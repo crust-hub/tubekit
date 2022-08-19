@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "tubekit_system.h"
+#include "log/logger.h"
 
 using namespace tubekit::utility;
 
@@ -21,7 +22,7 @@ void tubekit_system::init()
     else
         closedir(dp);
     // init logger
-
+    tubekit::log::logger::instance()->open(m_root_path + "/log/tubekit.log");
     // init inifile
 
     // init workflow
