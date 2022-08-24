@@ -6,7 +6,7 @@ namespace tubekit
     {
         using namespace std;
         /**
-         * @brief string 存储 int bool double string 类型
+         * @brief string store int、bool、double、string type
          *
          */
         class value

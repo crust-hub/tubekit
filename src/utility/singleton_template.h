@@ -7,7 +7,7 @@ namespace tubekit
         using namespace std;
 
         /**
-         * @brief 单例模式工具模板类
+         * @brief singleton template
          *
          * @tparam T
          */

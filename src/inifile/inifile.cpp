@@ -16,7 +16,6 @@ namespace tubekit
             {
                 return s;
             }
-            //删除字符串开头与结尾的" \r\n"
             s.erase(0, s.find_first_not_of(" \r\n"));
             s.erase(s.find_last_not_of(" \r\n") + 1);
             return s;
@@ -36,7 +35,7 @@ namespace tubekit
                 return false;
             }
             cout << "loading file sucess: " << m_filename << endl;
-            //解析内容
+            // parse content
             while (std::getline(f, line))
             {
                 line = trim(line);
@@ -51,9 +50,9 @@ namespace tubekit
                 }
                 else if ('#' == line[0]) // comment
                 {
-                    continue; //不解析注释的行
+                    continue; // not parsing commment line
                 }
-                else //是key=value格式的行
+                else // the line key=value
                 {
                     // find =
                     int pos = line.find_first_of('=');

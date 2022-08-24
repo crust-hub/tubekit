@@ -10,7 +10,7 @@ namespace tubekit
     {
         using namespace std;
         /**
-         * @brief ini 配置文件解析器
+         * @brief inifile parser
          *
          */
         class inifile
@@ -52,10 +52,10 @@ namespace tubekit
 
         private:
             /**
-             * @brief 删除字符串s开头与结尾的" \r\n"
+             * @brief delete " \r\n" start or end with s
              *
-             * @param s 要操作的值
-             * @return string 操作结果
+             * @param s
+             * @return string result
              */
             string trim(string s);
 

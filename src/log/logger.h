@@ -18,10 +18,6 @@ namespace tubekit
 
             ~logger();
 
-            /**
-             * @brief 日志级别
-             *
-             */
             enum flag
             {
                 DEBUG,
@@ -33,73 +29,74 @@ namespace tubekit
             };
 
             /**
-             * @brief 获取日志实例
+             * @brief get instance
              *
              * @return logger*
              */
             static logger *instance();
+
             /**
-             * @brief 打开日志文件
+             * @brief open log file
              *
              * @param log_file_path
              */
 
             void open(const string &log_file_path);
+
             /**
-             * @brief 关闭日志文件
+             * @brief close log file
              *
              */
-
             void close();
-            /**
-             * @brief debug打印日志
-             *
-             * @param file 输出内容
-             * @param line 行数
-             * @param format 格式
-             * @param ... 可变参数
-             */
 
+            /**
+             * @brief out log in debug
+             *
+             * @param file content
+             * @param line line number
+             * @param format
+             * @param ... param
+             */
             void debug(const char *file, int line, const char *format, ...);
-            /**
-             * @brief info打印日志
-             *
-             * @param file 输出内容
-             * @param line 行数
-             * @param format 格式
-             * @param ... 可变参数
-             */
 
+            /**
+             * @brief out log in info
+             *
+             * @param file content
+             * @param line line number
+             * @param format
+             * @param ... param
+             */
             void info(const char *file, int line, const char *format, ...);
-            /**
-             * @brief warn打印日志
-             *
-             * @param file 输出内容
-             * @param line 行数
-             * @param format 格式
-             * @param ... 可变参数
-             */
 
+            /**
+             * @brief out log in warn
+             *
+             * @param file content
+             * @param line line number
+             * @param format
+             * @param ... param
+             */
             void warn(const char *file, int line, const char *format, ...);
-            /**
-             * @brief error打印日志
-             *
-             * @param file 输出内容
-             * @param line 行数
-             * @param format 格式
-             * @param ... 可变参数
-             */
 
+            /**
+             * @brief out log in error
+             *
+             * @param file content
+             * @param line line number
+             * @param format
+             * @param ... param
+             */
             void error(const char *file, int line, const char *format, ...);
-            /**
-             * @brief fatal打印日志
-             *
-             * @param file 输出内容
-             * @param line 行数
-             * @param format 格式
-             * @param ... 可变参数
-             */
 
+            /**
+             * @brief out log in fatlal
+             *
+             * @param file content
+             * @param line line number
+             * @param format
+             * @param ... param
+             */
             void fatal(const char *file, int line, const char *format, ...);
 
         protected:
@@ -108,7 +105,7 @@ namespace tubekit
         protected:
             FILE *m_fp;
             static const char *s_flag[FLAG_COUNT];
-            static logger *m_instance; //日志实例
+            static logger *m_instance; // log instance
         };
     }
 }
