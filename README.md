@@ -8,7 +8,7 @@ prepare
 
 ```bash
 sudo apt update  -y 
-sufo apt install g++ make cmake
+sudo apt install g++ make cmake
 ```
 
 run  
