@@ -4,11 +4,15 @@
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <cstring>
+#include <iostream>
 
 #include "tubekit_system.h"
 #include "log/logger.h"
+#include "inifile/inifile.h"
+#include "utility/singleton_template.h"
 
 using namespace tubekit::utility;
+using namespace tubekit::inifile;
 
 void tubekit_system::init()
 {
@@ -21,11 +25,16 @@ void tubekit_system::init()
         mkdir(log_dir_path.c_str(), 0755);
     else
         closedir(dp);
+
     // init logger
     tubekit::log::logger::instance()->open(m_root_path + "/log/tubekit.log");
-    // init inifile
 
-    // init workflow
+    // init inifile
+    inifile::inifile *ini = singleton_template<inifile::inifile>::instance();
+    ini->load(get_root_path() + "/config/main.ini");
+    // ini->operator<<(cout);
+
+    //  init workflow
 }
 
 void tubekit_system::core_dump()
