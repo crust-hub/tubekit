@@ -39,8 +39,7 @@ CMakeFiles
 *.cmake
 *.make
 build/
-bin/
-!*.ini
+bin/tubekit
 .vscode/
 *.log
 CMakeCache.txt
