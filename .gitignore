@@ -40,7 +40,7 @@ CMakeFiles
 *.make
 build/
 bin/
-!bin/config/
+!bin/config/main.ini
 .vscode/
 *.log
 CMakeCache.txt
