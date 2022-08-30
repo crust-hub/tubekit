@@ -10,6 +10,7 @@
 #include "log/logger.h"
 #include "inifile/inifile.h"
 #include "utility/singleton_template.h"
+#include "engine/workflow.h"
 
 using namespace tubekit::utility;
 using namespace tubekit::inifile;
@@ -35,6 +36,8 @@ void tubekit_system::init()
     // ini->operator<<(cout);
 
     //  init workflow
+    engine::workflow *work = singleton_template<engine::workflow>::instance();
+    work->load(get_root_path() + "/config/workflow.xml");
 }
 
 void tubekit_system::core_dump()
