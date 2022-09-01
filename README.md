@@ -16,3 +16,10 @@ run
 ```bash
 sudo bash ./run.sh
 ```
+
+## docker image
+
+```bash
+docker pull gaowanlu/tubekit:latest
+docker run gaowanlu/tubekit
+```
