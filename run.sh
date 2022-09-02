@@ -1,4 +1,4 @@
 cmake . &&
 make &&
 cd bin &&
-./tubekit
+nohup ./tubekit &
