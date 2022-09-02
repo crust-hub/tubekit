@@ -1,4 +1,2 @@
-cmake . &&
-make &&
-cd bin &&
-nohup ./tubekit &
+echo "workdir: $(pwd)"
+cmake . && make && cd bin && nohup ./tubekit &

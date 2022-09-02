@@ -14,7 +14,13 @@ sudo apt install g++ make cmake
 run  
 
 ```bash
-sudo bash ./run.sh
+sudo bash ./scripts/run.sh
+```
+
+stop  
+
+```bash
+sudo bash ./scripts/kill.sh
 ```
 
 ## docker image
