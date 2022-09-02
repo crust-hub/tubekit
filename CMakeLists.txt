@@ -12,6 +12,6 @@ include_directories("${PROJECT_SOURCE}/src")
 FILE(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 ADD_EXECUTABLE(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
 
-target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} pthread)
 
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin)

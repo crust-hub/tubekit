@@ -4,7 +4,7 @@ COPY . /tubekit
 WORKDIR /tubekit
 RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 RUN apt update -y
-RUN apt install cmake g++ make -y
+RUN apt install cmake g++ make libpthread-dev -y
 CMD rm -rf CMakeCache.txt \
     &&cmake . \
     && make -j8 \
