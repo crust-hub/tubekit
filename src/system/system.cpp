@@ -6,16 +6,21 @@
 #include <cstring>
 #include <iostream>
 
-#include "tubekit_system.h"
+#include "system.h"
 #include "log/logger.h"
 #include "inifile/inifile.h"
 #include "utility/singleton_template.h"
 #include "engine/workflow.h"
+#include "server/server.h"
 
 using namespace tubekit::utility;
+using namespace tubekit::system;
 using namespace tubekit::inifile;
+using namespace tubekit::log;
+using namespace tubekit::server;
+using namespace std;
 
-void tubekit_system::init()
+void system::init()
 {
     core_dump();
     m_root_path = get_root_path();
@@ -28,7 +33,7 @@ void tubekit_system::init()
         closedir(dp);
 
     // init logger
-    tubekit::log::logger::instance()->open(m_root_path + "/log/tubekit.log");
+    singleton_template<logger>::instance()->open(m_root_path + "/log/tubekit.log");
 
     // init inifile
     inifile::inifile *ini = singleton_template<inifile::inifile>::instance();
@@ -38,9 +43,19 @@ void tubekit_system::init()
     //  init workflow
     engine::workflow *work = singleton_template<engine::workflow>::instance();
     work->load(get_root_path() + "/config/workflow.xml");
+
+    // init server
+    auto m_server = singleton_template<server::server>::instance();
+    const string &ip = (*ini)["server"]["ip"];
+    const int port = (*ini)["server"]["port"];
+    const int threads = (*ini)["server"]["threads"];
+    const int max_conn = (*ini)["server"]["max_conn"];
+    const int wait_time = (*ini)["server"]["wait_time"];
+    m_server->config(ip, port, threads, max_conn, wait_time);
+    m_server->start();
 }
 
-void tubekit_system::core_dump()
+void system::core_dump()
 {
     // core dump info
     struct rlimit x;
@@ -52,7 +67,7 @@ void tubekit_system::core_dump()
     ret = setrlimit(RLIMIT_DATA, &x);
 }
 
-string tubekit_system::get_root_path()
+string system::get_root_path()
 {
     if (m_root_path != "")
     {

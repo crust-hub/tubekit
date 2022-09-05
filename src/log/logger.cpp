@@ -19,15 +19,6 @@ logger::~logger()
     close();
 }
 
-logger *logger::instance()
-{
-    if (m_instance == nullptr)
-    {
-        m_instance = new logger();
-    }
-    return m_instance;
-}
-
 void logger::open(const string &log_file_path)
 {
     close();

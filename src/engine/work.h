@@ -6,8 +6,8 @@ namespace tubekit
         class work
         {
         public:
-            work() = default;
-            ~work() = default;
+            work();
+            ~work();
         };
     }
 }

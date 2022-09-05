@@ -29,13 +29,6 @@ namespace tubekit
             };
 
             /**
-             * @brief get instance
-             *
-             * @return logger*
-             */
-            static logger *instance();
-
-            /**
              * @brief open log file
              *
              * @param log_file_path
