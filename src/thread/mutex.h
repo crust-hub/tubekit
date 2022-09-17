@@ -1,11 +1,14 @@
 #pragma once
 #include <pthread.h>
+
 namespace tubekit
 {
     namespace thread
     {
         class mutex
         {
+            friend class condition;
+
         public:
             mutex();
             ~mutex();
