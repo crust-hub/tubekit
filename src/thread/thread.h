@@ -8,11 +8,11 @@ namespace tubekit
 {
     namespace thread
     {
-        class tubekit_thread
+        class thread
         {
         public:
-            tubekit_thread();
-            virtual ~tubekit_thread();
+            thread();
+            virtual ~thread();
             virtual void run() = 0;
             void start();
             void stop();

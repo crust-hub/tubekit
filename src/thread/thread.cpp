@@ -1,17 +1,17 @@
-#include "thread/tubekit_thread.h"
+#include "thread/thread.h"
 #include "thread/auto_lock.h"
 
 using namespace tubekit::thread;
 
-tubekit_thread::tubekit_thread() : m_tid(0), m_task(nullptr)
+thread::thread() : m_tid(0), m_task(nullptr)
 {
 }
 
-tubekit_thread::~tubekit_thread()
+thread::~thread()
 {
 }
 
-void tubekit_thread::start()
+void thread::start()
 {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -28,19 +28,19 @@ void tubekit_thread::start()
     pthread_attr_destroy(&attr);
 }
 
-void tubekit_thread::stop()
+void thread::stop()
 {
     pthread_exit(PTHREAD_CANCELED);
 }
 
-void *tubekit_thread::thread_func(void *ptr)
+void *thread::thread_func(void *ptr)
 {
-    tubekit_thread *m_thread = (tubekit_thread *)ptr;
+    thread *m_thread = (thread *)ptr;
     m_thread->run();
     return ptr;
 }
 
-void tubekit_thread::set_task(task *task)
+void thread::set_task(task *task)
 {
     m_mutex.lock();
     m_task = task;
@@ -48,7 +48,7 @@ void tubekit_thread::set_task(task *task)
     m_mutex.unlock();
 }
 
-task *tubekit_thread::get_task()
+task *thread::get_task()
 {
     auto_lock lock(m_mutex);
     return m_task;
