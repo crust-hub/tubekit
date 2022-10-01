@@ -14,6 +14,11 @@ namespace tubekit
             thread();
             virtual ~thread();
             virtual void run() = 0;
+
+            /**
+             * @brief 以线程分离形式运行线程，调用run方法
+             *
+             */
             void start();
             void stop();
             void set_task(task *m_task);

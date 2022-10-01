@@ -1,6 +1,10 @@
 #include "server.h"
 #include <iostream>
 
+#include "thread/task_dispatcher.h"
+#include "thread/work_thread.h"
+#include "thread/task.h"
+
 using namespace std;
 using namespace tubekit::server;
 
@@ -18,8 +22,13 @@ void server::start()
 {
     cout << "server start..." << endl;
     // init thread pool and task queue
-    /*TODO*/
+    task_dispatcher<work_thread, task> *dispatcher = singleton_template<task_dispatcher<work_thread, task>>::instance();
+    dispatcher->init(m_threads);
     // init socket handler
+    // TODO...
+    // while (true)
+    // {
+    // }
 }
 
 void server::set_threads(size_t threads)
