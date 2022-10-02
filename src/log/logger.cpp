@@ -95,7 +95,7 @@ void logger::log(flag f, const char *file, int line, const char *format, va_list
     // ensure safe using file in different thread
     flockfile(m_fp); // print time
     // using log file
-    fprintf(m_fp, buf);
+    fprintf(m_fp, "%s  ", buf);
     fprintf(m_fp, "%s  ", s_flag[f]); // print flag
     fprintf(m_fp, "%s:%d  ", file, line);
     vfprintf(m_fp, format, arg_ptr); // formating print
