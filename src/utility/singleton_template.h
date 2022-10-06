@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+
 namespace tubekit
 {
     namespace utility

@@ -1,7 +1,8 @@
 #pragma once
 #include <list>
-#include "../thread/mutex.h"
-#include "../thread/auto_lock.h"
+
+#include "thread/mutex.h"
+#include "thread/auto_lock.h"
 
 namespace tubekit
 {

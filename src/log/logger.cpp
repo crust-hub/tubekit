@@ -1,4 +1,5 @@
 #include "logger.h"
+
 using namespace tubekit::log;
 
 const char *logger::s_flag[FLAG_COUNT] = {

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+
 #include "utility/singleton_template.h"
 #include "system/system.h"
 #include "inifile/inifile.h"

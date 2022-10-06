@@ -1,6 +1,8 @@
 #include <sstream>
 #include <algorithm>
+
 #include "element.h"
+
 using namespace tubekit::xml;
 
 element::element(const string &name) : m_name(name)

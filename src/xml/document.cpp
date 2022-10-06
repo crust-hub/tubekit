@@ -3,8 +3,10 @@
 #include <string>
 #include <iostream>
 #include <cctype>
+
 #include "document.h"
 #include "element.h"
+
 using namespace tubekit::xml;
 
 document::document() : m_idx(0)

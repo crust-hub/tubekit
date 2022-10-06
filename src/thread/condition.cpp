@@ -1,4 +1,5 @@
 #include "thread/condition.h"
+
 using namespace tubekit::thread;
 
 condition::condition()

@@ -1,5 +1,7 @@
-#include "value.h"
 #include <sstream>
+
+#include "value.h"
+
 using namespace tubekit::inifile;
 
 value::value(const bool &value)
