@@ -1,6 +1,6 @@
 # tubekit
 
-network framework for C++
+network framework for C++ ，rebuild from the yazi framework.
 
 ## start
 
