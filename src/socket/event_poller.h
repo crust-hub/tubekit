@@ -12,6 +12,8 @@ namespace tubekit
     {
         class event_poller
         {
+            friend class socket_handler;
+
         public:
             /**
              * @brief Construct a new event poller object
@@ -27,27 +29,63 @@ namespace tubekit
              */
             void create(int max_connections);
             /**
-             * @brief 增加需要监听的句柄
+             * @brief 向epoll句柄添加新的epoll_event
              *
-             * @param fd 需要监听的句柄
-             * @param ptr 让相应的event_poll.data.ptr携带的数据
-             * @param events EPOLLIN|EPOLOUT
+             * @param fd epoll句柄
+             * @param ptr 创建的epoll_event携带的数据指针
+             * @param events EPOLLIN: 表示对应的文件描述符可以读
+             *               EPOLLOUT: 表示对应的文件描述符可以写
+             *               EPOLLPRI: 表示对应的文件描述符有紧急的数可读
+             *               EPOLLERR: 表示对应的文件描述符发生错误
+             *               EPOLLHUP: 表示对应的文件描述符被挂断
+             *               EPOLLET: ET的epoll工作模式
+             *               EPOLLLT: 表示默认epoll工作模式
+             *               EPOLLONETSHOT: 表示
+             *               epoll模式中事件可能被触发多次，比如socket接收到数据交给一个线程处理数据，
+             *               在数据没有处理完之前又有新数据达到触发了事件，另一个线程被激活获得该socket，
+             *               从而产生多个线程操作同一socket，即使在ET模式下也有可能出现这种情况。
+             *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
+             *               这样前面的socket就不会出现竞态。
              */
             void add(int fd, void *ptr, __uint32_t events);
             /**
-             * @brief 修改监听句柄的模式
+             * @brief epoll句柄更新已存在的epoll_event
              *
-             * @param fd 目标句柄
-             * @param ptr 让相应的event_poll.data.ptr携带的数据
-             * @param events EPOLLIN|EPOLOUT
+             * @param fd epoll句柄
+             * @param ptr 创建的epoll_event携带的数据指针
+             * @param events EPOLLIN: 表示对应的文件描述符可以读
+             *               EPOLLOUT: 表示对应的文件描述符可以写
+             *               EPOLLPRI: 表示对应的文件描述符有紧急的数可读
+             *               EPOLLERR: 表示对应的文件描述符发生错误
+             *               EPOLLHUP: 表示对应的文件描述符被挂断
+             *               EPOLLET: ET的epoll工作模式
+             *               EPOLLLT: 表示默认epoll工作模式
+             *               EPOLLONETSHOT: 表示
+             *               epoll模式中事件可能被触发多次，比如socket接收到数据交给一个线程处理数据，
+             *               在数据没有处理完之前又有新数据达到触发了事件，另一个线程被激活获得该socket，
+             *               从而产生多个线程操作同一socket，即使在ET模式下也有可能出现这种情况。
+             *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
+             *               这样前面的socket就不会出现竞态。
              */
             void mod(int fd, void *ptr, __uint32_t events);
             /**
-             * @brief 移去正在监听的句柄
+             * @brief 从epoll句柄删除epoll_event
              *
-             * @param fd 目标句柄
-             * @param ptr 设置event_poll.data.ptr携带的数据
-             * @param events EPOLLIN|EPOLOUT
+             * @param fd epoll句柄
+             * @param ptr 创建的epoll_event携带的数据指针
+             * @param events EPOLLIN: 表示对应的文件描述符可以读
+             *               EPOLLOUT: 表示对应的文件描述符可以写
+             *               EPOLLPRI: 表示对应的文件描述符有紧急的数可读
+             *               EPOLLERR: 表示对应的文件描述符发生错误
+             *               EPOLLHUP: 表示对应的文件描述符被挂断
+             *               EPOLLET: ET的epoll工作模式
+             *               EPOLLLT: 表示默认epoll工作模式
+             *               EPOLLONETSHOT: 表示
+             *               epoll模式中事件可能被触发多次，比如socket接收到数据交给一个线程处理数据，
+             *               在数据没有处理完之前又有新数据达到触发了事件，另一个线程被激活获得该socket，
+             *               从而产生多个线程操作同一socket，即使在ET模式下也有可能出现这种情况。
+             *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
+             *               这样前面的socket就不会出现竞态。
              */
             void del(int fd, void *ptr, __uint32_t events);
             /**

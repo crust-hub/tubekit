@@ -9,6 +9,8 @@ namespace tubekit
 
         class socket
         {
+            friend class socket_handler;
+
         public:
             virtual ~socket();
             socket();

@@ -37,6 +37,17 @@ void event_poller::create(int max_connections)
     m_events = new ::epoll_event[max_connections + 1];
 }
 
+/**
+ * @brief 操作epoll句柄
+ *
+ * @param fd epoll句柄
+ * @param ptr 创建的epoll_event携带的数据指针
+ * @param events EPOLLIN表示对应的文件描述符可以读,EPOLLOUT表示对应的文件描述符可以写，
+ *               EPOLLPRI表示对应的文件描述符有紧急的数可读，EPOLLERR：表示对应的文件描述符发生错误，
+ *               EPOLLHUP表示对应的文件描述符被挂断，EPOLLET ET的epoll工作模式
+ *               EPOLLLT表示默认epoll工作模式
+ * @param op 操作选项 EPOLL_CTL_ADD，EPOLL_CTL_MOD，EPOLL_CTL_DEL
+ */
 void event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
 {
     struct ::epoll_event ev;

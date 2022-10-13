@@ -52,7 +52,7 @@ void system::init()
     const int max_conn = (*ini)["server"]["max_conn"];
     const int wait_time = (*ini)["server"]["wait_time"];
     m_server->config(ip, port, threads, max_conn, wait_time);
-    m_server->start();
+    m_server->start(); // server running
 }
 
 void system::core_dump()
