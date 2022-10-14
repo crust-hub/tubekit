@@ -109,6 +109,13 @@ namespace tubekit
             return *m_list_idle.begin();
         }
 
+        /**
+         * @brief 将空闲线程送入线程池
+         *
+         * @tparam THREAD
+         * @tparam TASK
+         * @param m_thread
+         */
         template <typename THREAD, typename TASK>
         void thread_pool<THREAD, TASK>::move_to_idle_list(THREAD *m_thread)
         {

@@ -53,7 +53,7 @@ void work_thread::run()
         m_mutex.lock();
         while (m_task == nullptr)
         {
-            m_cond.wait(&m_mutex);
+            m_cond.wait(&m_mutex); //等待分发任务
         }
         m_mutex.unlock();
 
@@ -74,8 +74,7 @@ void work_thread::run()
         m_task = nullptr;
 
         //将线程移到线程池空闲列表
-        thread_pool<work_thread, task> pool;
-        // singleton_template<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
+        singleton_template<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
 
         //允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
         rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);

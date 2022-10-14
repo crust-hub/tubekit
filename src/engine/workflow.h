@@ -4,6 +4,7 @@
 
 #include "work.h"
 #include "xml/element.h"
+#include "xml/document.h"
 
 namespace tubekit
 {
@@ -15,7 +16,7 @@ namespace tubekit
             workflow() = default;
             ~workflow();
             bool load(const std::string &path);
-            bool run(const std::string work, const std::string input, const std::string output);
+            bool run(const std::string &work, const std::string &input, std::string &output);
 
         private:
             bool load_plugin(work &work, tubekit::xml::element &el);

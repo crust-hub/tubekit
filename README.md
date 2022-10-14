@@ -32,6 +32,4 @@ docker run gaowanlu/tubekit
 
 ## to_do
 
-* task/work_task
-* plugin
-* engine
+* json parser

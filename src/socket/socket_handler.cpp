@@ -4,11 +4,14 @@
 #include "utility/singleton_template.h"
 #include "thread/task_dispatcher.h"
 #include "task/task_factory.h"
+#include "log/logger.h"
 
 using namespace std;
 using namespace tubekit::socket;
 using namespace tubekit::thread;
 using namespace tubekit::task;
+using namespace tubekit::log;
+using namespace tubekit::utility;
 
 socket_handler::socket_handler()
 {
@@ -97,6 +100,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                 {
                     detach(socketfd);
                     thread::task *new_task = task_factory::create(socketfd, task_factory::WORK_TASK);
+                    singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
                     //提交给work_thread所处理的任务队列
                     singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
                 }

@@ -46,7 +46,8 @@ namespace tubekit
         void task_dispatcher<THREAD, TASK>::init(size_t threads)
         {
             singleton_template<thread_pool<THREAD, TASK>>::instance()->create(threads);
-            start();
+            singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "threads create allrigth to check assign");
+            start(); //是所有线程分离运行
         }
 
         template <typename THREAD, typename TASK>

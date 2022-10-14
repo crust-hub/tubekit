@@ -29,7 +29,7 @@ void server::start()
     // init the socket handler in epoll
     socket_handler *handler = singleton_template<socket_handler>::instance();
     handler->listen(m_ip, m_port);
-    handler->handle(m_connects, m_wait_time);
+    handler->handle(m_connects, m_wait_time); //主线程loop
 }
 
 void server::set_threads(size_t threads)

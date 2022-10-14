@@ -1,4 +1,10 @@
 #pragma once
+#include <string>
+#include <vector>
+
+#include "context.h"
+#include "plugin.h"
+
 namespace tubekit
 {
     namespace engine
@@ -7,7 +13,18 @@ namespace tubekit
         {
         public:
             work();
+            work(const std::string &name, bool flag);
             ~work();
+            void append(plugin *plugin);
+            void set_name(const std::string &name);
+            void set_switch(bool flag);
+            bool get_switch() const;
+            bool run(context &ctx);
+
+        protected:
+            std::string m_name;
+            bool m_switch;
+            std::vector<plugin *> m_plugins;
         };
     }
 }
