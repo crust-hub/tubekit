@@ -17,7 +17,7 @@ namespace tubekit
             virtual void run() = 0;
 
             /**
-             * @brief 以线程分离形式运行线程，调用run方法
+             * @brief Run the thread in a detach form and call the run method
              *
              */
             void start();

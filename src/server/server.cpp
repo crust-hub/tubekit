@@ -23,13 +23,13 @@ void server::listen(const std::string &ip, int port)
 void server::start()
 {
     cout << "server start..." << endl;
-    // init thread pool and task queue
+    // init thread pool and task queue,task_dispather is detached thread to processing task in queue
     task_dispatcher<work_thread, task> *dispatcher = singleton_template<task_dispatcher<work_thread, task>>::instance();
-    dispatcher->init(m_threads);
+    dispatcher->init(m_threads); // number of work_thread
     // init the socket handler in epoll
     socket_handler *handler = singleton_template<socket_handler>::instance();
     handler->listen(m_ip, m_port);
-    handler->handle(m_connects, m_wait_time); //主线程loop
+    handler->handle(m_connects, m_wait_time); // main thread loop
 }
 
 void server::set_threads(size_t threads)

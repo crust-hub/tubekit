@@ -47,7 +47,7 @@ namespace tubekit
         {
             singleton_template<thread_pool<THREAD, TASK>>::instance()->create(threads);
             singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "threads create allrigth to check assign");
-            start(); //是所有线程分离运行
+            start(); // task_dispatcher::run start with other thread
         }
 
         template <typename THREAD, typename TASK>
@@ -72,7 +72,7 @@ namespace tubekit
             else
             {
                 m_mutex.lock();
-                m_tasks.push_front(m_task); //没有空余线程，则先放入列表
+                m_tasks.push_front(m_task); // If there are no free threads, they are put into the list first
                 m_mutex.unlock();
                 singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "all threads are busy");
             }
@@ -91,7 +91,7 @@ namespace tubekit
             {
                 singleton_template<logger>::instance()->error(__FILE__, __LINE__, "thread manager pthread_sigmask failed");
                 return;
-            } //只在主线程内处理信号
+            } // Signals are processed only within the main thread
 
             while (true)
             {

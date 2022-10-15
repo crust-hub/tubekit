@@ -7,6 +7,10 @@ namespace tubekit
 {
     namespace socket
     {
+        /**
+         * @brief socket for client
+         *
+         */
         class client_socket : public socket
         {
         public:

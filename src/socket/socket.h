@@ -20,7 +20,7 @@ namespace tubekit
             /**
              * @brief socket listen
              *
-             * @param backlog 挂起的连接队列的最大长度
+             * @param backlog The maximum length of the pending connection queue
              * @return true
              * @return false
              */

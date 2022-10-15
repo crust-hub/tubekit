@@ -45,10 +45,10 @@ bool work::get_switch() const
 
 bool work::run(context &ctx)
 {
-    //插件pipline
+    // run plugin pipline
     for (auto it = m_plugins.begin(); it != m_plugins.end(); it++)
     {
-        if ((*it)->get_switch()) //需要运行plugin的run
+        if ((*it)->get_switch()) // work'state is on
         {
             if (!((*it)->run(ctx)))
             {

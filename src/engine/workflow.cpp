@@ -13,7 +13,7 @@ using namespace tubekit::utility;
 
 workflow::~workflow()
 {
-    //删除所有pipline
+    // delete all work
     for (auto it = m_works.begin(); it != m_works.end(); ++it)
     {
         delete it->second;
@@ -27,17 +27,18 @@ bool workflow::load(const std::string &path)
     document doc;
     doc.load_file(path);
     element root = doc.parse();
+    // workflow.xml form,foreach works
     for (auto it = root.begin(); it != root.end(); ++it)
     {
         std::string &&name = std::move(it->attr("name"));
         std::string &&flag = std::move(it->attr("switch"));
         work *new_work = new work;
         new_work->set_name(name);
-        if (flag == "on")
+        if (flag == "on") // work on
         {
             new_work->set_switch(true);
         }
-        else if (flag == "off")
+        else if (flag == "off") // work off
         {
             new_work->set_switch(false);
         }
@@ -56,36 +57,39 @@ bool workflow::load(const std::string &path)
 
 bool workflow::run(const std::string &work, const std::string &input, std::string &output)
 {
+    // find the work that named ${work}
     auto it = m_works.find(work);
-    if (it == m_works.end())
+    if (it == m_works.end()) // not found
     {
         return false;
     }
-    if (!it->second->get_switch())
+    if (!it->second->get_switch()) // the work'state is close
     {
         return false;
     }
-    context ctx;
+    context ctx; // creating context
     ctx.set<std::string>("input", input);
-    if (!it->second->run(ctx))
+    if (!it->second->run(ctx)) // execute plugins in the work
     {
         return false;
     }
-    output = ctx.ref<std::string>("output");
+    output = ctx.ref<std::string>("output"); // the data return to client
     return true;
 }
 
 bool workflow::load_plugin(work &work, tubekit::xml::element &el)
 {
+    // foreach plugin in work
     for (auto it = el.begin(); it != el.end(); it++)
     {
         if (it->name() != "plugin")
         {
             return false;
         }
-        const std::string &&name = std::move(it->attr("name"));
+        const std::string &&name = std::move(it->attr("name")); // plugin'name
+        // load function pointer
         plugin *(*create)() = (plugin * (*)()) singleton_template<plugin_loader>::instance()->get(name, "create");
-        plugin *new_plugin = create();
+        plugin *new_plugin = create(); // to create plugin from .so
         new_plugin->set_name(name);
         const std::string &&flag = std::move(it->attr("switch"));
         if (flag == "on")
@@ -100,7 +104,7 @@ bool workflow::load_plugin(work &work, tubekit::xml::element &el)
         {
             return false;
         }
-        work.append(new_plugin);
+        work.append(new_plugin); // adding plugin to work object
     }
     return true;
 }

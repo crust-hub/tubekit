@@ -17,19 +17,19 @@ namespace tubekit
             ~socket_handler();
             void listen(const std::string &ip, int port);
             /**
-             * @brief 将m_socket注册到epoll中
+             * @brief Register the m_socket with the epoll
              *
              * @param m_socket
              */
             void attach(socket *m_socket);
             /**
-             * @brief 从epoll中移除
+             * @brief Remove from epoll
              *
              * @param m_socket
              */
             void detach(socket *m_socket);
             /**
-             * @brief 关闭m_socket并将其返回对象池
+             * @brief Close the m_socket and return it to the object pool
              *
              * @param m_socket
              */

@@ -12,8 +12,25 @@ namespace tubekit
         public:
             plugin_loader();
             ~plugin_loader();
+            /**
+             * @brief loading plugin
+             *
+             * @param plugin
+             */
             void load(const std::string &plugin);
+            /**
+             * @brief close plugin
+             *
+             * @param plugin
+             */
             void unload(const std::string &plugin);
+            /**
+             * @brief get handler from plugin
+             *
+             * @param plugin
+             * @param symbol
+             * @return void*
+             */
             void *get(const std::string &plugin, const std::string &symbol);
 
         private:

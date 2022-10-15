@@ -25,13 +25,13 @@ plugin_loader::~plugin_loader()
 void plugin_loader::load(const std::string &plugin)
 {
     assert(!plugin.empty());
-    assert(m_plugins.find(plugin) == m_plugins.end()); //插件已存在map中
+    assert(m_plugins.find(plugin) == m_plugins.end()); // plugin is not exist
     string filename = singleton_template<system::system>::instance()->get_root_path() + "/plugin/" + plugin;
-    //获得动态链接库句柄
+    // loading .so lib
     void *handle = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
     printf("load plugin %s %s\n", filename.c_str(), dlerror());
     assert(handle != nullptr);
-    m_plugins[plugin] = handle; //存进map
+    m_plugins[plugin] = handle; // cache plugin
 }
 
 void plugin_loader::unload(const std::string &plugin)
@@ -39,21 +39,21 @@ void plugin_loader::unload(const std::string &plugin)
     assert(!plugin.empty());
     auto it = m_plugins.find(plugin);
     assert(it != m_plugins.end());
-    dlclose(m_plugins[plugin]); //关闭指定句柄的动态链接库
-    m_plugins.erase(it);        //从map中删除
+    dlclose(m_plugins[plugin]); // close handler
+    m_plugins.erase(it);        // delete from cache
 }
 
 void *plugin_loader::get(const string &plugin, const string &symbol)
 {
     auto it = m_plugins.find(plugin);
-    if (it == m_plugins.end())
+    if (it == m_plugins.end()) // not found
     {
         load(plugin);
-        //再次尝试查询
+        // retry
         it = m_plugins.find(plugin);
         assert(it != m_plugins.end());
     }
-    void *func = dlsym(it->second, symbol.c_str()); //加载可执行函数
+    void *func = dlsym(it->second, symbol.c_str()); // get funtion fron plugin
     assert(func != nullptr);
     return func;
 }

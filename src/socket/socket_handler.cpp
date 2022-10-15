@@ -56,11 +56,11 @@ void socket_handler::remove(socket *m_socket)
 
 void socket_handler::handle(int max_connections, int wait_time)
 {
-    m_epoll = new event_poller(false); // EPOLLLT模式
+    m_epoll = new event_poller(false); // EPOLLLT mode
     m_epoll->create(max_connections);
-    m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); //将本机socket注册epoll_event
+    m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the native socket epoll_event
     socket_pool.init(max_connections);
-    //主线程循环
+    // main thread loop
     while (true)
     {
         int num = m_epoll->wait(wait_time);
@@ -68,12 +68,12 @@ void socket_handler::handle(int max_connections, int wait_time)
         {
             continue;
         }
-        for (int i = 0; i < num; i++) //处理可读出数据的socket
+        for (int i = 0; i < num; i++) // Sockets that handle readable data
         {
-            //有新的socket连接
+            // There is a new socket connection
             if (m_server == static_cast<socket *>(m_epoll->m_events[i].data.ptr))
             {
-                int socket_fd = m_server->accept(); //获取新连接的socket_fd
+                int socket_fd = m_server->accept(); // Gets the socket_fd for the new connection
                 socket *socket_object = socket_pool.allocate();
                 if (socket_object == nullptr)
                 {
@@ -83,25 +83,25 @@ void socket_handler::handle(int max_connections, int wait_time)
                 socket_object->set_non_blocking();
                 attach(socket_object);
             }
-            else //可读取客户端发来的数据
+            else // Data sent by the client can be read
             {
                 socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
-                //针对不同的事件触发不同的处理
-                if (m_epoll->m_events[i].events & EPOLLHUP) //文件描述符被挂断
+                // Different processing is triggered for different poll events
+                if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up
                 {
                     detach(socketfd);
                 }
-                else if (m_epoll->m_events[i].events & EPOLLERR) //文件描述符发生错误
+                else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
                 {
                     detach(socketfd);
                     remove(socketfd);
                 }
-                else if (m_epoll->m_events[i].events & EPOLLIN) //有数据可读
+                else if (m_epoll->m_events[i].events & EPOLLIN) // There is data to read
                 {
                     detach(socketfd);
                     thread::task *new_task = task_factory::create(socketfd, task_factory::WORK_TASK);
                     singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
-                    //提交给work_thread所处理的任务队列
+                    // Submit the task to the queue of task_dispatcher
                     singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
                 }
             }

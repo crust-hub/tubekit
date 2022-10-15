@@ -31,7 +31,7 @@ void work_task::run()
     socket::socket *socketfd = static_cast<socket::socket *>(m_data);
     work_task_msg_head msg_head;
     memset(&msg_head, 0, sizeof(msg_head));
-    int len = socketfd->recv((char *)(&msg_head), sizeof(msg_head)); //取出消息头
+    int len = socketfd->recv((char *)(&msg_head), sizeof(msg_head)); // Remove the message headers
     if (len == 0)
     {
         handler->remove(socketfd);

@@ -110,7 +110,7 @@ namespace tubekit
         }
 
         /**
-         * @brief 将空闲线程送入线程池
+         * @brief Feed idle threads to the thread pool
          *
          * @tparam THREAD
          * @tparam TASK

@@ -7,7 +7,7 @@ namespace tubekit
 {
     namespace task
     {
-        //协议头部格式
+        // Protocol header format
         struct work_task_msg_head
         {
             char flag[8];
@@ -15,7 +15,7 @@ namespace tubekit
             uint32_t len;
         };
 
-        //缓冲大小
+        // buffer size
         constexpr uint32_t recv_buffer_size = 1024;
 
         class work_task : public tubekit::thread::task
@@ -25,7 +25,7 @@ namespace tubekit
             ~work_task();
             void run();
             /**
-             * @brief 手动析构
+             * @brief Manual destruction
              *
              */
             void destroy();

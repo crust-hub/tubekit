@@ -13,6 +13,10 @@ namespace tubekit
             virtual ~object() = default;
         };
 
+        /**
+         * @brief context is a data bearer for plugin pipline
+         *
+         */
         class context
         {
         public:
