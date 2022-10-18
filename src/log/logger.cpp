@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "logger.h"
 
 using namespace tubekit::log;
@@ -88,11 +90,11 @@ void logger::log(flag f, const char *file, int line, const char *format, va_list
         exit(1);
     }
     // get time now
-    time_t ticks = time(nullptr);
-    struct tm *ptm = localtime(&ticks);
+    std::time_t ticks = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    struct tm *ptm = std::localtime(&ticks);
     char buf[32];
     memset(buf, 0, sizeof(buf));
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S  ", ptm);
+    strftime(buf, sizeof(buf), "%Y-%M-%D %H:%M:%S  ", ptm);
     // ensure safe using file in different thread
     flockfile(m_fp); // print time
     // using log file

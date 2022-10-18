@@ -5,6 +5,7 @@
 #include <sys/resource.h>
 #include <cstring>
 #include <iostream>
+#include <filesystem>
 
 #include "system.h"
 #include "log/logger.h"
@@ -28,7 +29,7 @@ void system::init()
     const string log_dir_path = m_root_path + "/log";
     DIR *dp = opendir(log_dir_path.c_str());
     if (dp == nullptr)
-        mkdir(log_dir_path.c_str(), 0755);
+        mkdir(log_dir_path.c_str(), 0755); // create dir
     else
         closedir(dp);
 

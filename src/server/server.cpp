@@ -10,7 +10,11 @@ using namespace std;
 using namespace tubekit::server;
 using namespace tubekit::socket;
 
-server::server() : m_ip("0.0.0.0"), m_port(0), m_threads(1024), m_connects(1024), m_wait_time(10)
+server::server() : m_ip("0.0.0.0"),
+                   m_port(0),
+                   m_threads(1024),
+                   m_connects(1024),
+                   m_wait_time(10)
 {
 }
 
@@ -47,7 +51,11 @@ void server::set_wait_time(size_t wait_time)
     m_wait_time = wait_time;
 }
 
-void server::config(const std::string &ip, int port, size_t threads, size_t connects, size_t wait_time)
+void server::config(const std::string &ip,
+                    int port,
+                    size_t threads,
+                    size_t connects,
+                    size_t wait_time)
 {
     listen(ip, port);
     set_threads(threads);

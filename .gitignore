@@ -39,8 +39,10 @@ CMakeFiles
 *.cmake
 *.make
 build/
+out/
 bin/tubekit
 .vscode/
+.vs/
 *.log
 CMakeCache.txt
 cmake_install.cmake

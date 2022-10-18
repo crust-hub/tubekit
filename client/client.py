@@ -8,15 +8,16 @@ def send_data(client, data):
     data = struct.pack(f'8sII{data_len}s', b'work', cmd, data_len, data.encode('utf-8'))
     client.send(data)  # send data in tcp
     info = client.recv(1024).decode()
-    print(len(info))
+    print(info)
 
 
 if __name__ == '__main__':
     data=''
     for i in range(10):
-        data=data+'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabhdsbjchbfvjbdfjvbfjdhvbjhfbh'
+        data=data+'aaaaaaaaaaaaaaaaaaaa高万禄aaaaaaaaaaaaaaaabhdsbjchbfvjbdfjvbfjdhvbjhfbh'
     index = 0 
 
+    #host = '61.171.51.135'
     host = '127.0.0.1'
     port = 2022
     start_time = time.time()
