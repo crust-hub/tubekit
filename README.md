@@ -1,14 +1,13 @@
 # tubekit
 
-network framework for C++ ，rebuild from the yazi framework.
+web service framework for C++ ，rebuild from the yazi framework.
 
 ## start
 
 prepare  
 
 ```bash
-sudo apt update  -y 
-sudo apt install g++ make cmake
+g++ cmake make http-parser
 ```
 
 run  
@@ -29,6 +28,11 @@ sudo bash ./kill.sh
 docker pull gaowanlu/tubekit:latest
 docker run gaowanlu/tubekit
 ```
+
+# third party
+
+[@http-parser](https://github.com/nodejs/http-parser)  
+[@yazi](https://github.com/oldjun/yazi)(source of inspiration)  
 
 ## to_do
 

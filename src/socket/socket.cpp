@@ -221,3 +221,8 @@ int socket::create_tcp_socket()
     }
     return fd;
 }
+
+int socket::get_fd()
+{
+    return this->m_sockfd;
+}

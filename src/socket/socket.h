@@ -44,6 +44,7 @@ namespace tubekit
             bool set_keep_alive();
             bool set_reuse_addr();
             bool set_reuse_port();
+            int get_fd();
 
         protected:
             string m_ip;
