@@ -54,74 +54,88 @@ void work_task::run()
 
     settings.on_message_begin = [](http_parser *parser) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
         std::cout << "on_message_begin" << std::endl;
         return 0;
     };
 
     settings.on_url = [](http_parser *parser, const char *at, size_t length) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
-        std::cout << "on_url" << std::endl;
-        return 0;
+        std::cout << "on_url ";
+        char str[1024];
+        bzero(str,sizeof(str));
+        memcpy(str,at,length);
+        str[length]=0;
+        std::cout<<str<<std::endl;
+        return 0;   // allowed
+        //return -1;// reject this connection
     };
 
     settings.on_status = [](http_parser *parser, const char *at, size_t length) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
-        std::cout << "on_status" << std::endl;
+        std::cout << "on_status ";
+        char str[1024];
+        bzero(str,sizeof(str));
+        memcpy(str,at,length);
+        str[length]=0;
+        std::cout<<str<<std::endl;
         return 0;
     };
 
     settings.on_header_field = [](http_parser *parser, const char *at, size_t length) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
-        std::cout << "on_header_field" << std::endl;
+        std::cout << "on_header_field ";
+        char str[1024];
+        bzero(str,sizeof(str));
+        memcpy(str,at,length);
+        str[length]=0;
+        std::cout<<str<<std::endl;
         return 0;
     };
 
     settings.on_header_value = [](http_parser *parser, const char *at, size_t length) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
-        std::cout << "on_header_value" << std::endl;
+        std::cout << "on_header_value ";
+        char str[1024];
+        bzero(str,sizeof(str));
+        memcpy(str,at,length);
+        str[length]=0;
+        std::cout<<str<<std::endl;
         return 0;
     };
 
     settings.on_headers_complete = [](http_parser *parser) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
         std::cout << "on_headers_complete" << std::endl;
         return 0;
     };
 
     settings.on_body = [](http_parser *parser, const char *at, size_t length) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
-        std::cout << "on_body" << std::endl;
-        // std::cout << std::string(at) << std::endl;
+        std::cout << "on_body " <<length<<std::endl;
+        char str[1024];
+        bzero(str,sizeof(str));
+        memcpy(str,at,length);
+        str[length]=0;
+        std::cout<<str<<std::endl;
         return 0;
     };
+
     settings.on_message_complete = [](http_parser *parser) -> int
     {
         std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
         std::cout << "on_message_complete" << std::endl;
-        // std::cout << (long long)parser << std::endl;
         return 0;
     };
 
     settings.on_chunk_header = [](http_parser *parser) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
         std::cout << "on_chunk_header" << std::endl;
-        // std::cout << (long long)parser << std::endl;
         return 0;
     };
 
     settings.on_chunk_complete = [](http_parser *parser) -> int
     {
-        std::cout << ((custom_data_t *)parser->data)->buffer_all->size() << std::endl;
         std::cout << "on_chunk_complete" << std::endl;
-        // std::cout << (long long)parser << std::endl;
         return 0;
     };
 
@@ -129,7 +143,7 @@ void work_task::run()
     int len = 0;
     while ((len = socketfd->recv(my_data->buffer, my_data->buf_len)) > 0)
     {
-        for (size_t i = 0; i < len; i++)
+        for (int i = 0; i < len; i++)
         {
             my_data->buffer_all->push_back(my_data->buffer[i]);
         }
@@ -226,3 +240,4 @@ void work_task::run()
     // // return to epoll for next time
     // handler->attach(socketfd);
 }
+
