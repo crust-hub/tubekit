@@ -5,6 +5,7 @@
 #include "thread/task_dispatcher.h"
 #include "task/task_factory.h"
 #include "log/logger.h"
+#include "server/server.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -12,6 +13,7 @@ using namespace tubekit::thread;
 using namespace tubekit::task;
 using namespace tubekit::log;
 using namespace tubekit::utility;
+using namespace tubekit::server;
 
 socket_handler::socket_handler()
 {
@@ -96,13 +98,26 @@ void socket_handler::handle(int max_connections, int wait_time)
                     detach(socketfd);
                     remove(socketfd);
                 }
-                else if (m_epoll->m_events[i].events & EPOLLIN) // There is data to read
+                else if (m_epoll->m_events[i].events & EPOLLIN) // There is data,to be can read
                 {
                     detach(socketfd);
-                    thread::task *new_task = task_factory::create(socketfd, task_factory::WORK_TASK);
+                    // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
+                    std::string task_type = singleton_template<server::server>::instance()->get_task_type();
+                    thread::task *new_task = nullptr;
+                    if (task_type == "WORKFLOW_TASK")
+                        new_task = task_factory::create(socketfd, task_factory::WORKFLOW_TASK);
+                    else if (task_type == "HTTP_TASK")
+                        new_task = task_factory::create(socketfd, task_factory::HTTP_TASK);
                     singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
-                    // Submit the task to the queue of task_dispatcher
-                    singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
+                    if (new_task == nullptr)
+                    {
+                        singleton_template<logger>::instance()->error(__FILE__, __LINE__, "new_task is nullptr");
+                    }
+                    else
+                    {
+                        // Submit the task to the queue of task_dispatcher
+                        singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
+                    }
                 }
             }
         }

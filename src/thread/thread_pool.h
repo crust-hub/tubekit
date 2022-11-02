@@ -181,19 +181,19 @@ namespace tubekit
 
             m_mutex_busy.lock();
 
-            // all busy state
+            // all thread is  busy state
             while (m_list_busy.size() == m_threads)
             {
                 m_cond_busy.wait(&m_mutex_busy);
             }
             m_mutex_busy.unlock();
 
+            // get idle a thread
             THREAD *idle_thread = get_idle_thread();
             if (idle_thread != nullptr)
             {
                 move_to_busy_list(idle_thread);
-
-                idle_thread->set_task(m_task);
+                idle_thread->set_task(m_task); // set task to idle thread
             }
             else
             {

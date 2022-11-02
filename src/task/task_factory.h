@@ -2,7 +2,8 @@
 
 #include "thread/task.h"
 #include "socket/socket.h"
-#include "work_task.h"
+#include "workflow_task.h"
+#include "http_task.h"
 
 namespace tubekit
 {
@@ -13,15 +14,18 @@ namespace tubekit
         public:
             enum task_type
             {
-                WORK_TASK = 0
+                WORKFLOW_TASK = 0, // workflow engine
+                HTTP_TASK          // http engine
             };
             static tubekit::thread::task *create(tubekit::socket::socket *m_socket, task_type type)
             {
                 switch (type)
                 {
-                case WORK_TASK:
+                case WORKFLOW_TASK:
                     return new work_task(m_socket);
                     break;
+                case HTTP_TASK:
+                    return new http_task(m_socket);
                 default:
                     break;
                 }

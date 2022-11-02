@@ -51,14 +51,26 @@ void server::set_wait_time(size_t wait_time)
     m_wait_time = wait_time;
 }
 
+void server::set_task_type(std::string task_type)
+{
+    m_task_type = task_type;
+}
+
+std::string server::get_task_type()
+{
+    return m_task_type;
+}
+
 void server::config(const std::string &ip,
                     int port,
                     size_t threads,
                     size_t connects,
-                    size_t wait_time)
+                    size_t wait_time,
+                    std::string task_type)
 {
     listen(ip, port);
     set_threads(threads);
     set_connects(connects);
     set_wait_time(wait_time);
+    set_task_type(task_type);
 }

@@ -52,7 +52,8 @@ void system::init()
     const int threads = (*ini)["server"]["threads"];
     const int max_conn = (*ini)["server"]["max_conn"];
     const int wait_time = (*ini)["server"]["wait_time"];
-    m_server->config(ip, port, threads, max_conn, wait_time);
+    const string task_type = (*ini)["server"]["task_type"];
+    m_server->config(ip, port, threads, max_conn, wait_time, task_type);
     m_server->start(); // server running with dead loop
 }
 

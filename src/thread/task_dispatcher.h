@@ -17,15 +17,40 @@ namespace tubekit
 {
     namespace thread
     {
+        /**
+         * @brief use THREAD to process TASK
+         *
+         * @tparam THREAD
+         * @tparam TASK
+         */
         template <typename THREAD, typename TASK>
         class task_dispatcher : public thread
         {
         public:
             task_dispatcher();
             ~task_dispatcher();
+            /**
+             * @brief init threads
+             *
+             * @param threads
+             */
             void init(size_t threads);
+            /**
+             * @brief add to m_tasks
+             *
+             * @param task
+             */
             void assign(TASK *task);
-            void handle(TASK *taks);
+            /**
+             * @brief send to thread pool
+             *
+             * @param task
+             */
+            void handle(TASK *task);
+            /**
+             * @brief task_dispatcher thread start
+             *
+             */
             virtual void run();
 
         protected:
@@ -98,6 +123,7 @@ namespace tubekit
                 m_mutex.lock();
                 while (m_tasks.empty())
                 {
+                    // to wait if have not task in m_tasks
                     m_cond.wait(&m_mutex);
                 }
                 TASK *task = m_tasks.front();
