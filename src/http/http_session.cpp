@@ -64,7 +64,7 @@ ostream &operator<<(ostream &os, const session &m_session)
     return os;
 }
 
-int main(void)
+int http_session_test(void)
 {
     session m_session;
     m_session.set_url("123", 3);
