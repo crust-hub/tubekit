@@ -52,8 +52,9 @@ void socket_handler::detach(socket *m_socket)
 
 void socket_handler::remove(socket *m_socket)
 {
+    detach(m_socket);
     m_socket->close();
-    socket_pool.release(m_socket);
+    socket_pool.release(m_socket); // return back to socket object poll
 }
 
 void socket_handler::handle(int max_connections, int wait_time)
@@ -89,24 +90,15 @@ void socket_handler::handle(int max_connections, int wait_time)
             {
                 socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 // Different processing is triggered for different poll events
-                if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up
-                {
-                    detach(socketfd);
-                }
-                else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
-                {
-                    detach(socketfd);
-                    remove(socketfd);
-                }
-                else if (m_epoll->m_events[i].events & EPOLLIN) // There is data,to be can read
+                if (m_epoll->m_events[i].events & EPOLLIN) // There is data,to be can read
                 {
                     detach(socketfd);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
-                    std::string task_type = singleton_template<server::server>::instance()->get_task_type();
+                    auto task_type = singleton_template<server::server>::instance()->get_task_type();
                     thread::task *new_task = nullptr;
-                    if (task_type == "WORKFLOW_TASK")
+                    if (task_type == server::server::WORKFLOW_TASK)
                         new_task = task_factory::create(socketfd, task_factory::WORKFLOW_TASK);
-                    else if (task_type == "HTTP_TASK")
+                    else if (task_type == server::server::HTTP_TASK)
                         new_task = task_factory::create(socketfd, task_factory::HTTP_TASK);
                     singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
                     if (new_task == nullptr)
@@ -118,6 +110,16 @@ void socket_handler::handle(int max_connections, int wait_time)
                         // Submit the task to the queue of task_dispatcher
                         singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
                     }
+                }
+                else if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
+                {
+                    detach(socketfd);
+                    remove(socketfd);
+                }
+                else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
+                {
+                    detach(socketfd);
+                    remove(socketfd);
                 }
             }
         }

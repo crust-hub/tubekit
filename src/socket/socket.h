@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <functional>
 
 namespace tubekit
 {
@@ -32,6 +33,7 @@ namespace tubekit
             int recv(char *buf, size_t len);
             int send(const char *buf, size_t len);
             bool set_non_blocking();
+            bool set_blocking();
             bool set_send_buffer(size_t size);
             bool set_recv_buffer(size_t size);
             bool set_linger(bool active, size_t seconds);
@@ -52,7 +54,16 @@ namespace tubekit
             int m_sockfd;
 
         public:
-            static int create_tcp_socket();
+            void *ptr;
+            /**
+             * @brief execute delete_ptr_hook when execute close method
+             *
+             */
+            function<void(void *ptr)> delete_ptr_hook;
+
+        public:
+            static int
+            create_tcp_socket();
         };
     }
 }

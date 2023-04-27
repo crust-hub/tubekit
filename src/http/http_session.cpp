@@ -3,17 +3,35 @@
 using namespace std;
 using namespace tubekit::http;
 
-session::session()
+session::session(int socket_fd) : buffer_size(1024), socket_fd(socket_fd), over(false)
 {
+    m_http_parser = new http_parser;
+    http_parser_init(m_http_parser, HTTP_REQUEST);
+    m_http_parser->data = this;
+    buffer = new char[buffer_size];
 }
 
 session::~session()
 {
+    // std::cout << "session free" << std::endl;
+    delete[] buffer;
+    delete m_http_parser;
 }
 
-void session::add_header(const char *key, const size_t key_len, const char *value, const size_t value_len)
+http_parser *session::get_parser()
 {
-    headers.insert(pair<string, string>(string(key, key_len), string(value, value_len)));
+    return m_http_parser;
+}
+
+void session::add_header(const std::string &key, const std::string &value)
+{
+    auto res = headers.find(key);
+    if (res == headers.end())
+    {
+        vector<string> m_vec;
+        headers[key] = m_vec;
+    }
+    headers[key].push_back(value);
 }
 
 void session::add_to_body(const char *data, const size_t len)
@@ -36,45 +54,15 @@ void session::set_url(const char *url, size_t url_len)
 
 ostream &operator<<(ostream &os, const session &m_session)
 {
-    os << m_session.url << endl;
-    for (auto &header : m_session.headers)
-    {
-        os << header.first << " " << header.second << endl;
-    }
-    os << "\r\n";
-    if (!m_session.body.empty())
-    {
-        for (auto &ch : m_session.body)
-        {
-            os << ch;
-        }
-        os << "\r\n";
-    }
-    if (!m_session.chunks.empty())
-    {
-        for (auto &chunk : m_session.chunks)
-        {
-            for (auto &ch : chunk)
-            {
-                cout << ch;
-            }
-        }
-        os << "\r\n";
-    }
     return os;
 }
 
-int http_session_test(void)
+void session::set_over(bool over)
 {
-    session m_session;
-    m_session.set_url("123", 3);
-    m_session.add_to_body("123", 3);
-    m_session.add_to_body("456", 3);
-    m_session.add_header("name", 4, "asda", 4);
-    m_session.add_header("fsdf", 4, "asda", 4);
-    m_session.add_header("fdbf", 4, "asda", 4);
-    m_session.add_chunk({'1', '2', '3', '4'});
-    m_session.add_chunk({'5', '6', '7', '8'});
-    cout << m_session << endl;
-    return 0;
+    this->over = over;
+}
+
+bool session::get_over()
+{
+    return over;
 }

@@ -2,6 +2,7 @@
 
 #include "thread/task.h"
 #include "socket/socket.h"
+#include "http/http_session.h"
 
 namespace tubekit
 {
@@ -18,6 +19,7 @@ namespace tubekit
              *
              */
             void destroy();
+            static void test(const http::session *m_session);
         };
     }
 }

@@ -56,9 +56,17 @@ void server::set_task_type(std::string task_type)
     m_task_type = task_type;
 }
 
-std::string server::get_task_type()
+enum server::TaskType server::get_task_type()
 {
-    return m_task_type;
+    if (m_task_type == "HTTP_TASK")
+    {
+        return HTTP_TASK;
+    }
+    else if (m_task_type == "WORKFLOW_TASK")
+    {
+        return WORKFLOW_TASK;
+    }
+    return NONE;
 }
 
 void server::config(const std::string &ip,

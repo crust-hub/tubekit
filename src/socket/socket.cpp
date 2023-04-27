@@ -15,11 +15,11 @@ using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::log;
 
-socket::socket() : m_sockfd(0)
+socket::socket() : m_sockfd(0), ptr(nullptr)
 {
 }
 
-socket::socket(const string &ip, int port) : m_ip(ip), m_port(port), m_sockfd(0)
+socket::socket(const string &ip, int port) : m_ip(ip), m_port(port), m_sockfd(0), ptr(nullptr)
 {
 }
 
@@ -79,6 +79,11 @@ bool socket::connect(const string &ip, int port)
 
 bool socket::close()
 {
+    if (ptr != nullptr)
+    {
+        delete_ptr_hook(ptr);
+        ptr = nullptr;
+    }
     if (m_sockfd > 0)
     {
         ::close(m_sockfd);
@@ -122,6 +127,23 @@ bool socket::set_non_blocking()
     if (fcntl(m_sockfd, F_SETFL, flags) < 0)
     {
         singleton_template<logger>::instance()->error("socket::set_non_blocking(F_SETFL,O_NONBLOCK) errno=%d errstr=%s", errno, strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool socket::set_blocking()
+{
+    int flags = fcntl(m_sockfd, F_GETFL, 0);
+    if (flags < 0)
+    {
+        singleton_template<logger>::instance()->error("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
+        return false;
+    }
+    flags &= ~O_NONBLOCK; // setting nonblock
+    if (fcntl(m_sockfd, F_SETFL, flags) < 0)
+    {
+        singleton_template<logger>::instance()->error("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;

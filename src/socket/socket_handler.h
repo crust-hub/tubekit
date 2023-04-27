@@ -29,7 +29,7 @@ namespace tubekit
              */
             void detach(socket *m_socket);
             /**
-             * @brief Close the m_socket and return it to the object pool
+             * @brief Remove from epoll and close the real socket and return it to the object pool
              *
              * @param m_socket
              */

@@ -15,14 +15,6 @@ using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::engine;
 
-typedef struct
-{
-    int sock;
-    char *buffer;
-    size_t buf_len;
-    shared_ptr<vector<char>> buffer_all;
-} custom_data_t;
-
 work_task::work_task(tubekit::socket::socket *m_socket) : task(m_socket)
 {
 }
