@@ -36,10 +36,11 @@ void http_session::add_header(const std::string &key, const std::string &value)
 
 void http_session::add_to_body(const char *data, const size_t len)
 {
-    for (size_t i = 0; i < len; i++)
+    if (len == 0 || data == nullptr)
     {
-        body.push_back(data[i]);
+        return;
     }
+    body.insert(body.end(), data, data + len);
 }
 
 void http_session::add_chunk(const std::vector<char> &chunk)
