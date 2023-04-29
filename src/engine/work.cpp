@@ -1,4 +1,4 @@
-#include "work.h"
+#include "engine/work.h"
 #include "engine/plugin.h"
 #include "engine/plugin_loader.h"
 #include "utility/singleton_template.h"

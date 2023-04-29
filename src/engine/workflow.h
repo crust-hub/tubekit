@@ -2,7 +2,7 @@
 #include <string>
 #include <map>
 
-#include "work.h"
+#include "engine/work.h"
 #include "xml/element.h"
 #include "xml/document.h"
 

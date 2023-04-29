@@ -1,4 +1,4 @@
-#include "auto_lock.h"
+#include "thread/auto_lock.h"
 
 using namespace tubekit::thread;
 

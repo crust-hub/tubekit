@@ -2,8 +2,8 @@
 
 #include "thread/task.h"
 #include "socket/socket.h"
-#include "workflow_task.h"
-#include "http_task.h"
+#include "task/workflow_task.h"
+#include "task/http_task.h"
 
 namespace tubekit
 {

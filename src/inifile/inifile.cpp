@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "inifile.h"
+#include "inifile/inifile.h"
 
 namespace tubekit
 {

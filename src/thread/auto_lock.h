@@ -1,5 +1,5 @@
 #pragma once
-#include "mutex.h"
+#include "thread/mutex.h"
 
 namespace tubekit
 {

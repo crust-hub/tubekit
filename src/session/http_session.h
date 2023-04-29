@@ -8,13 +8,13 @@
 
 namespace tubekit
 {
-    namespace http
+    namespace session
     {
-        class session
+        class http_session
         {
         public:
-            session(int socket_fd);
-            ~session();
+            http_session(int socket_fd);
+            ~http_session();
             void add_header(const std::string &key, const std::string &value);
             void add_to_body(const char *data, const size_t len);
             void add_chunk(const std::vector<char> &chunk);
@@ -42,4 +42,4 @@ namespace tubekit
     }
 }
 
-std::ostream &operator<<(std::ostream &os, const tubekit::http::session &m_session);
+std::ostream &operator<<(std::ostream &os, const tubekit::session::http_session &m_session);

@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 
-#include "echo_plugin.h"
+#include "plugin/echo_plugin.h"
 
 using namespace std;
 using namespace tubekit::engine;

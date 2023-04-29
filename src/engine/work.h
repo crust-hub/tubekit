@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
-#include "context.h"
-#include "plugin.h"
+#include "engine/context.h"
+#include "engine/plugin.h"
 
 namespace tubekit
 {

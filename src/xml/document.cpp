@@ -4,8 +4,8 @@
 #include <iostream>
 #include <cctype>
 
-#include "document.h"
-#include "element.h"
+#include "xml/document.h"
+#include "xml/element.h"
 
 using namespace tubekit::xml;
 

@@ -1,9 +1,9 @@
 #include <string>
-#include "workflow.h"
+#include "engine/workflow.h"
 #include "utility/singleton_template.h"
 #include "log/logger.h"
-#include "plugin.h"
-#include "plugin_loader.h"
+#include "engine/plugin.h"
+#include "engine/plugin_loader.h"
 #include "engine/context.h"
 
 using namespace tubekit::engine;

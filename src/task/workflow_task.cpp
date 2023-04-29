@@ -4,7 +4,7 @@
 #include <memory.h>
 #include <vector>
 
-#include "workflow_task.h"
+#include "task/workflow_task.h"
 #include "socket/socket_handler.h"
 #include "utility/singleton_template.h"
 #include "engine/workflow.h"
