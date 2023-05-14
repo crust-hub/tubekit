@@ -9,10 +9,6 @@ prepare
 ```bash
 $ apt install g++ cmake make
 $ git clone https://github.com/crust-hub/tubekit.git
-$ cd tubekit/external
-$ make
-$ make install
-$ cd ..
 $ cmake .
 $ make
 ```

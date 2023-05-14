@@ -1,27 +1,43 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(tubekit)
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O2")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++2a -Wall -O2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++2a -Wall -O0")
 
-#link_directories("/usr/lib")
-#FIND_LIBRARY(RUNTIME_LIB http_parser /usr/lib  /usr/local/lib NO_DEFAULT_PATH)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
+message(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+message(${PROJECT_SOURCE_DIR}/external/http-parser)
+include_directories(${PROJECT_SOURCE_DIR}/external)
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-include_directories("${PROJECT_SOURCE}/src")
+file(GLOB_RECURSE SOURCE_PLUGIN "${PROJECT_SOURCE_DIR}/src/plugin/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_PLUGIN})
+file(GLOB_RECURSE SOURCE_INIFILE "${PROJECT_SOURCE_DIR}/src/inifile/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_INIFILE})
+file(GLOB_RECURSE SOURCE_LOG "${PROJECT_SOURCE_DIR}/src/log/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_LOG})
+file(GLOB_RECURSE SOURCE_TIMER "${PROJECT_SOURCE_DIR}/src/timer/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_TIMER})
+file(GLOB_RECURSE SOURCE_XML "${PROJECT_SOURCE_DIR}/src/xml/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_XML})
 
-FILE(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
 
-FILE(GLOB_RECURSE SOURCE_PLUGIN "${PROJECT_SOURCE_DIR}/src/plugin/*.cpp")
-LIST(REMOVE_ITEM SOURCE_FILES ${SOURCE_PLUGIN})
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/plugin)
 
-ADD_EXECUTABLE(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
+set(EXTERNAL_LIB)
+add_subdirectory(${PROJECT_SOURCE_DIR}/external)
+set(PROJECT_LIB)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/inifile)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/log)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/timer)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/xml)
 
-ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/src/plugin)
+message(${EXTERNAL_LIB})
+message(${PROJECT_LIB})
+target_link_libraries(${PROJECT_NAME} pthread dl ${EXTERNAL_LIB} ${PROJECT_LIB})
 
-target_link_libraries(${PROJECT_NAME} pthread dl http_parser)
-
-INSTALL(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin)

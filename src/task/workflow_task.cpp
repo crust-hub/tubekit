@@ -1,6 +1,5 @@
 #include <string>
 #include <sstream>
-#include <http_parser.h>
 #include <memory.h>
 #include <vector>
 
