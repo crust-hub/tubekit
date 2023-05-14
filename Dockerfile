@@ -3,11 +3,10 @@ RUN mkdir -p /tubekit
 COPY . /tubekit
 WORKDIR /tubekit
 RUN apt-get update && apt-get install -y apt-utils
-RUN apt-get install cmake g++ make -y
-RUN apt-get install git
+RUN apt-get install cmake g++ make git -y
 WORKDIR /tubekit
 CMD rm -rf CMakeCache.txt \
-    &&cmake . \
+    && cmake . \
     && make -j2 \
     && cd bin \
     && ls \
