@@ -1,4 +1,8 @@
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "server/server.h"
 #include "thread/task_dispatcher.h"
@@ -26,7 +30,7 @@ void server::listen(const std::string &ip, int port)
 
 void server::start()
 {
-    cout << "server start..." << endl;
+    std::cout << "server start..." << std::endl;
     // init thread pool and task queue,task_dispather is detached thread to processing task in queue
     task_dispatcher<work_thread, task> *dispatcher = singleton_template<task_dispatcher<work_thread, task>>::instance();
     dispatcher->init(m_threads); // number of work_thread
@@ -56,6 +60,11 @@ void server::set_task_type(std::string task_type)
     m_task_type = task_type;
 }
 
+void server::set_daemon(bool daemon)
+{
+    m_daemon = daemon;
+}
+
 enum server::TaskType server::get_task_type()
 {
     if (m_task_type == "HTTP_TASK")
@@ -74,11 +83,13 @@ void server::config(const std::string &ip,
                     size_t threads,
                     size_t connects,
                     size_t wait_time,
-                    std::string task_type)
+                    std::string task_type,
+                    bool daemon)
 {
     listen(ip, port);
     set_threads(threads);
     set_connects(connects);
     set_wait_time(wait_time);
     set_task_type(task_type);
+    set_daemon(daemon);
 }

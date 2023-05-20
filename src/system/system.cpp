@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 #include <filesystem>
+#include <fcntl.h>
 
 #include "system/system.h"
 #include "log/logger.h"
@@ -23,7 +24,23 @@ using namespace std;
 
 void system::init()
 {
+    // init inifile
+    inifile::inifile *ini = singleton_template<inifile::inifile>::instance();
+    ini->load(get_root_path() + "/config/main.ini");
+    const string &ip = (*ini)["server"]["ip"];
+    const int port = (*ini)["server"]["port"];
+    const int threads = (*ini)["server"]["threads"];
+    const int max_conn = (*ini)["server"]["max_conn"];
+    const int wait_time = (*ini)["server"]["wait_time"];
+    const string task_type = (*ini)["server"]["task_type"];
+    const int daemon = (*ini)["server"]["daemon"];
+    if (daemon)
+    {
+        create_daemon();
+    }
     core_dump();
+    signal_conf();
+
     m_root_path = get_root_path();
     // check log dir or create it
     const string log_dir_path = m_root_path + "/log";
@@ -36,24 +53,14 @@ void system::init()
     // init logger
     singleton_template<logger>::instance()->open(m_root_path + "/log/tubekit.log");
 
-    // init inifile
-    inifile::inifile *ini = singleton_template<inifile::inifile>::instance();
-    ini->load(get_root_path() + "/config/main.ini");
-    // ini->operator<<(cout);
-
     //  init workflow
     engine::workflow *work = singleton_template<engine::workflow>::instance();
     work->load(get_root_path() + "/config/workflow.xml");
 
+    // server start
     // init server
     auto m_server = singleton_template<server::server>::instance();
-    const string &ip = (*ini)["server"]["ip"];
-    const int port = (*ini)["server"]["port"];
-    const int threads = (*ini)["server"]["threads"];
-    const int max_conn = (*ini)["server"]["max_conn"];
-    const int wait_time = (*ini)["server"]["wait_time"];
-    const string task_type = (*ini)["server"]["task_type"];
-    m_server->config(ip, port, threads, max_conn, wait_time, task_type);
+    m_server->config(ip, port, threads, max_conn, wait_time, task_type, daemon);
     m_server->start(); // server running with dead loop
 }
 
@@ -92,4 +99,41 @@ string system::get_root_path()
         }
     }
     return string(path);
+}
+
+void system::signal_conf()
+{
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
+    // signal(SIGINT, );
+    // signal(SIGTERM, );
+}
+
+void system::create_daemon()
+{
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        std::cerr << "server::create_daemon() fork error" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) // father
+    {
+        exit(EXIT_SUCCESS);
+    }
+    // child
+    setsid();
+    int fd = open("/dev/null", O_RDWR);
+    if (fd < 0)
+    {
+        std::cerr << "server::create_daemon() open" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    dup2(fd, STDIN_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    dup2(fd, STDERR_FILENO);
+    if (fd > 2)
+    {
+        close(fd);
+    }
 }

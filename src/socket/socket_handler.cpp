@@ -69,7 +69,15 @@ void socket_handler::handle(int max_connections, int wait_time)
         int num = m_epoll->wait(wait_time);
         if (num == 0)
         {
-            continue;
+            continue; // timeout
+        }
+        else if (num < 0)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            break;
         }
         for (int i = 0; i < num; i++) // Sockets that handle readable data
         {
@@ -84,7 +92,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                 }
                 socket_object->m_sockfd = socket_fd;
                 socket_object->set_non_blocking();
-                socket_object->set_linger(false,0);
+                socket_object->set_linger(false, 0);
                 attach(socket_object);
             }
             else // Data sent by the client can be read

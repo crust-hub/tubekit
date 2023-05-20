@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <signal.h>
 
 namespace tubekit
 {
@@ -15,6 +16,8 @@ namespace tubekit
 
         private:
             void core_dump(); // core dump
+            void signal_conf();
+            void create_daemon();
 
         private:
             std::string m_root_path;
