@@ -1,9 +1,9 @@
-#include "session/http_session.h"
+#include "request/http_request.h"
 
 using namespace std;
-using namespace tubekit::session;
+using namespace tubekit::request;
 
-http_session::http_session(int socket_fd) : buffer_size(1024), socket_fd(socket_fd), over(false)
+http_request::http_request(int socket_fd) : buffer_size(1024), socket_fd(socket_fd), over(false)
 {
     m_http_parser = new http_parser;
     http_parser_init(m_http_parser, HTTP_REQUEST);
@@ -11,19 +11,19 @@ http_session::http_session(int socket_fd) : buffer_size(1024), socket_fd(socket_
     buffer = new char[buffer_size];
 }
 
-http_session::~http_session()
+http_request::~http_request()
 {
     // std::cout << "session free" << std::endl;
     delete[] buffer;
     delete m_http_parser;
 }
 
-http_parser *http_session::get_parser()
+http_parser *http_request::get_parser()
 {
     return m_http_parser;
 }
 
-void http_session::add_header(const std::string &key, const std::string &value)
+void http_request::add_header(const std::string &key, const std::string &value)
 {
     auto res = headers.find(key);
     if (res == headers.end())
@@ -34,7 +34,7 @@ void http_session::add_header(const std::string &key, const std::string &value)
     headers[key].push_back(value);
 }
 
-void http_session::add_to_body(const char *data, const size_t len)
+void http_request::add_to_body(const char *data, const size_t len)
 {
     if (len == 0 || data == nullptr)
     {
@@ -43,27 +43,27 @@ void http_session::add_to_body(const char *data, const size_t len)
     body.insert(body.end(), data, data + len);
 }
 
-void http_session::add_chunk(const std::vector<char> &chunk)
+void http_request::add_chunk(const std::vector<char> &chunk)
 {
     chunks.push_back(chunk);
 }
 
-void http_session::set_url(const char *url, size_t url_len)
+void http_request::set_url(const char *url, size_t url_len)
 {
     this->url = string(url, url_len);
 }
 
-ostream &operator<<(ostream &os, const http_session &m_session)
+ostream &operator<<(ostream &os, const http_request &m_http_request)
 {
     return os;
 }
 
-void http_session::set_over(bool over)
+void http_request::set_over(bool over)
 {
     this->over = over;
 }
 
-bool http_session::get_over()
+bool http_request::get_over()
 {
     return over;
 }

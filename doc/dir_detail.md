@@ -34,9 +34,9 @@
 │   │   ├── work.h//work mapping in workflow.xml
 │   │   ├── workflow.cpp
 │   │   └── workflow.h//The mapping in workflow.xml provides the external work call interface
-|   ├── session
-|   |   ├── http_session.cpp//http session
-|   |   └── http_session.h
+|   ├── request
+|   |   ├── http_request.cpp//http request
+|   |   └── http_request.h
 │   ├── main.cpp
 │   ├── plugin//Custom Job Engine Plugin
 │   │   ├── CMakeLists.txt
