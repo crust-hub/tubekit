@@ -23,6 +23,8 @@ file(GLOB_RECURSE SOURCE_TIMER "${PROJECT_SOURCE_DIR}/src/timer/*.cpp")
 list(REMOVE_ITEM SOURCE_FILES ${SOURCE_TIMER})
 file(GLOB_RECURSE SOURCE_XML "${PROJECT_SOURCE_DIR}/src/xml/*.cpp")
 list(REMOVE_ITEM SOURCE_FILES ${SOURCE_XML})
+file(GLOB_RECURSE SOURCE_BUFFER "${PROJECT_SOURCE_DIR}/src/buffer/*.cpp")
+list(REMOVE_ITEM SOURCE_FILES ${SOURCE_BUFFER})
 
 add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
 
@@ -35,6 +37,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/src/inifile)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/log)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/timer)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src/xml)
+add_subdirectory(${PROJECT_SOURCE_DIR}/src/buffer)
 
 message(${EXTERNAL_LIB})
 message(${PROJECT_LIB})
