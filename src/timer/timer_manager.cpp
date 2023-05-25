@@ -1,6 +1,13 @@
 #include "timer/timer_manager.h"
+#include <ctime>
+#include <iostream>
 
 using namespace tubekit::timer;
+
+bool timer_manager::TimerComparator::operator()(const timer *a, const timer *b) const
+{
+    return a->get_expired_time() > b->get_expired_time();
+}
 
 timer_manager::timer_manager()
 {
@@ -9,12 +16,12 @@ timer_manager::timer_manager()
 timer_manager::~timer_manager()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
+    while (!m_queue.empty())
     {
-        timer *timer_ptr = (*iter);
+        timer *timer_ptr = m_queue.top();
         delete timer_ptr;
+        m_queue.pop();
     }
-    m_list.clear();
 }
 
 int64_t timer_manager::add(int32_t repeated_times, int64_t interval, const timer_callback callback)
@@ -25,49 +32,39 @@ int64_t timer_manager::add(int32_t repeated_times, int64_t interval, const timer
     {
         return -1;
     }
-    m_list.push_back(timer_ptr);
+    m_queue.push(timer_ptr);
     return timer_ptr->get_id();
-}
-
-bool timer_manager::remove(int64_t timer_id)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (timer_id < 0)
-    {
-        return false;
-    }
-    for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
-    {
-        if ((*iter)->get_id() == timer_id)
-        {
-            timer *timer_ptr = (*iter);
-            delete timer_ptr;
-            m_list.erase(iter);
-            return true;
-        }
-    }
-    return false;
 }
 
 void timer_manager::check_and_handle()
 {
+    time_t now = ::time(nullptr);
     std::lock_guard<std::mutex> lock(m_mutex);
-    for (auto iter = m_list.begin(); iter != m_list.end();)
+    std::list<timer *> m_list;
+    while (!m_queue.empty())
     {
-        if ((*iter)->is_expired())
+        auto ptr = m_queue.top();
+        if (ptr->is_expired(now))
         {
-            (*iter)->run();
-            int32_t times = (*iter)->get_repeated_times();
+            ptr->run();
+            int32_t times = ptr->get_repeated_times();
             if (times == 0)
             {
-                timer *timer_ptr = *iter;
-                iter = m_list.erase(iter);
-                delete timer_ptr;
+                delete ptr;
             }
+            else
+            {
+                m_list.push_back(ptr);
+            }
+            m_queue.pop();
         }
         else
         {
-            ++iter;
+            break;
         }
+    }
+    for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
+    {
+        m_queue.push(*iter);
     }
 }

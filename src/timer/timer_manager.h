@@ -1,11 +1,9 @@
 #pragma once
-#include <list>
+#include <queue>
 #include <mutex>
+#include <vector>
+#include <list>
 #include "timer/timer.h"
-
-/*
-* PLAN: 需要后续优化，使用优先队列解决，待提高时间精度
-*/
 
 namespace tubekit
 {
@@ -13,6 +11,12 @@ namespace tubekit
     {
         class timer_manager final
         {
+            class TimerComparator
+            {
+            public:
+                bool operator()(const timer *a, const timer *b) const;
+            };
+
         public:
             timer_manager();
             ~timer_manager();
@@ -27,22 +31,13 @@ namespace tubekit
             int64_t add(int32_t repeated_times, int64_t interval, const timer_callback callback);
 
             /**
-             * @brief 删除定时器
-             *
-             * @param timer_id 定时器ID
-             * @return true
-             * @return false
-             */
-            bool remove(int64_t timer_id);
-
-            /**
              * @brief 检测定时器，到期则触发执行
              *
              */
             void check_and_handle();
 
         private:
-            std::list<timer *> m_list;
+            std::priority_queue<timer *, std::vector<timer *>, TimerComparator> m_queue;
             std::mutex m_mutex;
         };
     }

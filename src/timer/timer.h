@@ -4,10 +4,6 @@
 #include <cstdint>
 #include <ctime>
 
-/*
-*PLAN: 待提高时间精度
-*/
-
 namespace tubekit
 {
     namespace timer
@@ -20,9 +16,10 @@ namespace tubekit
             timer(const timer &) = delete;
             virtual ~timer();
             virtual void run();
-            bool is_expired() const;
+            bool is_expired(time_t now) const;
             int64_t get_id() const;
             int32_t get_repeated_times() const;
+            time_t get_expired_time() const;
 
         public:
             static int64_t generate_id();

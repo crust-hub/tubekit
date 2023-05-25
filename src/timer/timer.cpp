@@ -40,9 +40,8 @@ void timer::run()
     m_expired_time += m_interval;
 }
 
-bool timer::is_expired() const
+bool timer::is_expired(time_t now) const
 {
-    int64_t now = time(nullptr);
     return now >= m_expired_time;
 }
 
@@ -54,4 +53,9 @@ int64_t timer::generate_id()
     new_id = s_initial_id;
     s_mutex.unlock();
     return new_id;
+}
+
+time_t timer::get_expired_time() const
+{
+    return m_expired_time;
 }
