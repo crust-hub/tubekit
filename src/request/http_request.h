@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <http-parser/http_parser.h>
+#include "buffer/buffer.h"
 
 namespace tubekit
 {
@@ -30,9 +31,10 @@ namespace tubekit
             std::vector<char> body;
             std::vector<std::vector<char>> chunks;
             std::vector<char> data;
+            buffer::buffer m_buffer;
             char *buffer;
+            size_t buffer_size;
             std::string head_field_tmp;
-            const int buffer_size;
             const int socket_fd;
             bool over;
 

@@ -3,7 +3,7 @@
 using namespace std;
 using namespace tubekit::request;
 
-http_request::http_request(int socket_fd) : buffer_size(1024), socket_fd(socket_fd), over(false)
+http_request::http_request(int socket_fd) : m_buffer(1024), buffer_size(1024), socket_fd(socket_fd), over(false)
 {
     m_http_parser = new http_parser;
     http_parser_init(m_http_parser, HTTP_REQUEST);
@@ -14,7 +14,7 @@ http_request::http_request(int socket_fd) : buffer_size(1024), socket_fd(socket_
 http_request::~http_request()
 {
     // std::cout << "session free" << std::endl;
-    delete[] buffer;
+    delete buffer;
     delete m_http_parser;
 }
 

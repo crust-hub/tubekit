@@ -16,8 +16,86 @@ using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::request;
 
+http_parser_settings *http_task::settings = nullptr;
+
 http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
 {
+    if (settings == nullptr)
+    {
+        settings = new http_parser_settings;
+        settings->on_message_begin = [](http_parser *parser) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            http_method method = (http_method)parser->method;
+            m_http_request->method = http_method_str(method);
+            return 0;
+        };
+
+        settings->on_url = [](http_parser *parser, const char *at, size_t length) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            m_http_request->url = std::string(at, length);
+            return 0; // allowed
+            // return -1;// reject this connection
+        };
+
+        settings->on_status = [](http_parser *parser, const char *at, size_t length) -> auto
+        {
+            // parser reponses
+            return 0;
+        };
+
+        settings->on_header_field = [](http_parser *parser, const char *at, size_t length) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            m_http_request->head_field_tmp = std::string(at, length);
+            return 0;
+        };
+
+        settings->on_header_value = [](http_parser *parser, const char *at, size_t length) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            std::string value(at, length);
+            m_http_request->add_header(m_http_request->head_field_tmp, value);
+            return 0;
+        };
+
+        settings->on_headers_complete = [](http_parser *parser) -> auto
+        {
+            // session::http_session *m_session = static_cast<session::http_session *>(parser->data);
+            // std::cout << "on_headers_complete" << std::endl;
+            return 0;
+        };
+
+        settings->on_body = [](http_parser *parser, const char *at, size_t length) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            m_http_request->add_to_body(at, length);
+            return 0;
+        };
+
+        settings->on_message_complete = [](http_parser *parser) -> auto
+        {
+            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            m_http_request->set_over(true);
+            // std::cout << "on_message_complete" << std::endl;
+            return 0;
+        };
+
+        settings->on_chunk_header = [](http_parser *parser) -> auto
+        {
+            // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            std::cout << "on_chunk_header" << std::endl;
+            return 0;
+        };
+
+        settings->on_chunk_complete = [](http_parser *parser) -> auto
+        {
+            // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            std::cout << "on_chunk_complete" << std::endl;
+            return 0;
+        };
+    }
 }
 
 http_task::~http_task()
@@ -33,93 +111,26 @@ void http_task::run()
 {
     socket_handler *handler = singleton_template<socket_handler>::instance();
     socket::socket *socketfd = static_cast<socket::socket *>(m_data);
-    socketfd->delete_ptr_hook = [](void *ptr) -> auto
+
+    if (!socketfd->delete_ptr_hook)
     {
-        if (ptr != nullptr)
+        socketfd->delete_ptr_hook = [](void *ptr) -> auto
         {
-            request::http_request *m_http_request = (request::http_request *)ptr;
-            delete m_http_request;
-        }
-    };
-    if (socketfd->ptr == nullptr)
+            if (ptr != nullptr)
+            {
+                request::http_request *m_http_request = (request::http_request *)ptr;
+                delete m_http_request;
+            }
+        };
+    }
+
+    if (socketfd->ptr == nullptr) // binding http-parser
     {
         request::http_request *m_http_request = new request::http_request(socketfd->get_fd());
         socketfd->ptr = (void *)m_http_request;
     }
-    request::http_request *m_http_request = (request::http_request *)socketfd->ptr;
-    http_parser_settings settings;
-    settings.on_message_begin = [](http_parser *parser) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        http_method method = (http_method)parser->method;
-        m_http_request->method = http_method_str(method);
-        return 0;
-    };
 
-    settings.on_url = [](http_parser *parser, const char *at, size_t length) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        m_http_request->url = std::string(at, length);
-        return 0; // allowed
-        // return -1;// reject this connection
-    };
-
-    settings.on_status = [](http_parser *parser, const char *at, size_t length) -> auto
-    {
-        // parser reponses
-        return 0;
-    };
-
-    settings.on_header_field = [](http_parser *parser, const char *at, size_t length) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        m_http_request->head_field_tmp = std::string(at, length);
-        return 0;
-    };
-
-    settings.on_header_value = [](http_parser *parser, const char *at, size_t length) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        std::string value(at, length);
-        m_http_request->add_header(m_http_request->head_field_tmp, value);
-        return 0;
-    };
-
-    settings.on_headers_complete = [](http_parser *parser) -> auto
-    {
-        // session::http_session *m_session = static_cast<session::http_session *>(parser->data);
-        // std::cout << "on_headers_complete" << std::endl;
-        return 0;
-    };
-
-    settings.on_body = [](http_parser *parser, const char *at, size_t length) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        m_http_request->add_to_body(at, length);
-        return 0;
-    };
-
-    settings.on_message_complete = [](http_parser *parser) -> auto
-    {
-        request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        m_http_request->set_over(true);
-        // std::cout << "on_message_complete" << std::endl;
-        return 0;
-    };
-
-    settings.on_chunk_header = [](http_parser *parser) -> auto
-    {
-        // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        std::cout << "on_chunk_header" << std::endl;
-        return 0;
-    };
-
-    settings.on_chunk_complete = [](http_parser *parser) -> auto
-    {
-        // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-        std::cout << "on_chunk_complete" << std::endl;
-        return 0;
-    };
+    request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);
 
     // read
     int len = 0;
@@ -148,7 +159,7 @@ void http_task::run()
         }
         else if (len > 0)
         {
-            int nparsed = http_parser_execute(m_http_request->get_parser(), &settings, m_http_request->buffer, len);
+            int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, len);
             if (m_http_request->get_parser()->upgrade)
             {
             }
@@ -158,7 +169,14 @@ void http_task::run()
             }
         }
     } // while(1)
-    if (m_http_request->get_over())
+
+    // write
+    {
+        //... read from m_http_request->m_buffer
+        //... socketfd->send data
+    }
+
+    if (m_http_request->get_over()) // HTTP unpacking completed or error happen
     {
         test(m_http_request);
         const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/json;\r\n\r\n{\"server\":\"tubekit\"}";
