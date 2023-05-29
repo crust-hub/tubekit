@@ -1,109 +1,123 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdio>
+#include <cstring>
 #include "../src/buffer/buffer.h"
 using namespace std;
 using tubekit::buffer::buffer;
 
 int main(int argc, char **argv)
 {
-    char mybuffer[1024] = {0};
-    buffer m_buffer(19);
-    sleep(2);
-    cout << m_buffer.get_last_read_gap() << endl;  // 2
-    cout << m_buffer.get_last_write_gap() << endl; // 2
-
-    try
+    const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/json;\r\n\r\n{\"server\":\"tubekit\"}";
+    buffer m_buffer(1024);
+    std::cout << m_buffer.write(response, strlen(response)) << std::endl;
+    char charbuf[1024];
+    int len = m_buffer.read(charbuf, 1023);
+    charbuf[len] = 0;
+    while (len > 0)
     {
-        cout << m_buffer.write("1234567890", 10) << endl; // 10
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
+        std::cout << charbuf << std::endl;
+        len = m_buffer.read(charbuf, 1023);
+        charbuf[len] = 0;
     }
 
-    cout << m_buffer.get_last_write_gap() << endl; // 0
+    // char mybuffer[1024] = {0};
+    // buffer m_buffer(19);
+    // sleep(2);
+    // cout << m_buffer.get_last_read_gap() << endl;  // 2
+    // cout << m_buffer.get_last_write_gap() << endl; // 2
 
-    try
-    {
-        cout << m_buffer.write("1234567890", 10) << endl; // none
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl; // should_add_size + m_size > m_limit_max
-    }
+    // try
+    // {
+    //     cout << m_buffer.write("1234567890", 10) << endl; // 10
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
 
-    try
-    {
-        cout << m_buffer.write("123456789", 9) << endl; // 9
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
-    }
+    // cout << m_buffer.get_last_write_gap() << endl; // 0
 
-    try
-    {
-        cout << m_buffer.read(mybuffer, 0) << endl; // none
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl; // dest == nullptr || size == 0
-    }
+    // try
+    // {
+    //     cout << m_buffer.write("1234567890", 10) << endl; // none
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl; // should_add_size + m_size > m_limit_max
+    // }
 
-    try
-    {
-        cout << m_buffer.read(mybuffer, 10) << endl; // 10
-        printf("%s\n", mybuffer);                    // 1234567890
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
-    }
+    // try
+    // {
+    //     cout << m_buffer.write("123456789", 9) << endl; // 9
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
 
-    try
-    {
-        mybuffer[m_buffer.read(mybuffer, 10)] = 0;
-        printf("%s\n", mybuffer); // 123456789
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
-    }
+    // try
+    // {
+    //     cout << m_buffer.read(mybuffer, 0) << endl; // none
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl; // dest == nullptr || size == 0
+    // }
 
-    sleep(3);
-    cout << m_buffer.get_last_read_gap() << endl; // 3
-    const char *str1 = "sudygvuygvuyergfakshjdkhskfhaldsssssdfhsjkdahwueiyeuuuuuuuuuuuuuuuuuuuuuuuuuuuuuufjhsdkajfgjhdsvbgahjsdv";
+    // try
+    // {
+    //     cout << m_buffer.read(mybuffer, 10) << endl; // 10
+    //     printf("%s\n", mybuffer);                    // 1234567890
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
 
-    try
-    {
-        cout << m_buffer.write(str1, strlen(str1)) << endl;
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl; // should_add_size + m_size > m_limit_max
-    }
+    // try
+    // {
+    //     mybuffer[m_buffer.read(mybuffer, 10)] = 0;
+    //     printf("%s\n", mybuffer); // 123456789
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
 
-    const char *str2 = "abcdefghij";
+    // sleep(3);
+    // cout << m_buffer.get_last_read_gap() << endl; // 3
+    // const char *str1 = "sudygvuygvuyergfakshjdkhskfhaldsssssdfhsjkdahwueiyeuuuuuuuuuuuuuuuuuuuuuuuuuuuuuufjhsdkajfgjhdsvbgahjsdv";
 
-    try
-    {
-        cout << m_buffer.write(str2, strlen(str2)) << endl; // 10
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
-    }
+    // try
+    // {
+    //     cout << m_buffer.write(str1, strlen(str1)) << endl;
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl; // should_add_size + m_size > m_limit_max
+    // }
 
-    try
-    {
-        mybuffer[m_buffer.read(mybuffer, 10)] = 0;
-        printf("%s\n", mybuffer); // abcdefghij
-    }
-    catch (const std::runtime_error &e)
-    {
-        cout << e.what() << endl;
-    }
+    // const char *str2 = "abcdefghij";
+
+    // try
+    // {
+    //     cout << m_buffer.write(str2, strlen(str2)) << endl; // 10
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
+
+    // try
+    // {
+    //     mybuffer[m_buffer.read(mybuffer, 10)] = 0;
+    //     printf("%s\n", mybuffer); // abcdefghij
+    // }
+    // catch (const std::runtime_error &e)
+    // {
+    //     cout << e.what() << endl;
+    // }
 
     return 0;
 }

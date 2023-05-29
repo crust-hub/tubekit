@@ -38,16 +38,23 @@ void socket_handler::listen(const string &ip, int port)
     m_server = new server_socket(ip, port);
 }
 
-void socket_handler::attach(socket *m_socket)
+void socket_handler::attach(socket *m_socket, bool listen_read)
 {
     auto_lock lock(m_mutex);
-    m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR));
+    if (listen_read)
+    {
+        m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR));
+    }
+    else
+    {
+        m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR));
+    }
 }
 
 void socket_handler::detach(socket *m_socket)
 {
     auto_lock lock(m_mutex);
-    m_epoll->del(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR));
+    m_epoll->del(m_socket->m_sockfd, (void *)m_socket, 0);
 }
 
 void socket_handler::remove(socket *m_socket)
@@ -61,7 +68,7 @@ void socket_handler::handle(int max_connections, int wait_time)
 {
     m_epoll = new event_poller(false); // EPOLLLT mode
     m_epoll->create(max_connections);
-    m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the native socket epoll_event
+    m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     socket_pool.init(max_connections);
     // main thread loop
     while (true)
@@ -93,13 +100,13 @@ void socket_handler::handle(int max_connections, int wait_time)
                 socket_object->m_sockfd = socket_fd;
                 socket_object->set_non_blocking();
                 socket_object->set_linger(false, 0);
-                attach(socket_object);
+                attach(socket_object); // listen read
             }
             else // Data sent by the client can be read
             {
                 socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 // Different processing is triggered for different poll events
-                if (m_epoll->m_events[i].events & EPOLLIN) // There is data,to be can read
+                if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
                 {
                     detach(socketfd);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
@@ -122,12 +129,10 @@ void socket_handler::handle(int max_connections, int wait_time)
                 }
                 else if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
                 {
-                    detach(socketfd);
                     remove(socketfd);
                 }
                 else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
                 {
-                    detach(socketfd);
                     remove(socketfd);
                 }
             }

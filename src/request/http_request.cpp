@@ -3,24 +3,23 @@
 using namespace std;
 using namespace tubekit::request;
 
-http_request::http_request(int socket_fd) : m_buffer(1024), buffer_size(1024), socket_fd(socket_fd), over(false)
+http_request::http_request(int socket_fd) : m_buffer(1024),
+                                            socket_fd(socket_fd),
+                                            recv_over(false),
+                                            send_over(false),
+                                            processed(false)
 {
-    m_http_parser = new http_parser;
-    http_parser_init(m_http_parser, HTTP_REQUEST);
-    m_http_parser->data = this;
-    buffer = new char[buffer_size];
+    http_parser_init(&m_http_parser, HTTP_REQUEST);
+    m_http_parser.data = this;
 }
 
 http_request::~http_request()
 {
-    // std::cout << "session free" << std::endl;
-    delete buffer;
-    delete m_http_parser;
 }
 
 http_parser *http_request::get_parser()
 {
-    return m_http_parser;
+    return &m_http_parser;
 }
 
 void http_request::add_header(const std::string &key, const std::string &value)
@@ -58,12 +57,32 @@ ostream &operator<<(ostream &os, const http_request &m_http_request)
     return os;
 }
 
-void http_request::set_over(bool over)
+void http_request::set_recv_over(bool recv_over)
 {
-    this->over = over;
+    this->recv_over = recv_over;
 }
 
-bool http_request::get_over()
+bool http_request::get_recv_over()
 {
-    return over;
+    return recv_over;
+}
+
+void http_request::set_send_over(bool send_over)
+{
+    this->send_over = send_over;
+}
+
+bool http_request::get_send_over()
+{
+    return this->send_over;
+}
+
+void http_request::set_processed(bool processed)
+{
+    this->processed = processed;
+}
+
+bool http_request::get_processed()
+{
+    return this->processed;
 }

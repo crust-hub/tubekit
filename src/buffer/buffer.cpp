@@ -4,8 +4,9 @@ using tubekit::buffer::buffer;
 
 buffer::buffer(u_int64_t limit_max)
 {
-    m_size = limit_max < 10 ? limit_max : 10;
+    m_size = limit_max < 1024 ? limit_max : 1024;
     m_limit_max = limit_max;
+    m_buffer = nullptr;
     m_buffer = (char *)malloc(m_size);
     m_read_ptr = m_buffer;
     m_write_ptr = m_buffer;
@@ -127,4 +128,10 @@ u_int64_t buffer::after_size()
     char *last_buffer_ptr = m_buffer + m_size - 1;
     u_int64_t after_size = last_buffer_ptr - m_write_ptr + 1;
     return after_size;
+}
+
+u_int64_t buffer::can_readable_size() const
+{
+    u_int64_t size = m_write_ptr - m_read_ptr;
+    return size;
 }

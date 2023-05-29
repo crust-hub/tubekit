@@ -51,7 +51,7 @@ void event_poller::create(int max_connections)
  *               EPOLLLT表示默认epoll工作模式
  * @param op 操作选项 EPOLL_CTL_ADD，EPOLL_CTL_MOD，EPOLL_CTL_DEL
  */
-void event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
+int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
 {
     struct ::epoll_event ev;
     ev.data.ptr = ptr;
@@ -75,7 +75,7 @@ void event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
     {
         ev.events = events;
     }
-    epoll_ctl(m_epfd, op, fd, &ev);
+    return epoll_ctl(m_epfd, op, fd, &ev);
 }
 
 void event_poller::add(int fd, void *ptr, __uint32_t events)
@@ -90,7 +90,7 @@ void event_poller::mod(int fd, void *ptr, __uint32_t events)
 
 void event_poller::del(int fd, void *ptr, __uint32_t events)
 {
-    ctrl(fd, ptr, events, EPOLL_CTL_DEL);
+    int result = ctrl(fd, ptr, events, EPOLL_CTL_DEL);
 }
 
 int event_poller::wait(int millsecond)

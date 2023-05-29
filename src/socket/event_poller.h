@@ -114,7 +114,7 @@ namespace tubekit
              *                 EPOLL_CTL_DEL：从 epfd中删除一个fd；
              *
              */
-            void ctrl(int fd, void *ptr, __uint32_t events, int op);
+            int ctrl(int fd, void *ptr, __uint32_t events, int op);
 
         protected:
             /**

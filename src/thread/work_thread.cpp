@@ -48,12 +48,12 @@ void work_thread::run()
     */
     pthread_cleanup_push(cleanup, this);
 
-    while (true) //线程将会一直运行，to process task
+    while (true) // 线程将会一直运行，to process task
     {
         m_mutex.lock();
         while (m_task == nullptr)
         {
-            m_cond.wait(&m_mutex); //等待分发任务
+            m_cond.wait(&m_mutex); // 等待分发任务
         }
         m_mutex.unlock();
 
@@ -68,18 +68,18 @@ void work_thread::run()
         在执行任务期间不允许被cancel
         */
 
-        //执行任务
+        // 执行任务
         m_task->run();
-        m_task->destroy();
+        delete m_task;
         m_task = nullptr;
 
-        //将线程移到线程池空闲列表
+        // 将线程移到线程池空闲列表
         singleton_template<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
 
-        //允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
+        // 允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
         rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);
 
-        pthread_testcancel(); //设置取消点 如果线程收到了cancel则运行到取消点才可以被取消
+        pthread_testcancel(); // 设置取消点 如果线程收到了cancel则运行到取消点才可以被取消
     }
 
     pthread_cleanup_pop(1);

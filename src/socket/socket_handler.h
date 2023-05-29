@@ -21,7 +21,7 @@ namespace tubekit
              *
              * @param m_socket
              */
-            void attach(socket *m_socket);
+            void attach(socket *m_socket, bool listen_read = false);
             /**
              * @brief Remove from epoll
              *

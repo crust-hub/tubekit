@@ -77,7 +77,7 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
         settings->on_message_complete = [](http_parser *parser) -> auto
         {
             request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->set_over(true);
+            m_http_request->set_recv_over(true);
             // std::cout << "on_message_complete" << std::endl;
             return 0;
         };
@@ -100,11 +100,11 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
 
 http_task::~http_task()
 {
+    destroy();
 }
 
 void http_task::destroy()
 {
-    delete this;
 }
 
 void http_task::run()
@@ -114,7 +114,8 @@ void http_task::run()
 
     if (!socketfd->delete_ptr_hook)
     {
-        socketfd->delete_ptr_hook = [](void *ptr) -> auto
+        // execute delete_ptr_hook when socket to close
+        socketfd->delete_ptr_hook = [](void *ptr) -> void
         {
             if (ptr != nullptr)
             {
@@ -124,7 +125,7 @@ void http_task::run()
         };
     }
 
-    if (socketfd->ptr == nullptr) // binding http-parser
+    if (socketfd->ptr == nullptr) // binding httpRequest for socket
     {
         request::http_request *m_http_request = new request::http_request(socketfd->get_fd());
         socketfd->ptr = (void *)m_http_request;
@@ -133,76 +134,112 @@ void http_task::run()
     request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);
 
     // read
-    int len = 0;
-    while (1)
+    if (false == m_http_request->get_recv_over())
     {
-        len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
-        if (len == -1 && errno == EAGAIN)
+        int len = 0;
+        while (1)
         {
-            // std::cout << "EAGAIN :" << strerror(errno) << std::endl;
-            break;
-        }
-        else if (len == -1 && errno == EWOULDBLOCK)
-        {
-            // std::cout << "EWOULDBLOCK :" << strerror(errno) << std::endl;
-            break;
-        }
-        else if (len == -1 && errno == EINTR) // error interupt
-        {
-            continue;
-        }
-        else if (len == 0) // noting recv later
-        {
-            // std::cout << "len==0" << std::endl;
-            m_http_request->set_over(true);
-            break;
-        }
-        else if (len > 0)
-        {
-            int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, len);
-            if (m_http_request->get_parser()->upgrade)
+            len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
+            if (len == -1 && errno == EAGAIN)
             {
-            }
-            else if (nparsed != len) // error
-            {
+                // std::cout << "EAGAIN :" << strerror(errno) << std::endl;
                 break;
             }
-        }
-    } // while(1)
-
-    // write
-    {
-        //... read from m_http_request->m_buffer
-        //... socketfd->send data
+            else if (len == -1 && errno == EINTR) // error interupt
+            {
+                continue;
+            }
+            else if (len == 0) // noting recv later
+            {
+                // std::cout << "len==0" << std::endl;
+                m_http_request->set_recv_over(true);
+                break;
+            }
+            else if (len > 0)
+            {
+                int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, len);
+                if (m_http_request->get_parser()->upgrade)
+                {
+                }
+                else if (nparsed != len) // error
+                {
+                    break;
+                }
+            }
+        } // while(1)
     }
 
-    if (m_http_request->get_over()) // HTTP unpacking completed or error happen
+    // process http request
+    if (m_http_request->get_recv_over() && false == m_http_request->get_processed() && false == m_http_request->get_send_over())
     {
-        test(m_http_request);
+        // test(m_http_request);
         const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/json;\r\n\r\n{\"server\":\"tubekit\"}";
-        // http response....
-        int last = strlen(response);
-        int ready = 0;
-        while (last > 0)
+        m_http_request->m_buffer.write(response, strlen(response));
+        m_http_request->set_processed(true);
+    }
+
+    // write
+    if (m_http_request->get_recv_over() && false == m_http_request->get_send_over() && m_http_request->get_processed())
+    {
+        int len = 0;
+        len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1); // read data from write buffer
+        m_http_request->buffer[len] = 0;
+        bool disconnect = false;
+        bool eagain = false;
+        while (len > 0 && !disconnect && !eagain)
         {
-            int len = socketfd->send(response + ready, last);
-            if (len == -1)
+            int ready = 0;
+            int last = len;
+            while (last > 0)
             {
+                int sended = socketfd->send(m_http_request->buffer + ready, last);
+                if (sended == -1)
+                {
+                    if (errno == EINTR)
+                    {
+                        continue;
+                    }
+                    // EAGAIN
+                    if (errno == EAGAIN)
+                    {
+                        eagain = true;
+                        continue;
+                    }
+                }
+                else if (sended == 0) // disconnect or nothing to send
+                {
+                    disconnect = true;
+                    m_http_request->set_send_over(true);
+                }
+                else
+                {
+                    last -= sended;
+                    ready += sended;
+                }
             }
-            else if (len == 0)
+            if (!eagain)
             {
-            }
-            else
-            {
-                last -= len;
-                ready += len;
+                len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
             }
         }
-        handler->remove(socketfd); // detach and back to object poll
+        if (0 == m_http_request->m_buffer.can_readable_size())
+        {
+            m_http_request->set_send_over(true); // write over
+        }
+    }
+
+    // continue to epoll_wait
+    if (false == m_http_request->get_recv_over())
+    {
+        handler->attach(socketfd); // continue registe epoll wait write
+    }
+    else if (false == m_http_request->get_send_over() && m_http_request->get_processed())
+    {
+        handler->attach(socketfd, true); // wait read
     }
     else
     {
-        handler->attach(socketfd); // continue registe epoll
+        handler->remove(socketfd); // remove
     }
 }
 

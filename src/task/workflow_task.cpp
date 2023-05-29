@@ -20,11 +20,11 @@ work_task::work_task(tubekit::socket::socket *m_socket) : task(m_socket)
 
 work_task::~work_task()
 {
+    destroy();
 }
 
 void work_task::destroy()
 {
-    delete this;
 }
 
 void work_task::run()

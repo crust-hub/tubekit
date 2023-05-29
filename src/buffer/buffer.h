@@ -18,6 +18,7 @@ namespace tubekit
             time_t get_last_write_gap();
             u_int64_t read(char *dest, u_int64_t size) noexcept(false);
             u_int64_t write(const char *source, u_int64_t size) noexcept(false);
+            u_int64_t can_readable_size() const;
 
         private:
             u_int64_t m_limit_max;

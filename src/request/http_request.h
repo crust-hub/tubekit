@@ -21,8 +21,12 @@ namespace tubekit
             void add_chunk(const std::vector<char> &chunk);
             void set_url(const char *url, size_t url_len);
             http_parser *get_parser();
-            void set_over(bool over);
-            bool get_over();
+            void set_recv_over(bool recv_over);
+            bool get_recv_over();
+            void set_send_over(bool send_over);
+            bool get_send_over();
+            void set_processed(bool processed);
+            bool get_processed();
 
         public:
             std::string url;
@@ -32,14 +36,16 @@ namespace tubekit
             std::vector<std::vector<char>> chunks;
             std::vector<char> data;
             buffer::buffer m_buffer;
-            char *buffer;
-            size_t buffer_size;
+            const size_t buffer_size{1024};
+            char buffer[1024];
             std::string head_field_tmp;
             const int socket_fd;
-            bool over;
+            bool recv_over;
+            bool send_over;
+            bool processed;
 
         private:
-            http_parser *m_http_parser;
+            http_parser m_http_parser;
         };
     }
 }
