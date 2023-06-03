@@ -57,7 +57,7 @@ namespace tubekit
         public:
             result();
             ~result();
-            void set_bind(size_t index, void *buffer, unsigned long size, value_type type);
+            void set_bind(size_t index, void *buffer, unsigned long size, value_type type, bool *is_null);
             MYSQL_BIND *get_bind();
             size_t get_size();
 
@@ -90,7 +90,7 @@ namespace tubekit
         }
 
         template <size_t bind_size>
-        void result<bind_size>::set_bind(size_t index, void *buffer, unsigned long size, value_type type)
+        void result<bind_size>::set_bind(size_t index, void *buffer, unsigned long size, value_type type, bool *is_null)
         {
             switch (type)
             {
@@ -199,6 +199,7 @@ namespace tubekit
             }
             bind[index].buffer = buffer;
             bind[index].buffer_length = size;
+            bind[index].is_null = is_null;
         }
 
         /**
