@@ -136,32 +136,32 @@ void http_task::run()
     // read
     if (false == m_http_request->get_recv_over())
     {
-        int len = 0;
+        m_http_request->buffer_used_len = 0;
         while (1)
         {
-            len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
-            if (len == -1 && errno == EAGAIN)
+            m_http_request->buffer_used_len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
+            if (m_http_request->buffer_used_len == -1 && errno == EAGAIN)
             {
                 // std::cout << "EAGAIN :" << strerror(errno) << std::endl;
                 break;
             }
-            else if (len == -1 && errno == EINTR) // error interupt
+            else if (m_http_request->buffer_used_len == -1 && errno == EINTR) // error interupt
             {
                 continue;
             }
-            else if (len == 0) // noting recv later
+            else if (m_http_request->buffer_used_len == 0) // noting recv later
             {
-                // std::cout << "len==0" << std::endl;
+                // std::cout << "m_http_request->buffer_used_len==0" << std::endl;
                 m_http_request->set_recv_over(true);
                 break;
             }
-            else if (len > 0)
+            else if (m_http_request->buffer_used_len > 0)
             {
-                int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, len);
+                int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, m_http_request->buffer_used_len);
                 if (m_http_request->get_parser()->upgrade)
                 {
                 }
-                else if (nparsed != len) // error
+                else if (nparsed != m_http_request->buffer_used_len) // error
                 {
                     break;
                 }
@@ -179,17 +179,20 @@ void http_task::run()
     }
 
     // write
+    bool disconnect = false;
     if (m_http_request->get_recv_over() && false == m_http_request->get_send_over() && m_http_request->get_processed())
     {
-        int len = 0;
-        len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1); // read data from write buffer
-        m_http_request->buffer[len] = 0;
-        bool disconnect = false;
-        bool eagain = false;
-        while (len > 0 && !disconnect && !eagain)
+        if (false == m_http_request->get_write_eagain())
+        {
+            m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1); // read data from write buffer
+            m_http_request->buffer[m_http_request->buffer_used_len] = 0;
+        }
+
+        bool this_loop_eagain = false;
+        while (m_http_request->buffer_used_len > 0 && !disconnect && !this_loop_eagain)
         {
             int ready = 0;
-            int last = len;
+            int last = m_http_request->buffer_used_len;
             while (last > 0)
             {
                 int sended = socketfd->send(m_http_request->buffer + ready, last);
@@ -199,12 +202,14 @@ void http_task::run()
                     {
                         continue;
                     }
-                    // EAGAIN
-                    if (errno == EAGAIN)
+                    else if (errno == EAGAIN)
                     {
-                        eagain = true;
+                        m_http_request->set_write_eagain(true);
+                        this_loop_eagain = true;
                         continue;
                     }
+                    disconnect = true; // error
+                    break;
                 }
                 else if (sended == 0) // disconnect or nothing to send
                 {
@@ -217,12 +222,16 @@ void http_task::run()
                     ready += sended;
                 }
             }
-            if (!eagain)
+            if (!this_loop_eagain)
             {
-                len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
+                m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
+            }
+            else
+            {
+                break;
             }
         }
-        if (0 == m_http_request->m_buffer.can_readable_size())
+        if (disconnect || (0 == m_http_request->m_buffer.can_readable_size() && !m_http_request->get_write_eagain()))
         {
             m_http_request->set_send_over(true); // write over
         }

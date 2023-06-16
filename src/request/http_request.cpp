@@ -7,7 +7,9 @@ http_request::http_request(int socket_fd) : m_buffer(1024),
                                             socket_fd(socket_fd),
                                             recv_over(false),
                                             send_over(false),
-                                            processed(false)
+                                            processed(false),
+                                            write_eagain(false),
+                                            buffer_used_len(0)
 {
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
@@ -85,4 +87,14 @@ void http_request::set_processed(bool processed)
 bool http_request::get_processed()
 {
     return this->processed;
+}
+
+void http_request::set_write_eagain(bool write_eagain)
+{
+    this->write_eagain = write_eagain;
+}
+
+bool http_request::get_write_eagain()
+{
+    return write_eagain;
 }

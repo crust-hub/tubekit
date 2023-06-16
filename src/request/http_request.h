@@ -27,6 +27,8 @@ namespace tubekit
             bool get_send_over();
             void set_processed(bool processed);
             bool get_processed();
+            void set_write_eagain(bool write_eagain);
+            bool get_write_eagain();
 
         public:
             std::string url;
@@ -36,16 +38,18 @@ namespace tubekit
             std::vector<std::vector<char>> chunks;
             std::vector<char> data;
             buffer::buffer m_buffer;
-            const size_t buffer_size{1024};
-            char buffer[1024];
+            const size_t buffer_size{2048};
+            char buffer[2048];
+            int buffer_used_len; // effective content length in buffer
             std::string head_field_tmp;
             const int socket_fd;
-            bool recv_over;
-            bool send_over;
-            bool processed;
 
         private:
             http_parser m_http_parser;
+            bool recv_over;
+            bool send_over;
+            bool processed;
+            bool write_eagain; // Used to mark whether EAGAIN occurred during writing. If so, when executing the code block for the next loop, the content in the buffer should be sent first before starting take from from m_buffer
         };
     }
 }
