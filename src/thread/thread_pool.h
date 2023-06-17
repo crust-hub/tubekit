@@ -1,6 +1,6 @@
 #pragma once
 
-#include <set>
+#include <list>
 
 #include "thread/mutex.h"
 #include "thread/condition.h"
@@ -63,9 +63,8 @@ namespace tubekit
              */
             size_t m_threads;
 
-            // using set,prevent having same thread in same list
-            std::set<THREAD *> m_list_idle;
-            std::set<THREAD *> m_list_busy;
+            std::list<THREAD *> m_list_idle;
+            std::list<THREAD *> m_list_busy;
 
             mutex m_mutex_idle;
             mutex m_mutex_busy;
@@ -93,7 +92,7 @@ namespace tubekit
             {
                 THREAD *new_thread = new THREAD();
                 singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "create thread %x", new_thread);
-                m_list_idle.insert(new_thread);
+                m_list_idle.push_back(new_thread);
                 new_thread->start();
             }
         }
@@ -120,12 +119,12 @@ namespace tubekit
         void thread_pool<THREAD, TASK>::move_to_idle_list(THREAD *m_thread)
         {
             m_mutex_idle.lock();
-            m_list_idle.insert(m_thread);
+            m_list_idle.push_back(m_thread);
             m_cond_idle.signal();
             m_mutex_idle.unlock();
 
             m_mutex_busy.lock();
-            auto res = m_list_busy.find(m_thread);
+            auto res = std::find(m_list_busy.begin(), m_list_busy.end(), m_thread);
             if (res != m_list_busy.end())
             {
                 m_list_busy.erase(res);
@@ -143,11 +142,11 @@ namespace tubekit
             {
                 m_cond_busy.wait(&m_mutex_busy);
             }
-            m_list_busy.insert(m_thread);
+            m_list_busy.insert(m_list_busy.end(), m_thread);
             m_mutex_busy.unlock();
 
             m_mutex_idle.lock();
-            auto res = m_list_idle.find(m_thread);
+            auto res = std::find(m_list_idle.begin(), m_list_idle.end(), m_thread);
             if (res != m_list_idle.end())
             {
                 m_list_idle.erase(res);
