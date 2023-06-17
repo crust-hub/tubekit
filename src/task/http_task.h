@@ -21,7 +21,6 @@ namespace tubekit
              *
              */
             void destroy() override;
-            static void test(const request::http_request *m_http_request);
             static http_parser_settings *settings;
         };
     }

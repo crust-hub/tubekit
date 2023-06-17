@@ -62,8 +62,6 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
 
         settings->on_headers_complete = [](http_parser *parser) -> auto
         {
-            // session::http_session *m_session = static_cast<session::http_session *>(parser->data);
-            // std::cout << "on_headers_complete" << std::endl;
             return 0;
         };
 
@@ -77,14 +75,12 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
         settings->on_message_complete = [](http_parser *parser) -> auto
         {
             request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->set_recv_over(true);
-            // std::cout << "on_message_complete" << std::endl;
+            m_http_request->set_recv_end(true);
             return 0;
         };
 
         settings->on_chunk_header = [](http_parser *parser) -> auto
         {
-            // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
             std::cout << "on_chunk_header" << std::endl;
             return 0;
         };
@@ -133,26 +129,26 @@ void http_task::run()
 
     request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);
 
-    // read
-    if (false == m_http_request->get_recv_over())
+    // read from socket
+    if (!m_http_request->get_recv_end())
     {
         m_http_request->buffer_used_len = 0;
-        while (1)
+        while (true)
         {
             m_http_request->buffer_used_len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
             if (m_http_request->buffer_used_len == -1 && errno == EAGAIN)
             {
-                // std::cout << "EAGAIN :" << strerror(errno) << std::endl;
+                m_http_request->buffer_used_len = 0;
                 break;
             }
             else if (m_http_request->buffer_used_len == -1 && errno == EINTR) // error interupt
             {
+                m_http_request->buffer_used_len = 0;
                 continue;
             }
             else if (m_http_request->buffer_used_len == 0) // noting recv later
             {
-                // std::cout << "m_http_request->buffer_used_len==0" << std::endl;
-                m_http_request->set_recv_over(true);
+                m_http_request->buffer_used_len = 0;
                 break;
             }
             else if (m_http_request->buffer_used_len > 0)
@@ -163,111 +159,113 @@ void http_task::run()
                 }
                 else if (nparsed != m_http_request->buffer_used_len) // error
                 {
+                    m_http_request->buffer_used_len = 0;
                     break;
                 }
             }
+            m_http_request->buffer_used_len = 0;
         } // while(1)
     }
 
     // process http request
-    if (m_http_request->get_recv_over() && false == m_http_request->get_processed() && false == m_http_request->get_send_over())
+    if (m_http_request->get_recv_end() && !m_http_request->get_process_end())
     {
-        // test(m_http_request);
-        const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/json;\r\n\r\n{\"server\":\"tubekit\"}";
-        m_http_request->m_buffer.write(response, strlen(response));
-        m_http_request->set_processed(true);
+        m_http_request->set_process_end(true);
+        // load callback
+        m_http_request->process_callback = [](http_request &request) -> void
+        {
+            const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/json;\r\n\r\n{\"server\":\"tubekit\"}";
+            request.m_buffer.write(response, strlen(response));
+            // Write when the contents of the buffer have been sent write_end_callback will be executed,
+            // and the response must be set response_end to true, then write after write_end_callback will be continuously recalled
+            request.write_end_callback = [](http_request &m_request) -> void
+            {
+                // std::cout << "m_buffer send over" << std::endl;
+                m_request.set_response_end(true);
+            };
+            request.destory_callback = [](http_request &m_request) -> void
+            {
+                // std::cout << "http_request destory" << std::endl;
+            };
+        };
+        if (m_http_request->process_callback)
+        {
+            m_http_request->process_callback(*m_http_request);
+        }
+        else
+        {
+            m_http_request->set_everything_end(true);
+        }
     }
 
     // write
-    bool disconnect = false;
-    if (m_http_request->get_recv_over() && false == m_http_request->get_send_over() && m_http_request->get_processed())
+    if (m_http_request->get_process_end() && !m_http_request->get_everything_end())
     {
-        if (false == m_http_request->get_write_eagain())
+        while (m_http_request->buffer_used_len > m_http_request->buffer_start_use)
         {
-            m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1); // read data from write buffer
-            m_http_request->buffer[m_http_request->buffer_used_len] = 0;
-        }
-
-        bool this_loop_eagain = false;
-        while (m_http_request->buffer_used_len > 0 && !disconnect && !this_loop_eagain)
-        {
-            int ready = 0;
-            int last = m_http_request->buffer_used_len;
-            while (last > 0)
+            int sended = socketfd->send(m_http_request->buffer + m_http_request->buffer_start_use, m_http_request->buffer_used_len - m_http_request->buffer_start_use);
+            if (0 > sended)
             {
-                int sended = socketfd->send(m_http_request->buffer + ready, last);
-                if (sended == -1)
+                if (errno == EINTR)
                 {
-                    if (errno == EINTR)
-                    {
-                        continue;
-                    }
-                    else if (errno == EAGAIN)
-                    {
-                        m_http_request->set_write_eagain(true);
-                        this_loop_eagain = true;
-                        continue;
-                    }
-                    disconnect = true; // error
+                    continue;
+                }
+                else if (errno == EAGAIN)
+                {
                     break;
                 }
-                else if (sended == 0) // disconnect or nothing to send
+                else // error
                 {
-                    disconnect = true;
-                    m_http_request->set_send_over(true);
-                }
-                else
-                {
-                    last -= sended;
-                    ready += sended;
+                    m_http_request->set_everything_end(true);
+                    break;
                 }
             }
-            if (!this_loop_eagain)
+            else if (0 == sended) // disconnect or nothing to send
             {
-                m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
+                m_http_request->set_everything_end(true);
+                break;
+            }
+            else // send success
+            {
+                m_http_request->buffer_start_use += sended;
+            }
+        }
+        //  Notify the user that the content sent last time has been sent to the client
+        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 == m_http_request->m_buffer.can_readable_size() && !m_http_request->get_response_end())
+        {
+            if (m_http_request->write_end_callback)
+            {
+                m_http_request->write_end_callback(*m_http_request);
             }
             else
             {
-                break;
+                m_http_request->set_everything_end(true);
             }
         }
-        if (disconnect || (0 == m_http_request->m_buffer.can_readable_size() && !m_http_request->get_write_eagain()))
+        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 != m_http_request->m_buffer.can_readable_size())
         {
-            m_http_request->set_send_over(true); // write over
+            // read from m_buffer to buffer for next write
+            m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
+            m_http_request->buffer[m_http_request->buffer_used_len] = 0;
+            m_http_request->buffer_start_use = 0;
+        }
+        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 == m_http_request->m_buffer.can_readable_size() && m_http_request->get_response_end())
+        {
+            m_http_request->set_everything_end(true);
         }
     }
 
     // continue to epoll_wait
-    if (false == m_http_request->get_recv_over())
+    if (!m_http_request->get_recv_end()) // next loop for reading
     {
-        handler->attach(socketfd); // continue registe epoll wait write
+        handler->attach(socketfd); // continue registe epoll wait read
     }
-    else if (false == m_http_request->get_send_over() && m_http_request->get_processed())
+    else if (!m_http_request->get_everything_end())
     {
-        handler->attach(socketfd, true); // wait read
+        handler->attach(socketfd, true); // wait write
     }
     else
     {
         handler->remove(socketfd); // remove
     }
-}
-
-void http_task::test(const request::http_request *m_http_request)
-{
-    cout << "http_task::test start" << endl;
-    cout << m_http_request->method << " " << m_http_request->url << endl;
-    // headers
-    for_each(m_http_request->headers.begin(), m_http_request->headers.end(),
-             [](const pair<string, vector<string>> &m_pair) -> void
-             {
-                 cout << m_pair.first << ":";
-                 for (const string &value : m_pair.second)
-                 {
-                     cout << value;
-                 }
-                 cout << endl;
-             });
-    // body
-    cout << "body size : " << m_http_request->body.size() << endl;
-    cout << "http_task::test end" << endl;
 }
