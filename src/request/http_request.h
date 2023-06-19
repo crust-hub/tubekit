@@ -31,7 +31,7 @@ namespace tubekit
             bool set_everything_end(bool everything_end);
             bool get_everything_end();
 
-        public: 
+        public:
             std::string url;
             std::string method;
             std::map<std::string, std::vector<std::string>> headers;
@@ -47,7 +47,8 @@ namespace tubekit
             const int socket_fd;
             std::function<void(http_request &request)> process_callback;
             std::function<void(http_request &request)> write_end_callback;
-            std::function<void(http_request&request)> destory_callback;
+            std::function<void(http_request &request)> destory_callback;
+            void *ptr{nullptr};
 
         private:
             http_parser m_http_parser;
