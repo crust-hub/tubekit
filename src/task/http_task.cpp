@@ -148,11 +148,6 @@ void http_task::run()
                 m_http_request->buffer_used_len = 0;
                 continue;
             }
-            else if (m_http_request->buffer_used_len == 0) // noting recv later
-            {
-                m_http_request->buffer_used_len = 0;
-                break;
-            }
             else if (m_http_request->buffer_used_len > 0)
             {
                 int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, m_http_request->buffer_used_len);
@@ -164,6 +159,15 @@ void http_task::run()
                     m_http_request->buffer_used_len = 0;
                     break;
                 }
+            }
+            else
+            {
+                // 1. m_http_request->buffer_used_len == 0 client closed
+                m_http_request->set_recv_end(true);
+                m_http_request->set_process_end(true);
+                m_http_request->set_response_end(true);
+                m_http_request->set_everything_end(true);
+                break;
             }
             m_http_request->buffer_used_len = 0;
         } // while(1)
@@ -202,6 +206,8 @@ void http_task::run()
                 }
                 else // error
                 {
+                    // 1.errno==ECONNRESET、EPIPE etc.
+                    m_http_request->set_response_end(true);
                     m_http_request->set_everything_end(true);
                     break;
                 }
@@ -245,13 +251,12 @@ void http_task::run()
     if (!m_http_request->get_recv_end()) // next loop for reading
     {
         handler->attach(socketfd); // continue registe epoll wait read
+        return;
     }
-    else if (!m_http_request->get_everything_end())
+    if (!m_http_request->get_everything_end())
     {
         handler->attach(socketfd, true); // wait write
+        return;
     }
-    else
-    {
-        handler->remove(socketfd); // remove
-    }
+    handler->remove(socketfd); // remove
 }

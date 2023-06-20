@@ -105,9 +105,20 @@ void socket_handler::handle(int max_connections, int wait_time)
             else // Data sent by the client can be read
             {
                 socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
-                // Different processing is triggered for different poll events
-                if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
+
+                if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
                 {
+                    remove(socketfd);
+                }
+                else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
+                {
+                    remove(socketfd);
+                }
+                // Different processing is triggered for different poll events
+                else if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
+                {
+                    // ��������Ƿ�ر�
+                    
                     detach(socketfd);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
                     auto task_type = singleton_template<server::server>::instance()->get_task_type();
@@ -127,11 +138,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                         singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
                     }
                 }
-                else if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
-                {
-                    remove(socketfd);
-                }
-                else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
+                else
                 {
                     remove(socketfd);
                 }
