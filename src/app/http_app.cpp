@@ -1,5 +1,7 @@
 #include "app/http_app.h"
+#include <string>
 
+using std::string;
 using tubekit::app::http_app;
 using tubekit::request::http_request;
 
@@ -8,9 +10,16 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
     // load callback
     m_http_request.process_callback = [](http_request &request) -> void
     {
-        constexpr const char *path = "../src/app/http_app.cpp";
+        const string &url = request.url;
+        auto find_res = url.find("..");
+        if (find_res != std::string::npos)
+        {
+            request.set_response_end(true);
+            return;
+        }
+        const string path = std::string("../src") + url;
         request.ptr = nullptr;
-        request.ptr = fopen(path, "r");
+        request.ptr = fopen(path.c_str(), "r");
         if (request.ptr == nullptr)
         {
             request.set_response_end(true);
