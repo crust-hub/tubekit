@@ -46,14 +46,14 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
     };
     m_http_request.process_callback = [](http_request &request) -> void
     {
-        const string url = request.url;
+        string url = request.url;
         auto find_res = url.find("..");
         if (std::string::npos != find_res)
         {
             request.set_response_end(true);
             return;
         }
-        const string prefix = "/mnt/c/Users/gaowanlu/Desktop/MyProject/note";
+        const string prefix = "/mes/tubekit/src";
         const string path = prefix + url;
         auto type = fs::get_status(path);
         if (type == fs::status::dir)
@@ -66,9 +66,13 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
             vector<string> dir_contents;
             if (0 == fs::look_dir(path, dir_contents))
             {
+                if(url != "/")
+                {
+                    url+="/";
+                }
                 for (size_t i = 0; i < dir_contents.size(); ++i)
                 {
-                    a_tags.push_back(html_loader::a_tag(string("./") + dir_contents[i], string("./") + dir_contents[i]));
+                    a_tags.push_back(html_loader::a_tag(url+dir_contents[i],url+dir_contents[i]));
                 }
             }
             string body;

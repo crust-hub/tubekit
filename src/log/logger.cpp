@@ -84,6 +84,7 @@ void logger::fatal(const char *file, int line, const char *format, ...)
 
 void logger::log(flag f, const char *file, int line, const char *format, va_list arg_ptr)
 {
+    return;
     if (m_fp == nullptr)
     {
         printf("open log file failed: m_fp==nullptr\n");
