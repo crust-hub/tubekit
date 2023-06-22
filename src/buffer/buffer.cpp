@@ -1,4 +1,5 @@
 #include "buffer/buffer.h"
+#include <iostream>
 
 using tubekit::buffer::buffer;
 
@@ -46,7 +47,8 @@ u_int64_t buffer::read(char *dest, u_int64_t size)
     while (size > 0 && m_read_ptr != m_write_ptr)
     {
         dest[readed_size] = *m_read_ptr;
-        readed_size++, size--;
+        readed_size++;
+        size--;
         m_read_ptr++;
     }
     // update m_last_read
@@ -69,7 +71,6 @@ u_int64_t buffer::write(const char *source, u_int64_t size)
         if (check_and_write(source, size))
         {
             m_last_write = time(nullptr);
-            return size;
         }
         else
         {
@@ -85,12 +86,14 @@ u_int64_t buffer::write(const char *source, u_int64_t size)
                 m_buffer = new_buffer;
                 m_size = m_size + should_add_size;
             }
+            else
+            {
+                throw std::runtime_error("realloc error");
+            }
             if (check_and_write(source, size))
             {
                 m_last_write = time(nullptr);
-                return size;
             }
-            throw std::runtime_error("realloc error");
         }
     }
     return size;
@@ -125,7 +128,7 @@ void buffer::move_to_before()
 
 u_int64_t buffer::after_size()
 {
-    char *last_buffer_ptr = m_buffer + m_size - 1;
+    char *last_buffer_ptr = m_buffer + m_size;
     u_int64_t after_size = last_buffer_ptr - m_write_ptr + 1;
     return after_size;
 }
@@ -134,4 +137,14 @@ u_int64_t buffer::can_readable_size() const
 {
     u_int64_t size = m_write_ptr - m_read_ptr;
     return size;
+}
+
+void buffer::set_limit_max(u_int64_t limit_max)
+{
+    m_limit_max = limit_max;
+}
+
+u_int64_t buffer::get_limit_max()
+{
+    return m_limit_max;
 }

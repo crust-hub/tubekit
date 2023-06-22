@@ -126,7 +126,7 @@ void http_task::run()
     if (socketfd->ptr == nullptr) // binding httpRequest for socket
     {
         request::http_request *m_http_request = new request::http_request(socketfd->get_fd());
-        socketfd->ptr = (void *)m_http_request;
+        socketfd->ptr = m_http_request;
     }
 
     request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);

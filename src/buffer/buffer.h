@@ -19,6 +19,8 @@ namespace tubekit
             u_int64_t read(char *dest, u_int64_t size) noexcept(false);
             u_int64_t write(const char *source, u_int64_t size) noexcept(false);
             u_int64_t can_readable_size() const;
+            void set_limit_max(u_int64_t limit_max);
+            u_int64_t get_limit_max();
 
         private:
             u_int64_t m_limit_max;

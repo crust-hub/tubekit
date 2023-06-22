@@ -105,7 +105,10 @@ namespace tubekit
             {
                 m_cond_idle.wait(&m_mutex_idle);
             }
-            return *m_list_idle.begin();
+            auto begin = m_list_idle.begin();
+            THREAD *ithread = *begin;
+            m_list_idle.erase(begin);
+            return ithread;
         }
 
         /**
@@ -122,9 +125,16 @@ namespace tubekit
             m_list_idle.push_back(m_thread);
             m_cond_idle.signal();
             m_mutex_idle.unlock();
-
             m_mutex_busy.lock();
-            auto res = std::find(m_list_busy.begin(), m_list_busy.end(), m_thread);
+            auto res = m_list_busy.begin();
+            while (res != m_list_busy.end())
+            {
+                if (*res == m_thread)
+                {
+                    break;
+                }
+                res++;
+            }
             if (res != m_list_busy.end())
             {
                 m_list_busy.erase(res);
@@ -142,11 +152,18 @@ namespace tubekit
             {
                 m_cond_busy.wait(&m_mutex_busy);
             }
-            m_list_busy.insert(m_list_busy.end(), m_thread);
+            m_list_busy.push_back(m_thread);
             m_mutex_busy.unlock();
-
             m_mutex_idle.lock();
-            auto res = std::find(m_list_idle.begin(), m_list_idle.end(), m_thread);
+            auto res = m_list_idle.begin();
+            while (res != m_list_idle.end())
+            {
+                if (*res == m_thread)
+                {
+                    break;
+                }
+                res++;
+            }
             if (res != m_list_idle.end())
             {
                 m_list_idle.erase(res);
