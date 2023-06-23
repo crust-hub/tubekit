@@ -83,7 +83,12 @@ u_int64_t buffer::write(const char *source, u_int64_t size)
             char *new_buffer = (char *)realloc(m_buffer, m_size + should_add_size);
             if (new_buffer)
             {
+                // Adjust read and write pointers
+                size_t read_ptr_gap = m_read_ptr - m_buffer;
+                size_t write_ptr_gap = m_write_ptr - m_buffer;
                 m_buffer = new_buffer;
+                m_read_ptr = m_buffer + read_ptr_gap;
+                m_write_ptr = m_buffer + write_ptr_gap;
                 m_size = m_size + should_add_size;
             }
             else

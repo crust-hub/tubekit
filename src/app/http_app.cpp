@@ -53,7 +53,7 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
             request.set_response_end(true);
             return;
         }
-        const string prefix = "/mes/tubekit/src";
+        const string prefix = "/mnt/c/Users/gaowanlu/Desktop/MyProject/tubekit";
         const string path = prefix + url;
         auto type = fs::get_status(path);
         if (type == fs::status::dir)
@@ -66,13 +66,13 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
             vector<string> dir_contents;
             if (0 == fs::look_dir(path, dir_contents))
             {
-                if(url != "/")
+                if (url != "/")
                 {
-                    url+="/";
+                    url += "/";
                 }
                 for (size_t i = 0; i < dir_contents.size(); ++i)
                 {
-                    a_tags.push_back(html_loader::a_tag(url+dir_contents[i],url+dir_contents[i]));
+                    a_tags.push_back(html_loader::a_tag(url + dir_contents[i], url + dir_contents[i]));
                 }
             }
             string body;
@@ -81,7 +81,7 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
                 body += a_tag;
             }
             string html = html_loader::load(body);
-            int size = request.m_buffer.write(html.c_str(), html.size());
+            request.m_buffer.write(html.c_str(), html.size());
             request.set_response_end(true);
             return;
         }

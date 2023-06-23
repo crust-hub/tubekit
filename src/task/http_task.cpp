@@ -177,7 +177,8 @@ void http_task::run()
     if (m_http_request->get_recv_end() && !m_http_request->get_process_end())
     {
         m_http_request->set_process_end(true);
-        app::http_app::process_request(*m_http_request); // app loader,loading process_callback for m_http_request
+        // app loader,loading process_callback for m_http_request
+        app::http_app::process_request(*m_http_request);
         if (m_http_request->process_callback)
         {
             m_http_request->process_callback(*m_http_request);
