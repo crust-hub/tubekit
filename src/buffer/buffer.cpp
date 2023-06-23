@@ -129,7 +129,7 @@ void buffer::move_to_before()
 u_int64_t buffer::after_size()
 {
     char *last_buffer_ptr = m_buffer + m_size;
-    u_int64_t after_size = last_buffer_ptr - m_write_ptr + 1;
+    u_int64_t after_size = last_buffer_ptr - m_write_ptr;
     return after_size;
 }
 

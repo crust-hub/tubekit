@@ -105,7 +105,6 @@ void socket_handler::handle(int max_connections, int wait_time)
             else // Data sent by the client can be read
             {
                 socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
-
                 if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
                 {
                     remove(socketfd);
@@ -117,8 +116,6 @@ void socket_handler::handle(int max_connections, int wait_time)
                 // Different processing is triggered for different poll events
                 else if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
                 {
-                    // ��������Ƿ�ر�
-                    
                     detach(socketfd);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
                     auto task_type = singleton_template<server::server>::instance()->get_task_type();
