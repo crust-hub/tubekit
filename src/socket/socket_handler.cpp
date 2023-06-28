@@ -1,10 +1,11 @@
+#include <tubekit-log/logger.h>
+
 #include "socket/socket_handler.h"
 #include "socket/server_socket.h"
 #include "thread/auto_lock.h"
 #include "utility/singleton_template.h"
 #include "thread/task_dispatcher.h"
 #include "task/task_factory.h"
-#include "log/logger.h"
 #include "server/server.h"
 
 using namespace std;
@@ -64,6 +65,10 @@ void socket_handler::remove(socket *m_socket)
     socket_pool.release(m_socket); // return back to socket object poll
 }
 
+void socket_handler::on_tick()
+{
+}
+
 void socket_handler::handle(int max_connections, int wait_time)
 {
     m_epoll = new event_poller(false); // EPOLLLT mode
@@ -74,6 +79,7 @@ void socket_handler::handle(int max_connections, int wait_time)
     while (true)
     {
         int num = m_epoll->wait(wait_time);
+        on_tick();
         if (num == 0)
         {
             continue; // timeout
@@ -104,26 +110,26 @@ void socket_handler::handle(int max_connections, int wait_time)
             }
             else // Data sent by the client can be read
             {
-                socket *socketfd = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
+                socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
                 {
-                    remove(socketfd);
+                    remove(socket_ptr);
                 }
                 else if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
                 {
-                    remove(socketfd);
+                    remove(socket_ptr);
                 }
                 // Different processing is triggered for different poll events
                 else if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
                 {
-                    detach(socketfd);
+                    detach(socket_ptr);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
                     auto task_type = singleton_template<server::server>::instance()->get_task_type();
                     thread::task *new_task = nullptr;
                     if (task_type == server::server::WORKFLOW_TASK)
-                        new_task = task_factory::create(socketfd, task_factory::WORKFLOW_TASK);
+                        new_task = task_factory::create(socket_ptr, task_factory::WORKFLOW_TASK);
                     else if (task_type == server::server::HTTP_TASK)
-                        new_task = task_factory::create(socketfd, task_factory::HTTP_TASK);
+                        new_task = task_factory::create(socket_ptr, task_factory::HTTP_TASK);
                     singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
                     if (new_task == nullptr)
                     {
@@ -137,7 +143,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                 }
                 else
                 {
-                    remove(socketfd);
+                    remove(socket_ptr);
                 }
             }
         }

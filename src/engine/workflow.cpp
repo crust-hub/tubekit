@@ -1,7 +1,7 @@
 #include <string>
+#include <tubekit-log/logger.h>
 #include "engine/workflow.h"
 #include "utility/singleton_template.h"
-#include "log/logger.h"
 #include "engine/plugin.h"
 #include "engine/plugin_loader.h"
 #include "engine/context.h"

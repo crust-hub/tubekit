@@ -1,6 +1,0 @@
-# ini parser
-
-## example
-
-```cpp
-```

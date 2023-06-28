@@ -1,4 +1,4 @@
-#include "buffer/buffer.h"
+#include "buffer.h"
 #include <iostream>
 
 using tubekit::buffer::buffer;

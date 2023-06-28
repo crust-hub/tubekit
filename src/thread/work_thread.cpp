@@ -1,6 +1,7 @@
+#include <tubekit-log/logger.h>
+
 #include "thread/work_thread.h"
 #include "utility/singleton_template.h"
-#include "log/logger.h"
 #include "thread/thread_pool.h"
 #include "thread/task.h"
 

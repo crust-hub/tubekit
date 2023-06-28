@@ -1,10 +1,10 @@
 #pragma once
 
 #include <list>
+#include <tubekit-log/logger.h>
 
 #include "thread/task.h"
 #include "thread/thread.h"
-#include "log/logger.h"
 #include "utility/singleton_template.h"
 #include "thread/work_thread.h"
 #include "thread/thread_pool.h"

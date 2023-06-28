@@ -36,6 +36,9 @@ namespace tubekit
             void remove(socket *m_socket);
             void handle(int max_connections, int wait_time);
 
+        public:
+            void on_tick();
+
         private:
             event_poller *m_epoll;
             socket *m_server;

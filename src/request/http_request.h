@@ -6,7 +6,7 @@
 #include <string>
 #include <functional>
 #include <http-parser/http_parser.h>
-#include "buffer/buffer.h"
+#include <tubekit-buffer/buffer.h>
 
 namespace tubekit
 {

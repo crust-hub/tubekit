@@ -1,6 +1,0 @@
-# log
-
-## example
-
-```cpp
-```

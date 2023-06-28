@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 #include <map>
+#include <tubekit-xml/element.h>
+#include <tubekit-xml/document.h>
 
 #include "engine/work.h"
-#include "xml/element.h"
-#include "xml/document.h"
 
 namespace tubekit
 {

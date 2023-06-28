@@ -7,10 +7,10 @@
 #include <iostream>
 #include <filesystem>
 #include <fcntl.h>
+#include <tubekit-inifile/inifile.h>
+#include <tubekit-log/logger.h>
 
 #include "system/system.h"
-#include "log/logger.h"
-#include "inifile/inifile.h"
 #include "utility/singleton_template.h"
 #include "engine/workflow.h"
 #include "server/server.h"

@@ -3,13 +3,8 @@
 
 #include "utility/singleton_template.h"
 #include "system/system.h"
-#include "inifile/inifile.h"
-#include "log/logger.h"
 
-using namespace std;
-using namespace tubekit::inifile;
 using namespace tubekit::utility;
-using namespace tubekit::log;
 
 int main(int argc, char **argv)
 {
