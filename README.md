@@ -9,20 +9,20 @@ prepare
 ```bash
 $ apt install g++ cmake make
 $ git clone https://github.com/crust-hub/tubekit.git
-$ cmake .
-$ make
 ```
 
 Run
 
 ```bash
-sudo bash ./run.sh
+chmod +x ./run.sh
+./run.sh
 ```
 
 Stop
 
 ```bash
-sudo bash ./kill.sh
+chmod +x ./kill.sh
+./kill.sh
 ```
 
 ## Http App
