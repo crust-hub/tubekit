@@ -8,7 +8,7 @@
 
 #include "task/http_task.h"
 #include "socket/socket_handler.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "request/http_request.h"
 #include "app/http_app.h"
 
@@ -20,7 +20,9 @@ using namespace tubekit::app;
 
 http_parser_settings *http_task::settings = nullptr;
 
-http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket)
+http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
+                                                          reason_recv(false),
+                                                          reason_send(false)
 {
     if (settings == nullptr)
     {
@@ -107,15 +109,15 @@ void http_task::destroy()
 
 void http_task::run()
 {
-    socket_handler *handler = singleton_template<socket_handler>::instance();
+    socket_handler *handler = singleton<socket_handler>::instance();
     socket::socket *socketfd = static_cast<socket::socket *>(m_data);
 
     if (!socketfd->delete_ptr_hook)
     {
         // execute delete_ptr_hook when socket to close
-        socketfd->delete_ptr_hook = [](void *ptr) -> void
+        socketfd->delete_ptr_hook = [](void *ptr)
         {
-            if (ptr != nullptr)
+            if (ptr)
             {
                 request::http_request *m_http_request = (request::http_request *)ptr;
                 delete m_http_request;
@@ -123,7 +125,7 @@ void http_task::run()
         };
     }
 
-    if (socketfd->ptr == nullptr) // binding httpRequest for socket
+    if (nullptr == socketfd->ptr) // binding http_request for socket
     {
         request::http_request *m_http_request = new request::http_request(socketfd->get_fd());
         socketfd->ptr = m_http_request;
@@ -132,7 +134,7 @@ void http_task::run()
     request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);
 
     // read from socket
-    if (!m_http_request->get_recv_end())
+    if (reason_recv && !m_http_request->get_recv_end())
     {
         m_http_request->buffer_used_len = 0;
         while (true)
@@ -190,7 +192,7 @@ void http_task::run()
     }
 
     // write
-    if (m_http_request->get_process_end() && !m_http_request->get_everything_end())
+    if (reason_send && m_http_request->get_process_end() && !m_http_request->get_everything_end())
     {
         while (m_http_request->buffer_used_len > m_http_request->buffer_start_use)
         {

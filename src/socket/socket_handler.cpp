@@ -3,10 +3,11 @@
 #include "socket/socket_handler.h"
 #include "socket/server_socket.h"
 #include "thread/auto_lock.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "thread/task_dispatcher.h"
 #include "task/task_factory.h"
 #include "server/server.h"
+#include "app/tick.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -39,10 +40,10 @@ void socket_handler::listen(const string &ip, int port)
     m_server = new server_socket(ip, port);
 }
 
-void socket_handler::attach(socket *m_socket, bool listen_read)
+void socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
 {
     auto_lock lock(m_mutex);
-    if (listen_read)
+    if (listen_send)
     {
         m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR));
     }
@@ -67,6 +68,7 @@ void socket_handler::remove(socket *m_socket)
 
 void socket_handler::on_tick()
 {
+    singleton<app::tick>::instance()->run();
 }
 
 void socket_handler::handle(int max_connections, int wait_time)
@@ -124,21 +126,42 @@ void socket_handler::handle(int max_connections, int wait_time)
                 {
                     detach(socket_ptr);
                     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
-                    auto task_type = singleton_template<server::server>::instance()->get_task_type();
+                    auto task_type = singleton<server::server>::instance()->get_task_type();
                     thread::task *new_task = nullptr;
-                    if (task_type == server::server::WORKFLOW_TASK)
-                        new_task = task_factory::create(socket_ptr, task_factory::WORKFLOW_TASK);
-                    else if (task_type == server::server::HTTP_TASK)
+
+                    switch (task_type)
+                    {
+                    case server::server::STREAM_TASK:
+                        new_task = task_factory::create(socket_ptr, task_factory::STREAM_TASK);
+                        if (new_task)
+                        {
+                            auto stream_task_ptr = (stream_task *)new_task;
+                            stream_task_ptr->reason_recv = (m_epoll->m_events[i].events & EPOLLIN);
+                            stream_task_ptr->reason_send = (m_epoll->m_events[i].events & EPOLLOUT);
+                        }
+                        break;
+                    case server::server::HTTP_TASK:
                         new_task = task_factory::create(socket_ptr, task_factory::HTTP_TASK);
-                    singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "new work task submit to task_dispatcher");
+                        if (new_task)
+                        {
+                            auto http_task_ptr = (http_task *)new_task;
+                            http_task_ptr->reason_recv = (m_epoll->m_events[i].events & EPOLLIN);
+                            http_task_ptr->reason_send = (m_epoll->m_events[i].events & EPOLLOUT);
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+
                     if (new_task == nullptr)
                     {
-                        singleton_template<logger>::instance()->error(__FILE__, __LINE__, "new_task is nullptr");
+                        remove(socket_ptr);
+                        singleton<logger>::instance()->error(__FILE__, __LINE__, "new_task is nullptr");
                     }
                     else
                     {
                         // Submit the task to the queue of task_dispatcher
-                        singleton_template<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
+                        singleton<task_dispatcher<work_thread, thread::task>>::instance()->assign(new_task);
                     }
                 }
                 else

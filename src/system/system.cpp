@@ -11,7 +11,7 @@
 #include <tubekit-log/logger.h>
 
 #include "system/system.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "engine/workflow.h"
 #include "server/server.h"
 
@@ -25,7 +25,7 @@ using namespace std;
 void system::init()
 {
     // init inifile
-    inifile::inifile *ini = singleton_template<inifile::inifile>::instance();
+    inifile::inifile *ini = singleton<inifile::inifile>::instance();
     ini->load(get_root_path() + "/config/main.ini");
     const string &ip = (*ini)["server"]["ip"];
     const int port = (*ini)["server"]["port"];
@@ -51,15 +51,15 @@ void system::init()
         closedir(dp);
 
     // init logger
-    singleton_template<logger>::instance()->open(m_root_path + "/log/tubekit.log");
+    singleton<logger>::instance()->open(m_root_path + "/log/tubekit.log");
 
     //  init workflow
-    engine::workflow *work = singleton_template<engine::workflow>::instance();
+    engine::workflow *work = singleton<engine::workflow>::instance();
     work->load(get_root_path() + "/config/workflow.xml");
 
     // server start
     // init server
-    auto m_server = singleton_template<server::server>::instance();
+    auto m_server = singleton<server::server>::instance();
     m_server->config(ip, port, threads, max_conn, wait_time, task_type, daemon);
     m_server->start(); // server running with dead loop
 }

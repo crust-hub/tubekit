@@ -11,7 +11,7 @@ namespace tubekit
             enum TaskType
             {
                 HTTP_TASK = 0,
-                WORKFLOW_TASK,
+                STREAM_TASK,
                 NONE
             };
 

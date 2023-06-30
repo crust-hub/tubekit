@@ -16,12 +16,15 @@ namespace tubekit
             socket_handler();
             ~socket_handler();
             void listen(const std::string &ip, int port);
+
             /**
              * @brief Register the m_socket with the epoll
              *
              * @param m_socket
+             * @param listen_send true: listen EPOLLOUT|EPOLLIN false: listen EPOLLIN
              */
-            void attach(socket *m_socket, bool listen_read = false);
+            void attach(socket *m_socket, bool listen_send = false);
+
             /**
              * @brief Remove from epoll
              *

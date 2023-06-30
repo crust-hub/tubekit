@@ -1,7 +1,7 @@
 #include <tubekit-log/logger.h>
 
 #include "thread/work_thread.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "thread/thread_pool.h"
 #include "thread/task.h"
 
@@ -19,7 +19,7 @@ work_thread::~work_thread()
 
 void work_thread::cleanup(void *ptr)
 {
-    singleton_template<logger>::instance()->info("work_thread", 1, "worker thread cleanup handler: %x", ptr);
+    singleton<logger>::instance()->info("work_thread", 1, "worker thread cleanup handler: %x", ptr);
 }
 
 void work_thread::run()
@@ -28,13 +28,13 @@ void work_thread::run()
     // sigfillset(sigset_t *set)调用该函数后，set指向的信号集中将包含linux支持的64种信号
     if (0 != sigfillset(&mask))
     {
-        singleton_template<logger>::instance()->error("work_thread", 1, "worker thread sigfillset failed");
+        singleton<logger>::instance()->error("work_thread", 1, "worker thread sigfillset failed");
     }
     // SIG_BLOCK:结果集是当前集合参数集的并集；SIG_UNBLOCK:结果集是当前集合参数集的差集；SIG_SETMASK:结果集是由参数集指向的
     // 在多线程的程序里，希望只在主线程中处理信号，可以使用pthread_sigmask
     if (0 != pthread_sigmask(SIG_SETMASK, &mask, NULL))
     {
-        singleton_template<logger>::instance()->error("work_thread", 1, "worker thread pthread_sigmask failed");
+        singleton<logger>::instance()->error("work_thread", 1, "worker thread pthread_sigmask failed");
     }
     /*
     在POSIX线程API中提供了一个pthread_cleanup_push()/pthread_cleanup_pop()函数对用于自动释放资源
@@ -75,7 +75,7 @@ void work_thread::run()
         m_task = nullptr;
 
         // 将线程移到线程池空闲列表
-        singleton_template<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
+        singleton<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
 
         // 允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
         rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);

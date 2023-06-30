@@ -63,8 +63,8 @@
 │   │   ├── http_task.cpp//Inherit thread/task
 │   │   ├── http_task.h
 │   │   ├── task_factory.h//Provides options to return the different kinds of tasks built
-│   │   ├── workflow_task.cpp//Inherit thread/task
-│   │   └── workflow_task.h
+│   │   ├── stream_task.cpp//Inherit thread/task
+│   │   └── stream_task.h
 │   ├── thread
 │   │   ├── auto_lock.cpp//RAII style auto_lock mutex
 │   │   ├── auto_lock.h
@@ -82,7 +82,7 @@
 │   │   └── work_thread.h
 │   ├── utility//tool
 │   │   ├── object_pool.h//object pool
-│   │   └── singleton_template.h//Singleton Pattern Template
+│   │   └── singleton.h//Singleton Pattern Template
 │   └── xml//xml file parser
 │   |   ├── README.md
 │   |   ├── document.cpp

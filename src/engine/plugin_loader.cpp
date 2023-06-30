@@ -6,7 +6,7 @@
 
 #include "plugin_loader.h"
 #include "system/system.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 
 using std::map;
 using std::string;
@@ -26,7 +26,7 @@ void plugin_loader::load(const std::string &plugin)
 {
     assert(!plugin.empty());
     assert(m_plugins.find(plugin) == m_plugins.end()); // plugin is not exist
-    string filename = singleton_template<system::system>::instance()->get_root_path() + "/plugin/" + plugin;
+    string filename = singleton<system::system>::instance()->get_root_path() + "/plugin/" + plugin;
     // loading .so lib
     void *handle = dlopen(filename.c_str(), RTLD_GLOBAL | RTLD_LAZY);
     printf("load plugin %s %s\n", filename.c_str(), dlerror());

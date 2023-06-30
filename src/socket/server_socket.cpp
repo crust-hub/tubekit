@@ -4,7 +4,7 @@
 
 #include "socket/server_socket.h"
 #include "socket/socket.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -20,7 +20,7 @@ server_socket::server_socket(const string &ip, int port) : socket(ip, port)
     m_sockfd = socket::create_tcp_socket();
     if (m_sockfd < 0)
     {
-        singleton_template<logger>::instance()->error("create server socket error: errno=%d errstr=%s", errno, strerror(errno));
+        singleton<logger>::instance()->error("create server socket error: errno=%d errstr=%s", errno, strerror(errno));
         return;
     }
     set_non_blocking();

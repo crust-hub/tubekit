@@ -10,7 +10,6 @@ def send_data(client, data):
     info = client.recv(1024).decode()
     print(info)
 
-
 if __name__ == '__main__':
     data=''
     for i in range(10):
@@ -18,15 +17,17 @@ if __name__ == '__main__':
     index = 0 
 
     #host = '61.171.51.135'
-    host = '127.0.0.1'
-    port = 2022
+    host = '172.29.94.203'
+    port = 20023
     start_time = time.time()
+    m_list = [];
     for index in range(10000):
         client = socket.socket()  # tcp socket
         client.connect((host, port))  # init connection
+        m_list.append(client)
         print('connected')
-        send_data(client, data)
-        client.close()
+        # send_data(client, data)
+        # client.close()
         print(index)
         index+=1
     end_time=time.time()

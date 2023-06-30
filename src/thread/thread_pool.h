@@ -6,7 +6,7 @@
 #include "thread/mutex.h"
 #include "thread/condition.h"
 #include "thread/thread_pool.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "thread/auto_lock.h"
 
 using namespace tubekit::utility;
@@ -91,7 +91,7 @@ namespace tubekit
             for (size_t i = 0; i < threads; i++)
             {
                 THREAD *new_thread = new THREAD();
-                singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "create thread %x", new_thread);
+                singleton<logger>::instance()->debug(__FILE__, __LINE__, "create thread %x", new_thread);
                 m_list_idle.push_back(new_thread);
                 new_thread->start();
             }
@@ -190,10 +190,10 @@ namespace tubekit
         {
             if (m_task == nullptr)
             {
-                singleton_template<logger>::instance()->error(__FILE__, __LINE__, "assign a null task to thread pool");
+                singleton<logger>::instance()->error(__FILE__, __LINE__, "assign a null task to thread pool");
                 return;
             }
-            singleton_template<logger>::instance()->debug(__FILE__, __LINE__, "assign a new task %x to thread pool", m_task);
+            singleton<logger>::instance()->debug(__FILE__, __LINE__, "assign a new task %x to thread pool", m_task);
 
             m_mutex_busy.lock();
 
@@ -213,7 +213,7 @@ namespace tubekit
             }
             else
             {
-                singleton_template<logger>::instance()->error(__FILE__, __LINE__, "thread is null,assign a task failed");
+                singleton<logger>::instance()->error(__FILE__, __LINE__, "thread is null,assign a task failed");
             }
         }
     }

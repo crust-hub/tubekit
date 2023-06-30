@@ -32,10 +32,10 @@ void server::start()
 {
     std::cout << "server start..." << std::endl;
     // init thread pool and task queue,task_dispather is detached thread to processing task in queue
-    task_dispatcher<work_thread, task> *dispatcher = singleton_template<task_dispatcher<work_thread, task>>::instance();
+    task_dispatcher<work_thread, task> *dispatcher = singleton<task_dispatcher<work_thread, task>>::instance();
     dispatcher->init(m_threads); // number of work_thread
     // init the socket handler in epoll
-    socket_handler *handler = singleton_template<socket_handler>::instance();
+    socket_handler *handler = singleton<socket_handler>::instance();
     handler->listen(m_ip, m_port);
     handler->handle(m_connects, m_wait_time); // main thread loop
 }
@@ -71,9 +71,9 @@ enum server::TaskType server::get_task_type()
     {
         return HTTP_TASK;
     }
-    else if (m_task_type == "WORKFLOW_TASK")
+    else if (m_task_type == "STREAM_TASK")
     {
-        return WORKFLOW_TASK;
+        return STREAM_TASK;
     }
     return NONE;
 }

@@ -17,11 +17,16 @@ namespace tubekit
             ~http_task();
             void run() override;
             /**
-             * @brief Manual destruction
+             * @brief Manual destruction,execute in ~http_task()
              *
              */
             void destroy() override;
+
+        public:
             static http_parser_settings *settings;
+            // flag:why create task
+            bool reason_recv;
+            bool reason_send;
         };
     }
 }

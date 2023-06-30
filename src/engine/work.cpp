@@ -1,7 +1,7 @@
 #include "engine/work.h"
 #include "engine/plugin.h"
 #include "engine/plugin_loader.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 
 using namespace tubekit::engine;
 using namespace tubekit::utility;
@@ -18,7 +18,7 @@ work::~work()
 {
     for (auto it = m_plugins.begin(); it != m_plugins.end(); it++)
     {
-        void (*destory)(plugin *) = (void (*)(plugin *))singleton_template<plugin_loader>::instance()->get((*it)->get_name(), "destory");
+        void (*destory)(plugin *) = (void (*)(plugin *))singleton<plugin_loader>::instance()->get((*it)->get_name(), "destory");
         destory(dynamic_cast<plugin *>(*it));
     }
 }

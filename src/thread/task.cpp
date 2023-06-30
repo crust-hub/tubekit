@@ -1,4 +1,6 @@
 #include "thread/task.h"
+
+#include <iostream>
 #include "thread/auto_lock.h"
 
 using namespace tubekit::thread;

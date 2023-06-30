@@ -1,7 +1,7 @@
 #include <string>
 #include <tubekit-log/logger.h>
 #include "engine/workflow.h"
-#include "utility/singleton_template.h"
+#include "utility/singleton.h"
 #include "engine/plugin.h"
 #include "engine/plugin_loader.h"
 #include "engine/context.h"
@@ -88,7 +88,7 @@ bool workflow::load_plugin(work &work, tubekit::xml::element &el)
         }
         const std::string &&name = std::move(it->attr("name")); // plugin'name
         // load function pointer
-        plugin *(*create)() = (plugin * (*)()) singleton_template<plugin_loader>::instance()->get(name, "create");
+        plugin *(*create)() = (plugin * (*)()) singleton<plugin_loader>::instance()->get(name, "create");
         plugin *new_plugin = create(); // to create plugin from .so
         new_plugin->set_name(name);
         const std::string &&flag = std::move(it->attr("switch"));
