@@ -4,9 +4,9 @@
 
 namespace tubekit
 {
-    namespace request
+    namespace connection
     {
-        class stream_request
+        class stream_connection
         {
         public:
             enum class state
@@ -18,13 +18,13 @@ namespace tubekit
             };
 
         public:
-            stream_request(int socket_fd);
-            ~stream_request();
+            stream_connection(int socket_fd);
+            ~stream_connection();
 
         public:
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
-            state request_state;
+            state connection_state;
 
         private:
             const int socket_fd;

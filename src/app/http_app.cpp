@@ -6,7 +6,7 @@
 using std::string;
 using std::vector;
 using tubekit::app::http_app;
-using tubekit::request::http_request;
+using tubekit::connection::http_connection;
 namespace fs = tubekit::fs;
 
 class html_loader
@@ -31,26 +31,26 @@ public:
     }
 };
 
-void http_app::process_request(tubekit::request::http_request &m_http_request)
+void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
-    m_http_request.m_buffer.set_limit_max(1024 * 1000);
+    m_http_connection.m_buffer.set_limit_max(1024 * 1000);
     // load callback
-    m_http_request.destory_callback = [](http_request &m_request) -> void
+    m_http_connection.destory_callback = [](http_connection &m_connection) -> void
     {
-        if (m_request.ptr)
+        if (m_connection.ptr)
         {
-            FILE *file = (FILE *)m_request.ptr;
+            FILE *file = (FILE *)m_connection.ptr;
             ::fclose(file);
-            m_request.ptr = nullptr;
+            m_connection.ptr = nullptr;
         }
     };
-    m_http_request.process_callback = [](http_request &request) -> void
+    m_http_connection.process_callback = [](http_connection &connection) -> void
     {
-        string url = request.url;
+        string url = connection.url;
         auto find_res = url.find("..");
         if (std::string::npos != find_res)
         {
-            request.set_response_end(true);
+            connection.set_response_end(true);
             return;
         }
         const string prefix = "/mnt/c/Users/gaowanlu/Desktop/MyProject/tubekit";
@@ -58,9 +58,9 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
         auto type = fs::get_status(path);
         if (type == fs::status::dir)
         {
-            request.ptr = nullptr;
+            connection.ptr = nullptr;
             const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
-            request.m_buffer.write(response, strlen(response));
+            connection.m_buffer.write(response, strlen(response));
             //  generate dir list
             vector<string> a_tags;
             vector<string> dir_contents;
@@ -81,41 +81,41 @@ void http_app::process_request(tubekit::request::http_request &m_http_request)
                 body += a_tag;
             }
             string html = html_loader::load(body);
-            request.m_buffer.write(html.c_str(), html.size());
-            request.set_response_end(true);
+            connection.m_buffer.write(html.c_str(), html.size());
+            connection.set_response_end(true);
             return;
         }
         else if (type == fs::status::file)
         {
             const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
-            request.m_buffer.write(response, strlen(response));
-            request.ptr = nullptr;
-            request.ptr = ::fopen(path.c_str(), "r");
-            if (request.ptr == nullptr)
+            connection.m_buffer.write(response, strlen(response));
+            connection.ptr = nullptr;
+            connection.ptr = ::fopen(path.c_str(), "r");
+            if (connection.ptr == nullptr)
             {
-                request.set_response_end(true);
+                connection.set_response_end(true);
                 return;
             }
             // Write when the contents of the buffer have been sent write_end_callback will be executed,
             // and the response must be set response_end to true, then write after write_end_callback will be continuously recalled
-            request.write_end_callback = [](http_request &m_request) -> void
+            connection.write_end_callback = [](http_connection &m_connection) -> void
             {
                 char buf[1024] = {0};
                 int len = 0;
-                len = ::fread(buf, sizeof(char), 1024, (FILE *)m_request.ptr);
+                len = ::fread(buf, sizeof(char), 1024, (FILE *)m_connection.ptr);
                 if (len > 0)
                 {
-                    m_request.m_buffer.write(buf, len);
+                    m_connection.m_buffer.write(buf, len);
                 }
                 else
                 {
-                    m_request.set_response_end(true);
+                    m_connection.set_response_end(true);
                 }
             };
             return;
         }
         const char *response = "HTTP/1.1 404 Not Found\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
-        request.m_buffer.write(response, strlen(response));
-        request.set_response_end(true);
+        connection.m_buffer.write(response, strlen(response));
+        connection.set_response_end(true);
     };
 }

@@ -10,13 +10,13 @@
 
 namespace tubekit
 {
-    namespace request
+    namespace connection
     {
-        class http_request
+        class http_connection
         {
         public:
-            http_request(int socket_fd);
-            ~http_request();
+            http_connection(int socket_fd);
+            ~http_connection();
             void add_header(const std::string &key, const std::string &value);
             void add_to_body(const char *data, const size_t len);
             void add_chunk(const std::vector<char> &chunk);
@@ -45,9 +45,9 @@ namespace tubekit
             int buffer_start_use;
             std::string head_field_tmp;
             const int socket_fd;
-            std::function<void(http_request &request)> process_callback;
-            std::function<void(http_request &request)> write_end_callback;
-            std::function<void(http_request &request)> destory_callback;
+            std::function<void(http_connection &connection)> process_callback;
+            std::function<void(http_connection &connection)> write_end_callback;
+            std::function<void(http_connection &connection)> destory_callback;
             void *ptr{nullptr};
 
         private:
@@ -60,4 +60,4 @@ namespace tubekit
     }
 }
 
-std::ostream &operator<<(std::ostream &os, const tubekit::request::http_request &m_http_request);
+std::ostream &operator<<(std::ostream &os, const tubekit::connection::http_connection &m_http_connection);

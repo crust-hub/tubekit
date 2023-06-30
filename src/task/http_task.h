@@ -4,7 +4,7 @@
 
 #include "thread/task.h"
 #include "socket/socket.h"
-#include "request/http_request.h"
+#include "connection/http_connection.h"
 
 namespace tubekit
 {

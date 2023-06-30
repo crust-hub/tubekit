@@ -1,5 +1,5 @@
 #pragma once
-#include "request/http_request.h"
+#include "connection/http_connection.h"
 
 namespace tubekit
 {
@@ -8,7 +8,7 @@ namespace tubekit
         class http_app
         {
         public:
-            static void process_request(tubekit::request::http_request &m_http_request);
+            static void process_connection(tubekit::connection::http_connection &m_http_connection);
         };
     }
 }

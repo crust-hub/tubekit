@@ -9,13 +9,13 @@
 #include "task/http_task.h"
 #include "socket/socket_handler.h"
 #include "utility/singleton.h"
-#include "request/http_request.h"
+#include "connection/http_connection.h"
 #include "app/http_app.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
-using namespace tubekit::request;
+using namespace tubekit::connection;
 using namespace tubekit::app;
 
 http_parser_settings *http_task::settings = nullptr;
@@ -29,16 +29,16 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
         settings = new http_parser_settings;
         settings->on_message_begin = [](http_parser *parser) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
             http_method method = (http_method)parser->method;
-            m_http_request->method = http_method_str(method);
+            t_http_connection->method = http_method_str(method);
             return 0;
         };
 
         settings->on_url = [](http_parser *parser, const char *at, size_t length) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->url = std::string(at, length);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
+            t_http_connection->url = std::string(at, length);
             return 0; // allowed
             // return -1;// reject this connection
         };
@@ -51,16 +51,16 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
 
         settings->on_header_field = [](http_parser *parser, const char *at, size_t length) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->head_field_tmp = std::string(at, length);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
+            t_http_connection->head_field_tmp = std::string(at, length);
             return 0;
         };
 
         settings->on_header_value = [](http_parser *parser, const char *at, size_t length) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
             std::string value(at, length);
-            m_http_request->add_header(m_http_request->head_field_tmp, value);
+            t_http_connection->add_header(t_http_connection->head_field_tmp, value);
             return 0;
         };
 
@@ -71,15 +71,15 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
 
         settings->on_body = [](http_parser *parser, const char *at, size_t length) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->add_to_body(at, length);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
+            t_http_connection->add_to_body(at, length);
             return 0;
         };
 
         settings->on_message_complete = [](http_parser *parser) -> auto
         {
-            request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
-            m_http_request->set_recv_end(true);
+            connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
+            t_http_connection->set_recv_end(true);
             return 0;
         };
 
@@ -91,7 +91,7 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
 
         settings->on_chunk_complete = [](http_parser *parser) -> auto
         {
-            // request::http_request *m_http_request = static_cast<request::http_request *>(parser->data);
+            // connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
             std::cout << "on_chunk_complete" << std::endl;
             return 0;
         };
@@ -119,84 +119,84 @@ void http_task::run()
         {
             if (ptr)
             {
-                request::http_request *m_http_request = (request::http_request *)ptr;
-                delete m_http_request;
+                connection::http_connection *t_http_connection = (connection::http_connection *)ptr;
+                delete t_http_connection;
             }
         };
     }
 
-    if (nullptr == socketfd->ptr) // binding http_request for socket
+    if (nullptr == socketfd->ptr) // binding http_connection for socket
     {
-        request::http_request *m_http_request = new request::http_request(socketfd->get_fd());
-        socketfd->ptr = m_http_request;
+        connection::http_connection *t_http_connection = new connection::http_connection(socketfd->get_fd());
+        socketfd->ptr = t_http_connection;
     }
 
-    request::http_request *m_http_request = static_cast<request::http_request *>(socketfd->ptr);
+    connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(socketfd->ptr);
 
     // read from socket
-    if (reason_recv && !m_http_request->get_recv_end())
+    if (reason_recv && !t_http_connection->get_recv_end())
     {
-        m_http_request->buffer_used_len = 0;
+        t_http_connection->buffer_used_len = 0;
         while (true)
         {
-            m_http_request->buffer_used_len = socketfd->recv(m_http_request->buffer, m_http_request->buffer_size);
-            if (m_http_request->buffer_used_len == -1 && errno == EAGAIN)
+            t_http_connection->buffer_used_len = socketfd->recv(t_http_connection->buffer, t_http_connection->buffer_size);
+            if (t_http_connection->buffer_used_len == -1 && errno == EAGAIN)
             {
-                m_http_request->buffer_used_len = 0;
+                t_http_connection->buffer_used_len = 0;
                 break;
             }
-            else if (m_http_request->buffer_used_len == -1 && errno == EINTR) // error interupt
+            else if (t_http_connection->buffer_used_len == -1 && errno == EINTR) // error interupt
             {
-                m_http_request->buffer_used_len = 0;
+                t_http_connection->buffer_used_len = 0;
                 continue;
             }
-            else if (m_http_request->buffer_used_len > 0)
+            else if (t_http_connection->buffer_used_len > 0)
             {
-                int nparsed = http_parser_execute(m_http_request->get_parser(), settings, m_http_request->buffer, m_http_request->buffer_used_len);
-                if (m_http_request->get_parser()->upgrade)
+                int nparsed = http_parser_execute(t_http_connection->get_parser(), settings, t_http_connection->buffer, t_http_connection->buffer_used_len);
+                if (t_http_connection->get_parser()->upgrade)
                 {
                 }
-                else if (nparsed != m_http_request->buffer_used_len) // error
+                else if (nparsed != t_http_connection->buffer_used_len) // error
                 {
-                    m_http_request->buffer_used_len = 0;
+                    t_http_connection->buffer_used_len = 0;
                     break;
                 }
             }
             else
             {
-                // 1. m_http_request->buffer_used_len == 0 client closed
-                m_http_request->set_recv_end(true);
-                m_http_request->set_process_end(true);
-                m_http_request->set_response_end(true);
-                m_http_request->set_everything_end(true);
+                // 1. t_http_connection->buffer_used_len == 0 client closed
+                t_http_connection->set_recv_end(true);
+                t_http_connection->set_process_end(true);
+                t_http_connection->set_response_end(true);
+                t_http_connection->set_everything_end(true);
                 break;
             }
-            m_http_request->buffer_used_len = 0;
+            t_http_connection->buffer_used_len = 0;
         } // while(1)
     }
 
-    // process http request
-    if (m_http_request->get_recv_end() && !m_http_request->get_process_end())
+    // process http connection
+    if (t_http_connection->get_recv_end() && !t_http_connection->get_process_end())
     {
-        m_http_request->set_process_end(true);
-        // app loader,loading process_callback for m_http_request
-        app::http_app::process_request(*m_http_request);
-        if (m_http_request->process_callback)
+        t_http_connection->set_process_end(true);
+        // app loader,loading process_callback for t_http_connection
+        app::http_app::process_connection(*t_http_connection);
+        if (t_http_connection->process_callback)
         {
-            m_http_request->process_callback(*m_http_request);
+            t_http_connection->process_callback(*t_http_connection);
         }
         else
         {
-            m_http_request->set_everything_end(true);
+            t_http_connection->set_everything_end(true);
         }
     }
 
     // write
-    if (reason_send && m_http_request->get_process_end() && !m_http_request->get_everything_end())
+    if (reason_send && t_http_connection->get_process_end() && !t_http_connection->get_everything_end())
     {
-        while (m_http_request->buffer_used_len > m_http_request->buffer_start_use)
+        while (t_http_connection->buffer_used_len > t_http_connection->buffer_start_use)
         {
-            int sended = socketfd->send(m_http_request->buffer + m_http_request->buffer_start_use, m_http_request->buffer_used_len - m_http_request->buffer_start_use);
+            int sended = socketfd->send(t_http_connection->buffer + t_http_connection->buffer_start_use, t_http_connection->buffer_used_len - t_http_connection->buffer_start_use);
             if (0 > sended)
             {
                 if (errno == EINTR)
@@ -210,53 +210,53 @@ void http_task::run()
                 else // error
                 {
                     // 1.errno==ECONNRESET、EPIPE etc.
-                    m_http_request->set_response_end(true);
-                    m_http_request->set_everything_end(true);
+                    t_http_connection->set_response_end(true);
+                    t_http_connection->set_everything_end(true);
                     break;
                 }
             }
             else if (0 == sended) // disconnect or nothing to send
             {
-                m_http_request->set_everything_end(true);
+                t_http_connection->set_everything_end(true);
                 break;
             }
             else // send success
             {
-                m_http_request->buffer_start_use += sended;
+                t_http_connection->buffer_start_use += sended;
             }
         }
         //  Notify the user that the content sent last time has been sent to the client
-        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 == m_http_request->m_buffer.can_readable_size() && !m_http_request->get_response_end())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_buffer.can_readable_size() && !t_http_connection->get_response_end())
         {
-            if (m_http_request->write_end_callback)
+            if (t_http_connection->write_end_callback)
             {
-                m_http_request->write_end_callback(*m_http_request);
+                t_http_connection->write_end_callback(*t_http_connection);
             }
             else
             {
-                m_http_request->set_everything_end(true);
+                t_http_connection->set_everything_end(true);
             }
         }
-        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 != m_http_request->m_buffer.can_readable_size())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 != t_http_connection->m_buffer.can_readable_size())
         {
             // read from m_buffer to buffer for next write
-            m_http_request->buffer_used_len = m_http_request->m_buffer.read(m_http_request->buffer, m_http_request->buffer_size - 1);
-            m_http_request->buffer[m_http_request->buffer_used_len] = 0;
-            m_http_request->buffer_start_use = 0;
+            t_http_connection->buffer_used_len = t_http_connection->m_buffer.read(t_http_connection->buffer, t_http_connection->buffer_size - 1);
+            t_http_connection->buffer[t_http_connection->buffer_used_len] = 0;
+            t_http_connection->buffer_start_use = 0;
         }
-        if (m_http_request->buffer_start_use == m_http_request->buffer_used_len && 0 == m_http_request->m_buffer.can_readable_size() && m_http_request->get_response_end())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_buffer.can_readable_size() && t_http_connection->get_response_end())
         {
-            m_http_request->set_everything_end(true);
+            t_http_connection->set_everything_end(true);
         }
     }
 
     // continue to epoll_wait
-    if (!m_http_request->get_recv_end()) // next loop for reading
+    if (!t_http_connection->get_recv_end()) // next loop for reading
     {
         handler->attach(socketfd); // continue registe epoll wait read
         return;
     }
-    if (!m_http_request->get_everything_end())
+    if (!t_http_connection->get_everything_end())
     {
         handler->attach(socketfd, true); // wait write
         return;

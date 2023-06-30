@@ -9,13 +9,13 @@
 #include "utility/singleton.h"
 #include "engine/workflow.h"
 #include "engine/workflow.h"
-#include "request/stream_request.h"
+#include "connection/stream_connection.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::engine;
-using namespace tubekit::request;
+using namespace tubekit::connection;
 
 stream_task::stream_task(tubekit::socket::socket *m_socket) : task(m_socket),
                                                               reason_send(false),
@@ -43,41 +43,41 @@ void stream_task::run()
         {
             if (ptr)
             {
-                request::stream_request *t_stream_request = (request::stream_request *)ptr;
-                delete t_stream_request;
+                connection::stream_connection *t_stream_connection = (connection::stream_connection *)ptr;
+                delete t_stream_connection;
             }
         };
     }
-    // binding stream_request for socket
+    // binding stream_connection for socket
     if (nullptr == socket_ptr->ptr)
     {
-        socket_ptr->ptr = new request::stream_request(socket_ptr->get_fd());
+        socket_ptr->ptr = new connection::stream_connection(socket_ptr->get_fd());
     }
 
-    request::stream_request *t_stream_request = static_cast<request::stream_request *>(socket_ptr->ptr);
+    connection::stream_connection *t_stream_connection = static_cast<connection::stream_connection *>(socket_ptr->ptr);
 
     // recv data
-    if (t_stream_request->request_state == stream_request::state::RECV)
+    if (t_stream_connection->connection_state == stream_connection::state::RECV)
     {
         if (reason_recv)
         {
             // can read
-            t_stream_request->request_state = stream_request::state::PROCESS;
+            t_stream_connection->connection_state = stream_connection::state::PROCESS;
         }
         handler->attach(socket_ptr, true);
         return;
     }
 
     // process data
-    if (t_stream_request->request_state == stream_request::state::PROCESS)
+    if (t_stream_connection->connection_state == stream_connection::state::PROCESS)
     {
-        t_stream_request->request_state = stream_request::state::SEND;
+        t_stream_connection->connection_state = stream_connection::state::SEND;
         handler->attach(socket_ptr, true);
         return;
     }
 
     // send data
-    if (t_stream_request->request_state == stream_request::state::SEND)
+    if (t_stream_connection->connection_state == stream_connection::state::SEND)
     {
         handler->attach(socket_ptr); // handler->remove(socket_ptr);
         return;
