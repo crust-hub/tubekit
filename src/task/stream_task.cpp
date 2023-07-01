@@ -78,7 +78,7 @@ void stream_task::run()
             // can read
             t_stream_connection->connection_state = stream_connection::state::PROCESS;
         }
-        handler->attach(socket_ptr, true);
+        handler->attach(socket_ptr);
         return;
     }
 
@@ -86,7 +86,7 @@ void stream_task::run()
     if (t_stream_connection->connection_state == stream_connection::state::PROCESS)
     {
         t_stream_connection->connection_state = stream_connection::state::SEND;
-        handler->attach(socket_ptr, true);
+        handler->attach(socket_ptr);
         return;
     }
 
@@ -97,7 +97,7 @@ void stream_task::run()
         return;
     }
 
-    handler->attach(socket_ptr); // handler->remove(socket_ptr);
+    handler->remove(socket_ptr); // handler->remove(socket_ptr);
 
     // // exceute workflow
     // workflow *workflow_instance = singleton<workflow>::instance();

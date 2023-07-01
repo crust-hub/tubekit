@@ -74,6 +74,7 @@ void socket_handler::on_tick()
 void socket_handler::handle(int max_connections, int wait_time)
 {
     m_epoll = new event_poller(false); // EPOLLLT mode
+
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     socket_pool.init(max_connections);
