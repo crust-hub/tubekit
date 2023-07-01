@@ -10,6 +10,8 @@
 #include "engine/workflow.h"
 #include "engine/workflow.h"
 #include "connection/stream_connection.h"
+#include "connection/connection_mgr.h"
+#include "connection/connection.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
@@ -36,25 +38,37 @@ void stream_task::run()
 {
     socket_handler *handler = singleton<socket_handler>::instance();
     socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
-    // socket object free hook function
-    if (!socket_ptr->delete_ptr_hook)
+
+    if (!socket_ptr->close_callback)
     {
-        socket_ptr->delete_ptr_hook = [](void *ptr)
+        socket_ptr->close_callback = [socket_ptr]()
         {
-            if (ptr)
-            {
-                connection::stream_connection *t_stream_connection = (connection::stream_connection *)ptr;
-                delete t_stream_connection;
-            }
+            singleton<connection_mgr>::instance()->remove(socket_ptr);
         };
     }
-    // binding stream_connection for socket
-    if (nullptr == socket_ptr->ptr)
-    {
-        socket_ptr->ptr = new connection::stream_connection(socket_ptr->get_fd());
-    }
 
-    connection::stream_connection *t_stream_connection = static_cast<connection::stream_connection *>(socket_ptr->ptr);
+    if (!singleton<connection_mgr>::instance()->has(socket_ptr))
+    {
+        connection::stream_connection *t_stream_connection = new connection::stream_connection(socket_ptr);
+        if (nullptr == t_stream_connection)
+        {
+            handler->remove(socket_ptr);
+            return;
+        }
+        bool add_res = singleton<connection_mgr>::instance()->add(socket_ptr, t_stream_connection);
+        if (!add_res)
+        {
+            delete t_stream_connection;
+            return;
+        }
+    }
+    connection::stream_connection *t_stream_connection = (connection::stream_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
+
+    if (nullptr == t_stream_connection)
+    {
+        handler->remove(socket_ptr);
+        return;
+    }
 
     // recv data
     if (t_stream_connection->connection_state == stream_connection::state::RECV)

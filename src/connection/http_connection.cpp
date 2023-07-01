@@ -3,14 +3,14 @@
 using namespace std;
 using namespace tubekit::connection;
 
-http_connection::http_connection(int socket_fd) : m_buffer(1024),
-                                                  socket_fd(socket_fd),
-                                                  recv_end(false),
-                                                  process_end(false),
-                                                  buffer_used_len(0),
-                                                  buffer_start_use(0),
-                                                  response_end(false),
-                                                  everything_end(false)
+http_connection::http_connection(tubekit::socket::socket *socket_ptr) : m_buffer(1024),
+                                                                        socket_ptr(socket_ptr),
+                                                                        recv_end(false),
+                                                                        process_end(false),
+                                                                        buffer_used_len(0),
+                                                                        buffer_start_use(0),
+                                                                        response_end(false),
+                                                                        everything_end(false)
 {
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;

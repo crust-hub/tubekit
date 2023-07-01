@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -15,11 +14,11 @@ using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::log;
 
-socket::socket() : m_sockfd(0), ptr(nullptr)
+socket::socket() : m_sockfd(0)
 {
 }
 
-socket::socket(const string &ip, int port) : m_ip(ip), m_port(port), m_sockfd(0), ptr(nullptr)
+socket::socket(const string &ip, int port) : m_ip(ip), m_port(port), m_sockfd(0)
 {
 }
 
@@ -79,10 +78,9 @@ bool socket::connect(const string &ip, int port)
 
 bool socket::close()
 {
-    if (ptr != nullptr)
+    if (close_callback)
     {
-        delete_ptr_hook(ptr);
-        ptr = nullptr;
+        close_callback();
     }
     if (m_sockfd > 0)
     {

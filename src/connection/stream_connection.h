@@ -2,11 +2,14 @@
 
 #include <tubekit-buffer/buffer.h>
 
+#include "connection/connection.h"
+#include "socket/socket.h"
+
 namespace tubekit
 {
     namespace connection
     {
-        class stream_connection
+        class stream_connection : public connection
         {
         public:
             enum class state
@@ -18,7 +21,7 @@ namespace tubekit
             };
 
         public:
-            stream_connection(int socket_fd);
+            stream_connection(tubekit::socket::socket *socket_ptr);
             ~stream_connection();
 
         public:
@@ -27,7 +30,7 @@ namespace tubekit
             state connection_state;
 
         private:
-            const int socket_fd;
+            tubekit::socket::socket *socket_ptr;
         };
     }
 }

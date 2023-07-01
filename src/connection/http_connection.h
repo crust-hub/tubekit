@@ -8,14 +8,17 @@
 #include <http-parser/http_parser.h>
 #include <tubekit-buffer/buffer.h>
 
+#include "connection/connection.h"
+#include "socket/socket.h"
+
 namespace tubekit
 {
     namespace connection
     {
-        class http_connection
+        class http_connection : public connection
         {
         public:
-            http_connection(int socket_fd);
+            http_connection(tubekit::socket::socket *socket_ptr);
             ~http_connection();
             void add_header(const std::string &key, const std::string &value);
             void add_to_body(const char *data, const size_t len);
@@ -44,7 +47,6 @@ namespace tubekit
             int buffer_used_len; // effective content length in buffer
             int buffer_start_use;
             std::string head_field_tmp;
-            const int socket_fd;
             std::function<void(http_connection &connection)> process_callback;
             std::function<void(http_connection &connection)> write_end_callback;
             std::function<void(http_connection &connection)> destory_callback;
@@ -56,6 +58,7 @@ namespace tubekit
             bool process_end;
             bool response_end;
             bool everything_end;
+            tubekit::socket::socket *socket_ptr;
         };
     }
 }

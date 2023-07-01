@@ -107,7 +107,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                 }
                 socket_object->m_sockfd = socket_fd;
                 socket_object->set_non_blocking();
-                socket_object->set_linger(true, 5);
+                socket_object->set_linger(true, 1);
                 attach(socket_object); // listen read
             }
             else // Data sent by the client can be read

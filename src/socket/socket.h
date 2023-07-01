@@ -54,16 +54,10 @@ namespace tubekit
             int m_sockfd;
 
         public:
-            void *ptr;
-            /**
-             * @brief execute delete_ptr_hook when execute close method
-             *
-             */
-            function<void(void *ptr)> delete_ptr_hook;
+            std::function<void()> close_callback;
 
         public:
-            static int
-            create_tcp_socket();
+            static int create_tcp_socket();
         };
     }
 }

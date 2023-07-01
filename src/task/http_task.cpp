@@ -11,6 +11,7 @@
 #include "utility/singleton.h"
 #include "connection/http_connection.h"
 #include "app/http_app.h"
+#include "connection/connection_mgr.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
@@ -110,28 +111,38 @@ void http_task::destroy()
 void http_task::run()
 {
     socket_handler *handler = singleton<socket_handler>::instance();
-    socket::socket *socketfd = static_cast<socket::socket *>(m_data);
+    socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
 
-    if (!socketfd->delete_ptr_hook)
+    if (!socket_ptr->close_callback)
     {
-        // execute delete_ptr_hook when socket to close
-        socketfd->delete_ptr_hook = [](void *ptr)
+        socket_ptr->close_callback = [socket_ptr]()
         {
-            if (ptr)
-            {
-                connection::http_connection *t_http_connection = (connection::http_connection *)ptr;
-                delete t_http_connection;
-            }
+            singleton<connection_mgr>::instance()->remove(socket_ptr);
         };
     }
 
-    if (nullptr == socketfd->ptr) // binding http_connection for socket
+    if (!singleton<connection_mgr>::instance()->has(socket_ptr))
     {
-        connection::http_connection *t_http_connection = new connection::http_connection(socketfd->get_fd());
-        socketfd->ptr = t_http_connection;
+        connection::http_connection *t_http_connection = new connection::http_connection(socket_ptr);
+        if (nullptr == t_http_connection)
+        {
+            handler->remove(socket_ptr);
+            return;
+        }
+        bool add_res = singleton<connection_mgr>::instance()->add(socket_ptr, t_http_connection);
+        if (!add_res)
+        {
+            delete t_http_connection;
+            return;
+        }
     }
+    connection::http_connection *t_http_connection = (connection::http_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
-    connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(socketfd->ptr);
+    if (nullptr == t_http_connection)
+    {
+        handler->remove(socket_ptr);
+        return;
+    }
 
     // read from socket
     if (reason_recv && !t_http_connection->get_recv_end())
@@ -139,7 +150,7 @@ void http_task::run()
         t_http_connection->buffer_used_len = 0;
         while (true)
         {
-            t_http_connection->buffer_used_len = socketfd->recv(t_http_connection->buffer, t_http_connection->buffer_size);
+            t_http_connection->buffer_used_len = socket_ptr->recv(t_http_connection->buffer, t_http_connection->buffer_size);
             if (t_http_connection->buffer_used_len == -1 && errno == EAGAIN)
             {
                 t_http_connection->buffer_used_len = 0;
@@ -196,7 +207,7 @@ void http_task::run()
     {
         while (t_http_connection->buffer_used_len > t_http_connection->buffer_start_use)
         {
-            int sended = socketfd->send(t_http_connection->buffer + t_http_connection->buffer_start_use, t_http_connection->buffer_used_len - t_http_connection->buffer_start_use);
+            int sended = socket_ptr->send(t_http_connection->buffer + t_http_connection->buffer_start_use, t_http_connection->buffer_used_len - t_http_connection->buffer_start_use);
             if (0 > sended)
             {
                 if (errno == EINTR)
@@ -253,13 +264,13 @@ void http_task::run()
     // continue to epoll_wait
     if (!t_http_connection->get_recv_end()) // next loop for reading
     {
-        handler->attach(socketfd); // continue registe epoll wait read
+        handler->attach(socket_ptr); // continue registe epoll wait read
         return;
     }
     if (!t_http_connection->get_everything_end())
     {
-        handler->attach(socketfd, true); // wait write
+        handler->attach(socket_ptr, true); // wait write
         return;
     }
-    handler->remove(socketfd); // remove
+    handler->remove(socket_ptr); // remove
 }
