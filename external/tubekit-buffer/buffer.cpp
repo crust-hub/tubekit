@@ -43,17 +43,20 @@ u_int64_t buffer::read(char *dest, u_int64_t size)
         throw std::runtime_error("dest == nullptr || size == 0");
     }
     // read size of bytes from m_buffer
-    u_int64_t readed_size = 0;
-    while (size > 0 && m_read_ptr != m_write_ptr)
+    const auto &can_readable = can_readable_size();
+    if (size <= can_readable)
     {
-        dest[readed_size] = *m_read_ptr;
-        readed_size++;
-        size--;
-        m_read_ptr++;
+        memcpy(dest, m_read_ptr, size);
+        m_read_ptr += size;
+        // update m_last_read
+        m_last_read = time(nullptr);
+        return size;
     }
+    memcpy(dest, m_read_ptr, can_readable);
+    m_read_ptr += can_readable;
     // update m_last_read
     m_last_read = time(nullptr);
-    return readed_size;
+    return can_readable;
 }
 
 u_int64_t buffer::write(const char *source, u_int64_t size)

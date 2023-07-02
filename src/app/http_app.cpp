@@ -36,7 +36,7 @@ public:
 
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
-    m_http_connection.m_buffer.set_limit_max(1024 * 1000);
+    m_http_connection.m_buffer.set_limit_max(2048000);
     // load callback
     m_http_connection.destory_callback = [](http_connection &m_connection) -> void
     {
@@ -86,9 +86,9 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             // and the response must be set response_end to true, then write after write_end_callback will be continuously recalled
             connection.write_end_callback = [](http_connection &m_connection) -> void
             {
-                char buf[10240] = {0};
+                char buf[2048000] = {0};
                 int len = 0;
-                len = ::fread(buf, sizeof(char), 10240, (FILE *)m_connection.ptr);
+                len = ::fread(buf, sizeof(char), 2048000, (FILE *)m_connection.ptr);
                 if (len > 0)
                 {
                     m_connection.m_buffer.write(buf, len);
