@@ -41,6 +41,7 @@ namespace tubekit
 
         public:
             void on_tick();
+            void on_proc();
 
         private:
             event_poller *m_epoll;

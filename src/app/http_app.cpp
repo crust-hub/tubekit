@@ -1,13 +1,16 @@
 #include "app/http_app.h"
-#include "utility/fs.h"
 #include <string>
 #include <vector>
+#include <filesystem>
+
+#include "utility/mime_type.h"
 
 using std::string;
 using std::vector;
 using tubekit::app::http_app;
 using tubekit::connection::http_connection;
-namespace fs = tubekit::fs;
+namespace fs = std::filesystem;
+namespace utility = tubekit::utility;
 
 class html_loader
 {
@@ -54,43 +57,26 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             return;
         }
         const string prefix = "/mnt/c/Users/gaowanlu/Desktop/MyProject/tubekit";
-        const string path = prefix + url;
-        auto type = fs::get_status(path);
-        if (type == fs::status::dir)
+
+        fs::path t_path(prefix + url);
+
+        if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::regular)
         {
-            connection.ptr = nullptr;
-            const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
-            connection.m_buffer.write(response, strlen(response));
-            //  generate dir list
-            vector<string> a_tags;
-            vector<string> dir_contents;
-            if (0 == fs::look_dir(path, dir_contents))
+            std::string mime_type;
+            try
             {
-                if (url != "/")
-                {
-                    url += "/";
-                }
-                for (size_t i = 0; i < dir_contents.size(); ++i)
-                {
-                    a_tags.push_back(html_loader::a_tag(url + dir_contents[i], url + dir_contents[i]));
-                }
+                mime_type = utility::mime_type::get_type(t_path.string());
             }
-            string body;
-            for (const auto &a_tag : a_tags)
+            catch (...)
             {
-                body += a_tag;
+                mime_type = "application/octet-stream";
             }
-            string html = html_loader::load(body);
-            connection.m_buffer.write(html.c_str(), html.size());
-            connection.set_response_end(true);
-            return;
-        }
-        else if (type == fs::status::file)
-        {
-            const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
-            connection.m_buffer.write(response, strlen(response));
+            std::string response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\n";
+            response += "Content-Type: ";
+            response += mime_type + "\r\n\r\n";
+            connection.m_buffer.write(response.c_str(), response.size());
             connection.ptr = nullptr;
-            connection.ptr = ::fopen(path.c_str(), "r");
+            connection.ptr = ::fopen(t_path.c_str(), "r");
             if (connection.ptr == nullptr)
             {
                 connection.set_response_end(true);
@@ -100,9 +86,9 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             // and the response must be set response_end to true, then write after write_end_callback will be continuously recalled
             connection.write_end_callback = [](http_connection &m_connection) -> void
             {
-                char buf[1024] = {0};
+                char buf[10240] = {0};
                 int len = 0;
-                len = ::fread(buf, sizeof(char), 1024, (FILE *)m_connection.ptr);
+                len = ::fread(buf, sizeof(char), 10240, (FILE *)m_connection.ptr);
                 if (len > 0)
                 {
                     m_connection.m_buffer.write(buf, len);
@@ -114,6 +100,30 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             };
             return;
         }
+
+        if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::directory)
+        {
+            connection.ptr = nullptr;
+            const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
+            connection.m_buffer.write(response, strlen(response));
+            //  generate dir list
+            vector<string> a_tags;
+            for (const auto &dir_entry : fs::directory_iterator{t_path})
+            {
+                std::string sub_path = dir_entry.path().string().substr(prefix.size());
+                a_tags.push_back(html_loader::a_tag(sub_path, sub_path));
+            }
+            string body;
+            for (const auto &a_tag : a_tags)
+            {
+                body += a_tag;
+            }
+            string html = html_loader::load(body);
+            connection.m_buffer.write(html.c_str(), html.size());
+            connection.set_response_end(true);
+            return;
+        }
+
         const char *response = "HTTP/1.1 404 Not Found\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
         connection.m_buffer.write(response, strlen(response));
         connection.set_response_end(true);

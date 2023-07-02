@@ -8,6 +8,7 @@
 #include "task/task_factory.h"
 #include "server/server.h"
 #include "app/tick.h"
+#include "app/proc.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -16,6 +17,7 @@ using namespace tubekit::task;
 using namespace tubekit::log;
 using namespace tubekit::utility;
 using namespace tubekit::server;
+using namespace tubekit::app;
 
 socket_handler::socket_handler()
 {
@@ -71,6 +73,11 @@ void socket_handler::on_tick()
     singleton<app::tick>::instance()->run();
 }
 
+void socket_handler::on_proc()
+{
+    singleton<app::proc>::instance()->run();
+}
+
 void socket_handler::handle(int max_connections, int wait_time)
 {
     m_epoll = new event_poller(false); // EPOLLLT mode
@@ -83,6 +90,7 @@ void socket_handler::handle(int max_connections, int wait_time)
     {
         int num = m_epoll->wait(wait_time);
         on_tick();
+        on_proc();
         if (num == 0)
         {
             continue; // timeout

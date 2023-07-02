@@ -122,7 +122,7 @@ namespace tubekit
         void thread_pool<THREAD, TASK>::move_to_idle_list(THREAD *m_thread)
         {
             m_mutex_idle.lock();
-            m_list_idle.push_back(m_thread);
+            m_list_idle.push_front(m_thread);
             m_cond_idle.signal();
             m_mutex_idle.unlock();
             m_mutex_busy.lock();
@@ -152,7 +152,7 @@ namespace tubekit
             {
                 m_cond_busy.wait(&m_mutex_busy);
             }
-            m_list_busy.push_back(m_thread);
+            m_list_busy.push_front(m_thread);
             m_mutex_busy.unlock();
             m_mutex_idle.lock();
             auto res = m_list_idle.begin();

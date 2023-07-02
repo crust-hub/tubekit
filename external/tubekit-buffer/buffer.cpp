@@ -119,16 +119,9 @@ bool buffer::check_and_write(const char *source, u_int64_t size)
 
 void buffer::move_to_before()
 {
-    char *tmp = m_buffer;
-    char *ptr = m_read_ptr;
-    while (ptr != m_write_ptr)
-    {
-        *tmp = *ptr;
-        tmp++;
-        ptr++;
-    }
+    memmove(m_buffer, m_read_ptr, can_readable_size());
+    m_write_ptr = m_buffer + can_readable_size();
     m_read_ptr = m_buffer;
-    m_write_ptr = tmp;
 }
 
 u_int64_t buffer::after_size()
