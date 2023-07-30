@@ -36,6 +36,10 @@ void stream_task::destroy()
 
 void stream_task::run()
 {
+    if (nullptr == m_data)
+    {
+        return;
+    }
     socket_handler *handler = singleton<socket_handler>::instance();
     socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
 

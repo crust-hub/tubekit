@@ -55,9 +55,16 @@ void work_thread::run()
         while (m_task == nullptr)
         {
             m_cond.wait(&m_mutex); // 等待分发任务
+            if (stop_flag)
+            {
+                break; // thread exit
+            }
         }
         m_mutex.unlock();
-
+        if (stop_flag)
+        {
+            break; // thread exit
+        }
         int rc = 0;
         int old_state = 0;
         rc = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
@@ -71,7 +78,7 @@ void work_thread::run()
 
         // 执行任务
         m_task->run();
-        delete m_task;
+        delete m_task; // free task object
         m_task = nullptr;
 
         // 将线程移到线程池空闲列表

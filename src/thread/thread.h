@@ -15,13 +15,13 @@ namespace tubekit
             thread();
             virtual ~thread();
             virtual void run() = 0;
+            virtual void to_stop();
 
             /**
              * @brief Run the thread in a detach form and call the run method
              *
              */
             void start();
-            void stop();
             void set_task(task *m_task);
             task *get_task();
 
@@ -33,12 +33,14 @@ namespace tubekit
              * @return void*
              */
             static void *thread_func(void *ptr);
+            void stop();
 
         protected:
             pthread_t m_tid;
             task *m_task;
             mutex m_mutex;
             condition m_cond;
+            bool stop_flag{false};
         };
     }
 }

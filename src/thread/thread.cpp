@@ -53,3 +53,8 @@ task *thread::get_task()
     auto_lock lock(m_mutex);
     return m_task;
 }
+
+void thread::to_stop()
+{
+    stop_flag = true;
+}

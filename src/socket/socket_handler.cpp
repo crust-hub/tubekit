@@ -9,6 +9,8 @@
 #include "server/server.h"
 #include "app/tick.h"
 #include "app/proc.h"
+#include "app/stop.h"
+#include "system/system.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -81,13 +83,19 @@ void socket_handler::on_proc()
 void socket_handler::handle(int max_connections, int wait_time)
 {
     m_epoll = new event_poller(false); // EPOLLLT mode
-
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     socket_pool.init(max_connections);
     // main thread loop
     while (true)
     {
+        // sys stop check
+        if (singleton<tubekit::server::server>::instance()->is_stop())
+        {
+            singleton<tubekit::server::server>::instance()->on_stop();
+            singleton<app::stop>::instance()->run();
+            break; // main process to exit
+        }
         int num = m_epoll->wait(wait_time);
         on_tick();
         on_proc();

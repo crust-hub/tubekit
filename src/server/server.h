@@ -34,6 +34,9 @@ namespace tubekit
                         std::string task_type,
                         bool daemon = false);
             enum TaskType get_task_type();
+            bool on_stop();
+            void to_stop();
+            bool is_stop();
 
         private:
             std::string m_ip;
@@ -43,6 +46,7 @@ namespace tubekit
             size_t m_wait_time;
             std::string m_task_type;
             bool m_daemon{false};
+            volatile bool stop_flag{false};
         };
     }
 }

@@ -13,6 +13,7 @@ namespace tubekit
             ~system() = default;
             void init();                 // init tubekit system
             std::string get_root_path(); // get executable file location path
+            static void signal_term(int sig);
 
         private:
             void core_dump(); // core dump

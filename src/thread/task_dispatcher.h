@@ -126,6 +126,10 @@ namespace tubekit
                     // to wait if have not task in m_tasks
                     m_cond.wait(&m_mutex);
                 }
+                if (stop_flag)
+                {
+                    break;
+                }
                 TASK *task = m_tasks.front();
                 m_tasks.pop_front();
                 m_mutex.unlock();

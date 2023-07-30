@@ -48,6 +48,7 @@ namespace tubekit
 
             size_t get_idle_thread_numbers();
             size_t get_busy_thread_numbers();
+            size_t get_threads();
 
             /**
              * @brief dispatch a task for processing it
@@ -215,6 +216,12 @@ namespace tubekit
             {
                 singleton<logger>::instance()->error(__FILE__, __LINE__, "thread is null,assign a task failed");
             }
+        }
+
+        template <typename THREAD, typename TASK>
+        size_t thread_pool<THREAD, TASK>::get_threads()
+        {
+            return m_threads;
         }
     }
 }

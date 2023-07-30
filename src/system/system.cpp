@@ -39,7 +39,8 @@ void system::init()
         create_daemon();
     }
     core_dump();
-    signal_conf();
+
+    signal_conf(); // system signal process hook bind
 
     m_root_path = get_root_path();
     // check log dir or create it
@@ -54,8 +55,8 @@ void system::init()
     singleton<logger>::instance()->open(m_root_path + "/log/tubekit.log");
 
     //  init workflow
-    engine::workflow *work = singleton<engine::workflow>::instance();
-    work->load(get_root_path() + "/config/workflow.xml");
+    // engine::workflow *work = singleton<engine::workflow>::instance();
+    // work->load(get_root_path() + "/config/workflow.xml");
 
     // server start
     // init server
@@ -106,7 +107,9 @@ void system::signal_conf()
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
     // signal(SIGINT, );
-    // signal(SIGTERM, );
+    signal(SIGTERM, &system::signal_term); // to call server::to_stop
+    signal(SIGSTOP, &system::signal_term);
+    signal(SIGKILL, &system::signal_term);
 }
 
 void system::create_daemon()
@@ -136,4 +139,9 @@ void system::create_daemon()
     {
         close(fd);
     }
+}
+
+void system::signal_term(int sig)
+{
+    singleton<server::server>::instance()->to_stop();
 }

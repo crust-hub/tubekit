@@ -93,3 +93,47 @@ void server::config(const std::string &ip,
     set_task_type(task_type);
     set_daemon(daemon);
 }
+
+bool server::is_stop()
+{
+    return stop_flag;
+}
+
+bool server::on_stop()
+{
+    if (stop_flag)
+    {
+        // wait all worker threads for sleep state
+        while (true)
+        {
+            auto work_thread_pool_instance = singleton<thread_pool<work_thread, task>>::instance();
+            if (work_thread_pool_instance->get_busy_thread_numbers() > 0)
+            {
+                sleep(1);
+                continue;
+            }
+            else
+            {
+                // stop all worker threads
+                while (work_thread_pool_instance->get_idle_thread_numbers() > 0)
+                {
+                    auto cthread = work_thread_pool_instance->get_idle_thread();
+                    cthread->to_stop();
+                    cthread->set_task(nullptr);
+                }
+                break;
+            }
+        }
+        // stop dispatch thread
+        auto dispatcher_instance = singleton<task_dispatcher<work_thread, task>>::instance();
+        dispatcher_instance->to_stop();
+        dispatcher_instance->assign(nullptr);
+        return true; // main process close
+    }
+    return false;
+}
+
+void server::to_stop()
+{
+    stop_flag = true;
+}
