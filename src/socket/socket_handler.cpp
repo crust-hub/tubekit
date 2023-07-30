@@ -115,6 +115,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                     break;
                 }
                 socket_object->m_sockfd = socket_fd;
+                socket_object->close_callback = nullptr;
                 socket_object->set_non_blocking();
                 socket_object->set_linger(true, 1);
                 attach(socket_object); // listen read
