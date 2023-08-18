@@ -90,17 +90,7 @@ namespace tubekit
         {
             singleton<logger>::instance()->debug(__FILE__, __LINE__, "task dispatcher handle task");
             thread_pool<THREAD, TASK> *pool = singleton<thread_pool<THREAD, TASK>>::instance();
-            if (pool->get_idle_thread_numbers() > 0)
-            {
-                pool->assign(m_task);
-            }
-            else
-            {
-                m_mutex.lock();
-                m_tasks.push_front(m_task); // If there are no free threads, they are put into the list first
-                m_mutex.unlock();
-                singleton<logger>::instance()->debug(__FILE__, __LINE__, "all threads are busy");
-            }
+            pool->assign(m_task);
         }
 
         template <typename THREAD, typename TASK>

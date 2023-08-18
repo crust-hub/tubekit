@@ -57,6 +57,8 @@ namespace tubekit
              */
             void assign(TASK *m_task);
 
+            void wait_exist_idle();
+
         private:
             /**
              * @brief number of threads in pool
