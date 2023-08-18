@@ -71,14 +71,14 @@ namespace tubekit
         void task_dispatcher<THREAD, TASK>::init(size_t threads)
         {
             singleton<thread_pool<THREAD, TASK>>::instance()->create(threads);
-            singleton<logger>::instance()->debug(__FILE__, __LINE__, "threads create allrigth to check assign");
+            LOG_DEBUG("threads create allrigth to check assign");
             start(); // task_dispatcher::run start with other thread
         }
 
         template <typename THREAD, typename TASK>
         void task_dispatcher<THREAD, TASK>::assign(TASK *m_task)
         {
-            singleton<logger>::instance()->debug(__FILE__, __LINE__, "task dispatcher assign task");
+            // LOG_DEBUG("task dispatcher assign task");
             m_mutex.lock();
             m_tasks.push_back(m_task);
             m_mutex.unlock();
@@ -88,7 +88,7 @@ namespace tubekit
         template <typename THREAD, typename TASK>
         void task_dispatcher<THREAD, TASK>::handle(TASK *m_task)
         {
-            singleton<logger>::instance()->debug(__FILE__, __LINE__, "task dispatcher handle task");
+            // LOG_DEBUG("task dispatcher handle task");
             thread_pool<THREAD, TASK> *pool = singleton<thread_pool<THREAD, TASK>>::instance();
             pool->assign(m_task);
         }
@@ -99,12 +99,12 @@ namespace tubekit
             sigset_t mask;
             if (0 != sigfillset(&mask))
             {
-                singleton<logger>::instance()->error(__FILE__, __LINE__, "thread manager sigfillset failed");
+                LOG_ERROR("thread manager sigfillset failed");
                 return;
             }
             if (0 != pthread_sigmask(SIG_SETMASK, &mask, nullptr))
             {
-                singleton<logger>::instance()->error(__FILE__, __LINE__, "thread manager pthread_sigmask failed");
+                LOG_ERROR("thread manager pthread_sigmask failed");
                 return;
             } // Signals are processed only within the main thread
 

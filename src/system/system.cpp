@@ -52,7 +52,7 @@ void system::init()
         closedir(dp);
 
     // init logger
-    singleton<logger>::instance()->open(m_root_path + "/log/tubekit.log");
+    logger::instance().open(m_root_path + "/log/tubekit.log");
 
     //  init workflow
     // engine::workflow *work = singleton<engine::workflow>::instance();

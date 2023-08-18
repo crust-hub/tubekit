@@ -174,7 +174,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                     if (new_task == nullptr)
                     {
                         remove(socket_ptr);
-                        singleton<logger>::instance()->error(__FILE__, __LINE__, "new_task is nullptr");
+                        LOG_ERROR("new_task is nullptr");
                     }
                     else
                     {

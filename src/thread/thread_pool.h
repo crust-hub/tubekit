@@ -57,8 +57,6 @@ namespace tubekit
              */
             void assign(TASK *m_task);
 
-            void wait_exist_idle();
-
         private:
             /**
              * @brief number of threads in pool
@@ -94,7 +92,7 @@ namespace tubekit
             for (size_t i = 0; i < threads; i++)
             {
                 THREAD *new_thread = new THREAD();
-                singleton<logger>::instance()->debug(__FILE__, __LINE__, "create thread %x", new_thread);
+                LOG_DEBUG("create thread %x", new_thread);
                 m_list_idle.push_back(new_thread);
                 new_thread->start();
             }
@@ -193,10 +191,10 @@ namespace tubekit
         {
             if (m_task == nullptr)
             {
-                singleton<logger>::instance()->error(__FILE__, __LINE__, "assign a null task to thread pool");
+                LOG_ERROR("assign a null task to thread pool");
                 return;
             }
-            singleton<logger>::instance()->debug(__FILE__, __LINE__, "assign a new task %x to thread pool", m_task);
+            // LOG_DEBUG("assign a new task %x to thread pool", m_task);
 
             m_mutex_busy.lock();
 
@@ -216,7 +214,7 @@ namespace tubekit
             }
             else
             {
-                singleton<logger>::instance()->error(__FILE__, __LINE__, "thread is null,assign a task failed");
+                LOG_ERROR("thread is null,assign a task failed");
             }
         }
 

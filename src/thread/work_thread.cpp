@@ -19,7 +19,7 @@ work_thread::~work_thread()
 
 void work_thread::cleanup(void *ptr)
 {
-    singleton<logger>::instance()->info("work_thread", 1, "worker thread cleanup handler: %x", ptr);
+    LOG_INFO("worker thread cleanup handler: %x", ptr);
 }
 
 void work_thread::run()
@@ -28,13 +28,13 @@ void work_thread::run()
     // sigfillset(sigset_t *set)调用该函数后，set指向的信号集中将包含linux支持的64种信号
     if (0 != sigfillset(&mask))
     {
-        singleton<logger>::instance()->error("work_thread", 1, "worker thread sigfillset failed");
+        LOG_ERROR("worker thread sigfillset failed");
     }
     // SIG_BLOCK:结果集是当前集合参数集的并集；SIG_UNBLOCK:结果集是当前集合参数集的差集；SIG_SETMASK:结果集是由参数集指向的
     // 在多线程的程序里，希望只在主线程中处理信号，可以使用pthread_sigmask
     if (0 != pthread_sigmask(SIG_SETMASK, &mask, NULL))
     {
-        singleton<logger>::instance()->error("work_thread", 1, "worker thread pthread_sigmask failed");
+        LOG_ERROR("worker thread pthread_sigmask failed");
     }
     /*
     在POSIX线程API中提供了一个pthread_cleanup_push()/pthread_cleanup_pop()函数对用于自动释放资源

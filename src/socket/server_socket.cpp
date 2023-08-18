@@ -20,7 +20,7 @@ server_socket::server_socket(const string &ip, int port) : socket(ip, port)
     m_sockfd = socket::create_tcp_socket();
     if (m_sockfd < 0)
     {
-        singleton<logger>::instance()->error("create server socket error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("create server socket error: errno=%d errstr=%s", errno, strerror(errno));
         return;
     }
     set_non_blocking();

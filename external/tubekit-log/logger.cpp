@@ -9,9 +9,8 @@ const char *logger::s_flag[FLAG_COUNT] = {
     "INFO",
     "WARN",
     "ERROR",
-    "FATAL"};
-
-logger *logger::m_instance = nullptr;
+    "FATAL",
+};
 
 logger::logger() : m_fp(nullptr)
 {
@@ -84,7 +83,6 @@ void logger::fatal(const char *file, int line, const char *format, ...)
 
 void logger::log(flag f, const char *file, int line, const char *format, va_list arg_ptr)
 {
-    return;
     if (m_fp == nullptr)
     {
         printf("open log file failed: m_fp==nullptr\n");

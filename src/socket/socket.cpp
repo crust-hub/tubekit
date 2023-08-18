@@ -44,7 +44,7 @@ bool socket::bind(const string &ip, int port)
     sockaddr.sin_port = htons(port);
     if (::bind(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
     {
-        singleton<logger>::instance()->error("socket bind error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket bind error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -55,7 +55,7 @@ bool socket::listen(int backlog)
     // backlog: queue of pending connections
     if (::listen(m_sockfd, backlog) < 0)
     {
-        singleton<logger>::instance()->error("socket listen error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket listen error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -70,7 +70,7 @@ bool socket::connect(const string &ip, int port)
     sockaddr.sin_port = htons(port);
     if (::connect(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
     {
-        singleton<logger>::instance()->error("socket connect error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket connect error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -95,7 +95,7 @@ int socket::accept()
     int sockfd = ::accept(m_sockfd, NULL, NULL);
     if (sockfd < 0)
     {
-        singleton<logger>::instance()->error("accept call error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("accept call error: errno=%d errstr=%s", errno, strerror(errno));
         sockfd = -1;
     }
     return sockfd;
@@ -118,13 +118,13 @@ bool socket::set_non_blocking()
     int flags = fcntl(m_sockfd, F_GETFL, 0);
     if (flags < 0)
     {
-        singleton<logger>::instance()->error("socket::set_non_blocking(F_GETFL,O_NONBLOCK) errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket::set_non_blocking(F_GETFL,O_NONBLOCK) errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     flags |= O_NONBLOCK; // setting nonblock
     if (fcntl(m_sockfd, F_SETFL, flags) < 0)
     {
-        singleton<logger>::instance()->error("socket::set_non_blocking(F_SETFL,O_NONBLOCK) errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket::set_non_blocking(F_SETFL,O_NONBLOCK) errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -135,13 +135,13 @@ bool socket::set_blocking()
     int flags = fcntl(m_sockfd, F_GETFL, 0);
     if (flags < 0)
     {
-        singleton<logger>::instance()->error("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     flags &= ~O_NONBLOCK; // setting nonblock
     if (fcntl(m_sockfd, F_SETFL, flags) < 0)
     {
-        singleton<logger>::instance()->error("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket::set_blocking() errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -152,7 +152,7 @@ bool socket::set_send_buffer(size_t size)
     size_t buffer_size = size;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_SNDBUF, &buffer_size, sizeof(buffer_size)) < 0)
     {
-        singleton<logger>::instance()->error("socket set send buffer error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set send buffer error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -163,7 +163,7 @@ bool socket::set_recv_buffer(size_t size)
     int buffer_size = size;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size)) < 0)
     {
-        singleton<logger>::instance()->error("socket set recv buffer errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set recv buffer errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -190,7 +190,7 @@ bool socket::set_linger(bool active, size_t seconds)
     l.l_linger = seconds;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_LINGER, &l, sizeof(l)) < 0)
     {
-        singleton<logger>::instance()->error("socket set linger error errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set linger error errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -201,7 +201,7 @@ bool socket::set_keep_alive()
     int flag = 1;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_KEEPALIVE, &flag, sizeof(flag)) < 0)
     {
-        singleton<logger>::instance()->error("socket set sock keep alive error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set sock keep alive error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -212,7 +212,7 @@ bool socket::set_reuse_addr()
     int flag = 1;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) < 0)
     {
-        singleton<logger>::instance()->error("socket set sock reuser addr error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set sock reuser addr error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -223,7 +223,7 @@ bool socket::set_reuse_port()
     int flag = 1;
     if (setsockopt(m_sockfd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(flag)) < 0)
     {
-        singleton<logger>::instance()->error("socket set sock reuser port error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("socket set sock reuser port error: errno=%d errstr=%s", errno, strerror(errno));
         return false;
     }
     return true;
@@ -234,7 +234,7 @@ int socket::create_tcp_socket()
     int fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (fd < 0)
     {
-        singleton<logger>::instance()->error("create tcp socket error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("create tcp socket error: errno=%d errstr=%s", errno, strerror(errno));
         return fd;
     }
     return fd;

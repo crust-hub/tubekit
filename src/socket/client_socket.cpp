@@ -19,7 +19,7 @@ client_socket::client_socket(const string &ip, int port) : socket(ip, port)
     m_sockfd = socket::create_tcp_socket();
     if (m_sockfd < 0)
     {
-        singleton<logger>::instance()->error("create client socket error: errno=%d errstr=%s", errno, strerror(errno));
+        LOG_ERROR("create client socket error: errno=%d errstr=%s", errno, strerror(errno));
         return;
     }
     connect(ip, port);

@@ -14,8 +14,13 @@ namespace tubekit
         class logger
         {
         public:
-            logger();
+            static logger &instance()
+            {
+                static logger m_instance;
+                return m_instance;
+            }
 
+            logger();
             ~logger();
 
             enum flag
@@ -98,7 +103,12 @@ namespace tubekit
         protected:
             FILE *m_fp;
             static const char *s_flag[FLAG_COUNT];
-            static logger *m_instance; // log instance
         };
     }
 }
+
+#define LOG_DEBUG(...) tubekit::log::logger::instance().debug(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_INFO(...) tubekit::log::logger::instance().info(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARN(...) tubekit::log::logger::instance().warn(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_ERROR(...) tubekit::log::logger::instance().error(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_FATAL(...) tubekit::log::logger::instance().fatal(__FILE__, __LINE__, __VA_ARGS__)
