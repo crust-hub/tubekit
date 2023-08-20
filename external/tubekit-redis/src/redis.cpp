@@ -1,9 +1,43 @@
 #include <stdexcept>
 #include <iostream>
+#include <string>
+#include <cstring>
 #include "redis.h"
 #include "hiredis.h"
 
 using namespace tubekit::redis;
+
+typedef struct
+{
+    int id;
+    char name[50];
+    double value;
+} CustomData;
+
+// 存储二进制结构体数据到Redis
+static void StoreStructToRedis(redisContext *conn, const char *key, const CustomData *data)
+{
+    redisReply *reply = (redisReply *)redisCommand(conn, "SET %s %b", key, data, sizeof(CustomData));
+    if (reply == NULL)
+    {
+        throw std::runtime_error("redis set command error");
+    }
+    freeReplyObject(reply);
+}
+
+static void FetchStructFromRedis(redisContext *conn, const char *key, CustomData *data)
+{
+    redisReply *reply = (redisReply *)redisCommand(conn, "GET %s", key);
+    if (reply != NULL && reply->type == REDIS_REPLY_STRING)
+    {
+        memcpy(data, reply->str, sizeof(CustomData));
+    }
+    else
+    {
+        throw std::runtime_error("redis get command error or key not found");
+    }
+    freeReplyObject(reply);
+}
 
 redis::redis(const std::string &host, const std::string &pwd, const int &port) : host(host), port(port), pwd(pwd)
 {
@@ -72,6 +106,24 @@ void redis::test()
     std::cout << reply->str << std::endl;
 
     freeReplyObject(reply);
+
+    try
+    {
+        CustomData obj;
+        bzero(&obj, sizeof(obj));
+        obj.id = 1;
+        obj.value = 102.2;
+        strcpy(obj.name, "hello");
+        StoreStructToRedis(context, "obj", &obj);
+        bzero(&obj, sizeof(obj));
+        FetchStructFromRedis(context, "obj", &obj);
+        std::cout << obj.id << " " << obj.name << " " << obj.value << std::endl;
+    }
+    catch (std::runtime_error &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
     // disconnect
     redisFree(context);
 }
