@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <tubekit-log/logger.h>
 
 #include "utility/mime_type.h"
 
@@ -74,7 +75,14 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             std::string response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\n";
             response += "Content-Type: ";
             response += mime_type + "\r\n\r\n";
-            connection.m_buffer.write(response.c_str(), response.size());
+            try
+            {
+                connection.m_buffer.write(response.c_str(), response.size());
+            }
+            catch (const std::runtime_error &e)
+            {
+                LOG_ERROR(e.what());
+            }
             connection.ptr = nullptr;
             connection.ptr = ::fopen(t_path.c_str(), "r");
             if (connection.ptr == nullptr)
@@ -91,7 +99,14 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
                 len = ::fread(buf, sizeof(char), 204800, (FILE *)m_connection.ptr);
                 if (len > 0)
                 {
-                    m_connection.m_buffer.write(buf, len);
+                    try
+                    {
+                        m_connection.m_buffer.write(buf, len);
+                    }
+                    catch (const std::runtime_error &e)
+                    {
+                        LOG_ERROR(e.what());
+                    }
                 }
                 else
                 {
@@ -105,7 +120,14 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
         {
             connection.ptr = nullptr;
             const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
-            connection.m_buffer.write(response, strlen(response));
+            try
+            {
+                connection.m_buffer.write(response, strlen(response));
+            }
+            catch (const std::runtime_error &e)
+            {
+                LOG_ERROR(e.what());
+            }
             //  generate dir list
             vector<string> a_tags;
             for (const auto &dir_entry : fs::directory_iterator{t_path})
@@ -119,13 +141,27 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
                 body += a_tag;
             }
             string html = html_loader::load(body);
-            connection.m_buffer.write(html.c_str(), html.size());
+            try
+            {
+                connection.m_buffer.write(html.c_str(), html.size());
+            }
+            catch (const std::runtime_error &e)
+            {
+                LOG_ERROR(e.what());
+            }
             connection.set_response_end(true);
             return;
         }
 
         const char *response = "HTTP/1.1 404 Not Found\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
-        connection.m_buffer.write(response, strlen(response));
+        try
+        {
+            connection.m_buffer.write(response, strlen(response));
+        }
+        catch (const std::runtime_error &e)
+        {
+            LOG_ERROR(e.what());
+        }
         connection.set_response_end(true);
     };
 }

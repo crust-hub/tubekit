@@ -52,11 +52,14 @@ u_int64_t buffer::read(char *dest, u_int64_t size)
         m_last_read = time(nullptr);
         return size;
     }
-    memcpy(dest, m_read_ptr, can_readable);
-    m_read_ptr += can_readable;
-    // update m_last_read
-    m_last_read = time(nullptr);
-    return can_readable;
+    else
+    {
+        memcpy(dest, m_read_ptr, can_readable);
+        m_read_ptr += can_readable;
+        // update m_last_read
+        m_last_read = time(nullptr);
+        return can_readable;
+    }
 }
 
 u_int64_t buffer::write(const char *source, u_int64_t size)

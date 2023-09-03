@@ -7,6 +7,8 @@ def send_data(client, data):
     data_len = len(data)
     data = struct.pack(f'8sII{data_len}s', b'work', cmd, data_len, data.encode('utf-8'))
     client.send(data)  # send data in tcp
+    print("send data len:")
+    print(len(data))
     info = client.recv(1024).decode()
     print(info)
 
@@ -21,15 +23,16 @@ if __name__ == '__main__':
     port = 20023
     start_time = time.time()
     m_list = [];
-    for index in range(10000):
-        client = socket.socket()  # tcp socket
-        client.connect((host, port))  # init connection
-        m_list.append(client)
-        #print('connected')
-        # send_data(client, data)
-        # client.close()
-        #print(index)
+    
+    client = socket.socket()  # tcp socket
+    client.connect((host, port))  # init connection
+    m_list.append(client)
+    print('connected')
+    while True:
+        send_data(client, data)
+        print(index)
         index+=1
+    client.close()
     end_time=time.time()
     print('time count: ')
     print((end_time-start_time))

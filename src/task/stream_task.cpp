@@ -4,6 +4,7 @@
 #include <sstream>
 #include <memory.h>
 #include <vector>
+#include <tubekit-log/logger.h>
 
 #include "socket/socket_handler.h"
 #include "utility/singleton.h"
@@ -43,6 +44,7 @@ void stream_task::run()
     socket_handler *handler = singleton<socket_handler>::instance();
     socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
 
+    // bind socket close callback
     if (!socket_ptr->close_callback)
     {
         socket_ptr->close_callback = [socket_ptr]()
@@ -51,6 +53,7 @@ void stream_task::run()
         };
     }
 
+    // Connection Mgr
     if (!singleton<connection_mgr>::instance()->has(socket_ptr))
     {
         connection::stream_connection *t_stream_connection = new connection::stream_connection(socket_ptr);
@@ -66,6 +69,7 @@ void stream_task::run()
             return;
         }
     }
+
     connection::stream_connection *t_stream_connection = (connection::stream_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
     if (nullptr == t_stream_connection)
@@ -75,46 +79,73 @@ void stream_task::run()
     }
 
     // recv data
-    if (t_stream_connection->connection_state == stream_connection::state::RECV)
+    if (t_stream_connection->connection_state == stream_connection::state::WAIT_RECV)
     {
+        // can read
         if (reason_recv)
         {
-            // can read
-            t_stream_connection->connection_state = stream_connection::state::PROCESS;
+            t_stream_connection->connection_state = stream_connection::state::RECVING;
+            // read data from socket to connection layer buffer
+            t_stream_connection->sock2buf();
+            t_stream_connection->connection_state = stream_connection::state::WAIT_PROCESS;
+            handler->attach(socket_ptr, true);
         }
-        handler->attach(socket_ptr);
+        else
+        {
+            t_stream_connection->connection_state = stream_connection::state::WAIT_RECV;
+            handler->attach(socket_ptr);
+        }
         return;
     }
 
     // process data
-    if (t_stream_connection->connection_state == stream_connection::state::PROCESS)
+    if (t_stream_connection->connection_state == stream_connection::state::WAIT_PROCESS)
     {
-        t_stream_connection->connection_state = stream_connection::state::SEND;
-        handler->attach(socket_ptr);
+        t_stream_connection->connection_state = stream_connection::state::PROCESSING;
+        // processing data in connection layer,judge continue recv or process protocol pack
+        // write response data to send buffer
+        t_stream_connection->m_send_buffer.write("hello tubekit", 14);
+        t_stream_connection->connection_state = stream_connection::state::WAIT_SEND;
+        handler->attach(socket_ptr, true);
         return;
     }
 
     // send data
-    if (t_stream_connection->connection_state == stream_connection::state::SEND)
+    if (t_stream_connection->connection_state == stream_connection::state::WAIT_SEND)
     {
-        handler->attach(socket_ptr); // handler->remove(socket_ptr);
+        t_stream_connection->connection_state = stream_connection::state::SENDING;
+
+        // can send
+        if (reason_send)
+        {
+            // send data to socket from connection layer
+            bool bRet = t_stream_connection->buf2sock();
+            if (bRet) // continue send
+            {
+                t_stream_connection->connection_state = stream_connection::state::WAIT_SEND;
+                handler->attach(socket_ptr, true);
+            }
+            else
+            {
+                // trigger send end callback
+                t_stream_connection->connection_state = stream_connection::state::WAIT_RECV;
+                handler->attach(socket_ptr);
+            }
+        }
+        else
+        {
+            t_stream_connection->connection_state = stream_connection::state::NONE;
+            handler->attach(socket_ptr, true);
+        }
+
         return;
     }
 
-    handler->remove(socket_ptr); // handler->remove(socket_ptr);
+    if (t_stream_connection->connection_state == stream_connection::state::NONE)
+    {
+        handler->remove(socket_ptr);
+        return;
+    }
 
-    // // exceute workflow
-    // workflow *workflow_instance = singleton<workflow>::instance();
-
-    // ostringstream os;
-    // os << (int)(msg_head.cmd);
-    // const std::string work = os.str();
-    // const std::string input(buf);
-    // std::string output;
-    // // send body to work
-    // workflow_instance->run(cmd, input, output);
-    // // response client
-    // socketfd->send(output.c_str(), output.length());
-    // // return to epoll for next time
-    // handler->attach(socketfd);
+    handler->attach(socket_ptr);
 }

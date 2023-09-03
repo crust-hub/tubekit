@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <tubekit-log/logger.h>
 
 #include "task/http_task.h"
 #include "socket/socket_handler.h"
@@ -255,7 +256,14 @@ void http_task::run()
         if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 != t_http_connection->m_buffer.can_readable_size())
         {
             // read from m_buffer to buffer for next write
-            t_http_connection->buffer_used_len = t_http_connection->m_buffer.read(t_http_connection->buffer, t_http_connection->buffer_size - 1);
+            try
+            {
+                t_http_connection->buffer_used_len = t_http_connection->m_buffer.read(t_http_connection->buffer, t_http_connection->buffer_size - 1);
+            }
+            catch (const std::runtime_error &e)
+            {
+                LOG_ERROR(e.what());
+            }
             t_http_connection->buffer[t_http_connection->buffer_used_len] = 0;
             t_http_connection->buffer_start_use = 0;
         }

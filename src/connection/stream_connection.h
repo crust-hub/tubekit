@@ -14,15 +14,25 @@ namespace tubekit
         public:
             enum class state
             {
-                RECV,
-                SEND,
-                PROCESS,
+                WAIT_RECV,
+                RECVING,
+                RECVED,
+                WAIT_SEND,
+                SENDING,
+                WAIT_PROCESS,
+                PROCESSING,
+                WAIT_DISCONNECT,
+                CLOSED,
                 NONE
             };
 
         public:
             stream_connection(tubekit::socket::socket *socket_ptr);
             ~stream_connection();
+
+        public:
+            bool sock2buf();
+            bool buf2sock();
 
         public:
             buffer::buffer m_send_buffer;
