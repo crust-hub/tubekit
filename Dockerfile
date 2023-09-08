@@ -4,7 +4,7 @@ COPY . /tubekit
 WORKDIR /tubekit
 RUN apt-get update && apt-get install -y apt-utils
 RUN apt-get install cmake g++ make git -y
-RUN apt-get install protobuf-compiler
+RUN apt-get install protobuf-compiler -y
 WORKDIR /tubekit
 CMD rm -rf CMakeCache.txt \
     && cd protocol \
