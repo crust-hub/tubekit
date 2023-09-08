@@ -46,3 +46,7 @@ bin/tubekit
 *.log
 CMakeCache.txt
 cmake_install.cmake
+
+protocol/proto_res/
+!protocol/Makefile
+
