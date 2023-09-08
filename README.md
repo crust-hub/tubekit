@@ -8,7 +8,7 @@ prepare
 
 ```bash
 $ sudo apt update
-$ sudo apt install protobuf-compiler
+$ sudo apt install protobuf-compiler libprotobuf-dev
 $ apt install g++ cmake make
 $ git clone https://github.com/crust-hub/tubekit.git
 ```

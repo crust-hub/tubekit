@@ -42,6 +42,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 #for link external gen .so lib
 set(EXTERNAL_LIB http-parser tubekit-inifile tubekit-log tubekit-timer tubekit-xml tubekit-buffer)
 
-target_link_libraries(${PROJECT_NAME} pthread dl ${EXTERNAL_LIB})
+target_link_libraries(${PROJECT_NAME} pthread dl protobuf ${EXTERNAL_LIB})
 
 install(TARGETS ${PROJECT_NAME} DESTINATION /usr/bin)
