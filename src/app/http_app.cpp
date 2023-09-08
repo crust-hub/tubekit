@@ -57,7 +57,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             connection.set_response_end(true);
             return;
         }
-        const string prefix = "/mnt/c/Users/gaowanlu/Desktop/MyProject/tubekit";
+        const string prefix = "/";
 
         fs::path t_path(prefix + url);
 
