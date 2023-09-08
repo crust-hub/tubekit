@@ -18,8 +18,8 @@ if __name__ == '__main__':
         data=data+'aaaaaaaaaaaaaaaaaaaa高万禄aaaaaaaaaaaaaaaabhdsbjchbfvjbdfjvbfjdhvbjhfbh'
     index = 0 
 
-    #host = '61.171.51.135'
-    host = '172.29.94.203'
+    host = '61.171.51.135'
+    #host = '172.29.94.203'
     port = 20023
     start_time = time.time()
     m_list = [];

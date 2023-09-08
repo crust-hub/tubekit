@@ -1,2 +1,2 @@
-sudo kill -15 `ps -ef | grep 'tubekit' | grep -v 'grep' | awk '{print $2}'`
+sudo kill `ps -ef | grep 'tubekit' | grep -v 'grep' | awk '{print $2}'`
 
