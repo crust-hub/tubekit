@@ -8,7 +8,7 @@ RUN apt-get install protobuf-compiler
 WORKDIR /tubekit
 CMD rm -rf CMakeCache.txt \
     && cd protocol \
-    && cd ..
+    && cd .. \
     && cmake . \
     && make -j3 \
     && cd bin \
