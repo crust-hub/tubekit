@@ -4,6 +4,7 @@
 
 #include "connection/connection.h"
 #include "socket/socket.h"
+#include "task/stream_task.h"
 
 namespace tubekit
 {
@@ -12,32 +13,23 @@ namespace tubekit
         class stream_connection : public connection
         {
         public:
-            enum class state
-            {
-                WAIT_RECV,
-                RECVING,
-                RECVED,
-                WAIT_SEND,
-                SENDING,
-                WAIT_PROCESS,
-                PROCESSING,
-                WAIT_DISCONNECT,
-                CLOSED,
-                NONE
-            };
+            friend class tubekit::task::stream_task;
 
         public:
             stream_connection(tubekit::socket::socket *socket_ptr);
             ~stream_connection();
 
-        public:
+        private:
             bool sock2buf();
             bool buf2sock();
+
+        // public:
+        //     bool send(char *buffer, size_t buffer_size);
 
         public:
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
-            state connection_state;
+            buffer::buffer m_wating_send_pack;
 
         private:
             tubekit::socket::socket *socket_ptr;

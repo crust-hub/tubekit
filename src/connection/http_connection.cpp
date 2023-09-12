@@ -3,7 +3,7 @@
 using namespace std;
 using namespace tubekit::connection;
 
-http_connection::http_connection(tubekit::socket::socket *socket_ptr) : m_buffer(204800),
+http_connection::http_connection(tubekit::socket::socket *socket_ptr) : m_buffer(2048),
                                                                         socket_ptr(socket_ptr),
                                                                         recv_end(false),
                                                                         process_end(false),

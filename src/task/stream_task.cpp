@@ -78,74 +78,31 @@ void stream_task::run()
         return;
     }
 
-    // recv data
-    if (t_stream_connection->connection_state == stream_connection::state::WAIT_RECV)
-    {
-        // can read
-        if (reason_recv)
-        {
-            t_stream_connection->connection_state = stream_connection::state::RECVING;
-            // read data from socket to connection layer buffer
-            t_stream_connection->sock2buf();
-            t_stream_connection->connection_state = stream_connection::state::WAIT_PROCESS;
-            handler->attach(socket_ptr, true);
-        }
-        else
-        {
-            t_stream_connection->connection_state = stream_connection::state::WAIT_RECV;
-            handler->attach(socket_ptr);
-        }
-        return;
-    }
+    handler->remove(socket_ptr);
+    return;
 
-    // process data
-    if (t_stream_connection->connection_state == stream_connection::state::WAIT_PROCESS)
-    {
-        t_stream_connection->connection_state = stream_connection::state::PROCESSING;
-        // processing data in connection layer,judge continue recv or process protocol pack
-        // write response data to send buffer
-        t_stream_connection->m_send_buffer.write("hello tubekit", 14);
-        t_stream_connection->connection_state = stream_connection::state::WAIT_SEND;
-        handler->attach(socket_ptr, true);
-        return;
-    }
+    // // recv data
+    // {
+    //     // can read
+    //     // read data from socket to connection layer buffer
+    //     bool b_ret = t_stream_connection->sock2buf();
+    // }
 
-    // send data
-    if (t_stream_connection->connection_state == stream_connection::state::WAIT_SEND)
-    {
-        t_stream_connection->connection_state = stream_connection::state::SENDING;
+    // // process data
+    // {
+    // // process pack
+    //     try
+    //     {
+    //         t_stream_connection->send("hello tubekit", 14);
+    //     }
+    //     catch (...)
+    //     {
+    //     }
+    // }
 
-        // can send
-        if (reason_send)
-        {
-            // send data to socket from connection layer
-            bool bRet = t_stream_connection->buf2sock();
-            if (bRet) // continue send
-            {
-                t_stream_connection->connection_state = stream_connection::state::WAIT_SEND;
-                handler->attach(socket_ptr, true);
-            }
-            else
-            {
-                // trigger send end callback
-                t_stream_connection->connection_state = stream_connection::state::WAIT_RECV;
-                handler->attach(socket_ptr);
-            }
-        }
-        else
-        {
-            t_stream_connection->connection_state = stream_connection::state::NONE;
-            handler->attach(socket_ptr, true);
-        }
-
-        return;
-    }
-
-    if (t_stream_connection->connection_state == stream_connection::state::NONE)
-    {
-        handler->remove(socket_ptr);
-        return;
-    }
-
-    handler->attach(socket_ptr);
+    // // send data
+    // {
+    //     // send data to socket from connection layer
+    //     bool bRet = t_stream_connection->buf2sock();
+    // }
 }

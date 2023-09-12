@@ -1,12 +1,16 @@
 #include <tubekit-log/logger.h>
 #include "connection/stream_connection.h"
+#include "utility/singleton.h"
+#include "socket/socket_handler.h"
 
 using tubekit::connection::stream_connection;
+using tubekit::socket::socket_handler;
+using tubekit::utility::singleton;
 
 stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : socket_ptr(socket_ptr),
-                                                                            m_send_buffer(204800),
-                                                                            m_recv_buffer(204800),
-                                                                            connection_state(stream_connection::state::WAIT_RECV)
+                                                                            m_send_buffer(2048),
+                                                                            m_recv_buffer(2048),
+                                                                            m_wating_send_pack(2048)
 {
 }
 
@@ -54,6 +58,7 @@ bool stream_connection::buf2sock()
     static int shouldSendSize = 0;
     while (true)
     {
+        // static char buffer no data
         if (shouldSendIndex < 0)
         {
             int len = -1;
@@ -65,15 +70,52 @@ bool stream_connection::buf2sock()
             {
                 LOG_ERROR(e.what());
             }
+
             if (len > 0)
             {
                 shouldSendIndex = 0;
                 shouldSendSize = len;
+                continue;
             }
-            else
+
+            // no data send in m_send_buffer
+            // read package from m_wating_send_pack to m_send_buffer，if data exsit,return true
             {
-                // no data send
-                return false;
+                bool have_data = false;
+                while (true)
+                {
+                    char temp_buffer[1024];
+                    int temp_buffer_len = 0;
+                    try
+                    {
+                        temp_buffer_len = m_wating_send_pack.read(temp_buffer, 1024);
+                    }
+                    catch (const std::runtime_error &e)
+                    {
+                        LOG_ERROR(e.what());
+                    }
+                    if (temp_buffer_len > 0)
+                    {
+                        have_data = true;
+                        try
+                        {
+                            int writed_len = m_send_buffer.write(temp_buffer, temp_buffer_len);
+                            if (writed_len != temp_buffer_len)
+                            {
+                                LOG_ERROR("write_len[%d] != temp_buffer_len[%d]", writed_len, temp_buffer_len);
+                            }
+                        }
+                        catch (const std::runtime_error &e)
+                        {
+                            LOG_ERROR(e.what());
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                return have_data;
             }
         }
         int len = socket_ptr->send(&buffer[shouldSendIndex], shouldSendSize);
@@ -108,3 +150,24 @@ bool stream_connection::buf2sock()
     }
     return false;
 }
+
+// bool stream_connection::send(char *buffer, size_t buffer_size)
+// {
+//     if (buffer == nullptr)
+//     {
+//         return false;
+//     }
+//     try
+//     {
+//         u_int64_t len = m_wating_send_pack.write(buffer, buffer_size);
+//     }
+//     catch (...)
+//     {
+//         return false;
+//     }
+//     if (socket_ptr)
+//     {
+//         singleton<socket_handler>::instance()->attach(socket_ptr, true);
+//     }
+//     return true;
+// }

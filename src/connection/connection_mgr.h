@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+// #include <unordered_map>
+#include <vector>
 #include "thread/mutex.h"
 #include "connection/connection.h"
 #include "connection/http_connection.h"
@@ -26,6 +28,7 @@ namespace tubekit::connection
 
     private:
         std::map<void *, connection *> m_map;
+        // std::unordered_multimap<void *, std::vector<char>> m_wait_send_data;
         tubekit::thread::mutex m_mutex;
     };
 }
