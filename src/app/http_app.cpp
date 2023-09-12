@@ -37,7 +37,7 @@ public:
 
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
-    m_http_connection.m_buffer.set_limit_max(2048);
+    m_http_connection.m_buffer.set_limit_max(20480);
     // load callback
     m_http_connection.destory_callback = [](http_connection &m_connection) -> void
     {
