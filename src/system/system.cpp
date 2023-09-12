@@ -12,7 +12,6 @@
 
 #include "system/system.h"
 #include "utility/singleton.h"
-#include "engine/workflow.h"
 #include "server/server.h"
 
 using namespace tubekit::utility;
@@ -53,10 +52,6 @@ void system::init()
 
     // init logger
     logger::instance().open(m_root_path + "/log/tubekit.log");
-
-    //  init workflow
-    // engine::workflow *work = singleton<engine::workflow>::instance();
-    // work->load(get_root_path() + "/config/workflow.xml");
 
     // server start
     // init server

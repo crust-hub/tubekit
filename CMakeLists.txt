@@ -25,16 +25,16 @@ file(GLOB_RECURSE SOURCE_PROTOCOL_FILES "${PROJECT_SOURCE_DIR}/protocol/*.pb.cc"
 list(APPEND SOURCE_FILES ${SOURCE_PROTOCOL_FILES})
 
 # for plugin
-file(GLOB_RECURSE SOURCE_PLUGIN "${PROJECT_SOURCE_DIR}/src/plugin/*.cpp")
-list(REMOVE_ITEM SOURCE_FILES ${SOURCE_PLUGIN})
-foreach(item ${SOURCE_FILES})
-    message("SourceFile: ${item}")
-endforeach()
+#file(GLOB_RECURSE SOURCE_PLUGIN "${PROJECT_SOURCE_DIR}/src/plugin/*.cpp")
+#list(REMOVE_ITEM SOURCE_FILES ${SOURCE_PLUGIN})
+#foreach(item ${SOURCE_FILES})
+#    message("SourceFile: ${item}")
+#endforeach()
 
 add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
 
 #for src/plugin CMakeLists.txt
-add_subdirectory(${PROJECT_SOURCE_DIR}/src/plugin)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/src/plugin)
 
 #for external/ CMakeLists.txt
 add_subdirectory(${PROJECT_SOURCE_DIR}/external)

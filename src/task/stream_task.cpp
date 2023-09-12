@@ -8,8 +8,6 @@
 
 #include "socket/socket_handler.h"
 #include "utility/singleton.h"
-#include "engine/workflow.h"
-#include "engine/workflow.h"
 #include "connection/stream_connection.h"
 #include "connection/connection_mgr.h"
 #include "connection/connection.h"
@@ -17,7 +15,6 @@
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
-using namespace tubekit::engine;
 using namespace tubekit::connection;
 
 stream_task::stream_task(tubekit::socket::socket *m_socket) : task(m_socket),
