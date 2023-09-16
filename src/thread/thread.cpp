@@ -1,9 +1,8 @@
 #include "thread/thread.h"
-#include "thread/auto_lock.h"
 
 using namespace tubekit::thread;
 
-thread::thread() : m_tid(0), m_task(nullptr)
+thread::thread() : m_tid(0)
 {
 }
 
@@ -38,20 +37,6 @@ void *thread::thread_func(void *ptr)
     thread *m_thread = (thread *)ptr;
     m_thread->run();
     return ptr;
-}
-
-void thread::set_task(task *task)
-{
-    m_mutex.lock();
-    m_task = task;
-    m_cond.signal();
-    m_mutex.unlock();
-}
-
-task *thread::get_task()
-{
-    auto_lock lock(m_mutex);
-    return m_task;
 }
 
 void thread::to_stop()

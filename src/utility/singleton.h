@@ -5,8 +5,6 @@ namespace tubekit
 {
     namespace utility
     {
-        using namespace std;
-
         /**
          * @brief singleton template
          *
@@ -18,10 +16,10 @@ namespace tubekit
         public:
             static T *instance()
             {
-                static shared_ptr<T> instance = nullptr;
+                static std::shared_ptr<T> instance = nullptr;
                 if (instance == nullptr)
                 {
-                    instance = make_shared<T>();
+                    instance = std::make_shared<T>();
                 }
                 return instance.get();
             }

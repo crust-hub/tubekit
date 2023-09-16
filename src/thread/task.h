@@ -20,7 +20,6 @@ namespace tubekit
 
         protected:
             void *m_data;
-            mutex m_mutex;
         };
     }
 }

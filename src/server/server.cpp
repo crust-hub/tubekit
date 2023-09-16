@@ -3,16 +3,21 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <tubekit-log/logger.h>
 
 #include "server/server.h"
-#include "thread/task_dispatcher.h"
-#include "thread/work_thread.h"
+#include "thread/worker.h"
 #include "thread/task.h"
+#include "thread/worker_pool.h"
 #include "socket/socket_handler.h"
+#include "utility/singleton.h"
 
 using namespace std;
 using namespace tubekit::server;
 using namespace tubekit::socket;
+using namespace tubekit::utility;
+using namespace tubekit::thread;
+using namespace tubekit::log;
 
 server::server() : m_ip("0.0.0.0"),
                    m_port(0),
@@ -31,13 +36,17 @@ void server::listen(const std::string &ip, int port)
 void server::start()
 {
     std::cout << "server start..." << std::endl;
-    // init thread pool and task queue,task_dispather is detached thread to processing task in queue
-    task_dispatcher<work_thread, task> *dispatcher = singleton<task_dispatcher<work_thread, task>>::instance();
-    dispatcher->init(m_threads); // number of work_thread
+
+    // worker pool
+    worker_pool *m_worker_pool = singleton<worker_pool>::instance();
+    m_worker_pool->create(m_threads);
+
     // init the socket handler in epoll
     socket_handler *handler = singleton<socket_handler>::instance();
     handler->listen(m_ip, m_port);
     handler->handle(m_connects, m_wait_time); // main thread loop
+
+    LOG_ERROR("socket_handler handle return");
 }
 
 void server::set_threads(size_t threads)
@@ -103,31 +112,7 @@ bool server::on_stop()
 {
     if (stop_flag)
     {
-        // wait all worker threads for sleep state
-        while (true)
-        {
-            auto work_thread_pool_instance = singleton<thread_pool<work_thread, task>>::instance();
-            if (work_thread_pool_instance->get_busy_thread_numbers() > 0)
-            {
-                sleep(1);
-                continue;
-            }
-            else
-            {
-                // stop all worker threads
-                while (work_thread_pool_instance->get_idle_thread_numbers() > 0)
-                {
-                    auto cthread = work_thread_pool_instance->get_idle_thread();
-                    cthread->to_stop();
-                    cthread->set_task(nullptr);
-                }
-                break;
-            }
-        }
-        // stop dispatch thread
-        auto dispatcher_instance = singleton<task_dispatcher<work_thread, task>>::instance();
-        dispatcher_instance->to_stop();
-        dispatcher_instance->assign(nullptr);
+        singleton<worker_pool>::instance()->stop();
         return true; // main process close
     }
     return false;

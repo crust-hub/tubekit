@@ -87,14 +87,14 @@ http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
 
         settings->on_chunk_header = [](http_parser *parser) -> auto
         {
-            std::cout << "on_chunk_header" << std::endl;
+            // std::cout << "on_chunk_header" << std::endl;
             return 0;
         };
 
         settings->on_chunk_complete = [](http_parser *parser) -> auto
         {
             // connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
-            std::cout << "on_chunk_complete" << std::endl;
+            // std::cout << "on_chunk_complete" << std::endl;
             return 0;
         };
     }

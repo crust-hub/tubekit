@@ -1,28 +1,27 @@
 #include <tubekit-log/logger.h>
 
-#include "thread/work_thread.h"
+#include "thread/worker.h"
 #include "utility/singleton.h"
-#include "thread/thread_pool.h"
 #include "thread/task.h"
 
 using namespace tubekit::thread;
 using namespace tubekit::log;
 using namespace tubekit::utility;
 
-work_thread::work_thread() : thread()
+worker::worker() : thread()
 {
 }
 
-work_thread::~work_thread()
+worker::~worker()
 {
 }
 
-void work_thread::cleanup(void *ptr)
+void worker::cleanup(void *ptr)
 {
     LOG_INFO("worker thread cleanup handler: %x", ptr);
 }
 
-void work_thread::run()
+void worker::run()
 {
     sigset_t mask;
     // sigfillset(sigset_t *set)调用该函数后，set指向的信号集中将包含linux支持的64种信号
@@ -51,19 +50,11 @@ void work_thread::run()
 
     while (true) // 线程将会一直运行，to process task
     {
-        m_mutex.lock();
-        while (m_task == nullptr)
+        task *will_run_task = m_task_queue.pop();
+        if (will_run_task == nullptr || stop_flag)
         {
-            m_cond.wait(&m_mutex); // 等待分发任务
-            if (stop_flag)
-            {
-                break; // thread exit
-            }
-        }
-        m_mutex.unlock();
-        if (stop_flag)
-        {
-            break; // thread exit
+            stop_flag = true;
+            break;
         }
         int rc = 0;
         int old_state = 0;
@@ -77,12 +68,10 @@ void work_thread::run()
         */
 
         // 执行任务
-        m_task->run();
-        delete m_task; // free task object
-        m_task = nullptr;
+        will_run_task->run();
 
-        // 将线程移到线程池空闲列表
-        singleton<thread_pool<work_thread, task>>::instance()->move_to_idle_list(this);
+        delete will_run_task; // free task object
+        will_run_task = nullptr;
 
         // 允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
         rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);
@@ -91,4 +80,20 @@ void work_thread::run()
     }
 
     pthread_cleanup_pop(1);
+}
+
+void worker::push(task *m_task)
+{
+    if (stop_flag)
+    {
+        LOG_ERROR("worker thread already stoped, cannot add task to queue");
+        return;
+    }
+    m_task_queue.push(m_task);
+}
+
+void worker::stop()
+{
+    push(nullptr);
+    stop_flag = true;
 }

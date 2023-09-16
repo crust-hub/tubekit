@@ -1,10 +1,6 @@
 #pragma once
 #include <pthread.h>
 
-#include "thread/mutex.h"
-#include "thread/task.h"
-#include "thread/condition.h"
-
 namespace tubekit
 {
     namespace thread
@@ -22,8 +18,6 @@ namespace tubekit
              *
              */
             void start();
-            void set_task(task *m_task);
-            task *get_task();
 
         protected:
             /**
@@ -37,9 +31,6 @@ namespace tubekit
 
         protected:
             pthread_t m_tid;
-            task *m_task;
-            mutex m_mutex;
-            condition m_cond;
             bool stop_flag{false};
         };
     }

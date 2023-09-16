@@ -23,7 +23,7 @@ using namespace std;
 
 void system::init()
 {
-    // init inifile
+    // load config
     inifile::inifile *ini = singleton<inifile::inifile>::instance();
     ini->load(get_root_path() + "/config/main.ini");
     const string &ip = (*ini)["server"]["ip"];
@@ -33,31 +33,32 @@ void system::init()
     const int wait_time = (*ini)["server"]["wait_time"];
     const string task_type = (*ini)["server"]["task_type"];
     const int daemon = (*ini)["server"]["daemon"];
+
+    // daemon
     if (daemon)
     {
         create_daemon();
     }
+
+    // coredump config
     core_dump();
 
-    signal_conf(); // system signal process hook bind
+    // signal config
+    signal_conf();
 
-    m_root_path = get_root_path();
-    // check log dir or create it
-    const string log_dir_path = m_root_path + "/log";
+    // logger
+    const string log_dir_path = get_root_path() + "/log";
     DIR *dp = opendir(log_dir_path.c_str());
     if (dp == nullptr)
         mkdir(log_dir_path.c_str(), 0755); // create dir
     else
         closedir(dp);
-
-    // init logger
     logger::instance().open(m_root_path + "/log/tubekit.log");
 
-    // server start
-    // init server
+    // server
     auto m_server = singleton<server::server>::instance();
     m_server->config(ip, port, threads, max_conn, wait_time, task_type, daemon);
-    m_server->start(); // server running with dead loop
+    m_server->start(); // main thread loop
 }
 
 void system::core_dump()
@@ -94,7 +95,8 @@ string system::get_root_path()
             break;
         }
     }
-    return string(path);
+    m_root_path = string(path);
+    return m_root_path;
 }
 
 void system::signal_conf()
