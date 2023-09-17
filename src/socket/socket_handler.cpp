@@ -219,8 +219,8 @@ void socket_handler::handle(int max_connections, int wait_time)
                     if (new_task)
                     {
                         auto stream_task_ptr = (stream_task *)new_task;
-                        stream_task_ptr->reason_recv = (m_epoll->m_events[i].events & EPOLLIN);
-                        stream_task_ptr->reason_send = (m_epoll->m_events[i].events & EPOLLOUT);
+                        stream_task_ptr->reason_recv = recv_event;
+                        stream_task_ptr->reason_send = send_event;
                     }
                     break;
                 case server::server::HTTP_TASK:
@@ -228,8 +228,8 @@ void socket_handler::handle(int max_connections, int wait_time)
                     if (new_task)
                     {
                         auto http_task_ptr = (http_task *)new_task;
-                        http_task_ptr->reason_recv = (m_epoll->m_events[i].events & EPOLLIN);
-                        http_task_ptr->reason_send = (m_epoll->m_events[i].events & EPOLLOUT);
+                        http_task_ptr->reason_recv = recv_event;
+                        http_task_ptr->reason_send = send_event;
                     }
                     break;
                 default:
