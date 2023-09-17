@@ -36,6 +36,7 @@ bool connection_mgr::remove(void *index_ptr)
     auto res = m_map.find(index_ptr);
     if (res != m_map.end())
     {
+        res->second->close_before();
         // triger delete connection
         delete res->second;
         m_map.erase(res);

@@ -22,21 +22,26 @@ namespace tubekit
              *
              * @param m_socket
              * @param listen_send true: listen EPOLLOUT|EPOLLIN false: listen EPOLLIN
+             * @return int
              */
-            void attach(socket *m_socket, bool listen_send = false);
+            int attach(socket *m_socket, bool listen_send = false);
 
             /**
              * @brief Remove from epoll
              *
              * @param m_socket
              */
-            void detach(socket *m_socket);
+            int detach(socket *m_socket);
+
             /**
              * @brief Remove from epoll and close the real socket and return it to the object pool
              *
              * @param m_socket
              */
-            void remove(socket *m_socket);
+            int remove(socket *m_socket);
+
+            socket* alloc_socket();
+
             void handle(int max_connections, int wait_time);
 
         public:

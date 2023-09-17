@@ -11,11 +11,13 @@
 #include "connection/stream_connection.h"
 #include "connection/connection_mgr.h"
 #include "connection/connection.h"
+#include "app/stream_app.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::connection;
+using namespace tubekit::app;
 
 stream_task::stream_task(tubekit::socket::socket *m_socket) : task(m_socket),
                                                               reason_send(false),
@@ -38,68 +40,65 @@ void stream_task::run()
     {
         return;
     }
-    socket_handler *handler = singleton<socket_handler>::instance();
     socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
 
     // bind socket close callback
     if (!socket_ptr->close_callback)
     {
-        socket_ptr->close_callback = [socket_ptr]()
-        {
-            singleton<connection_mgr>::instance()->remove(socket_ptr);
+        socket_ptr->close_callback = [socket_ptr]() {
         };
     }
 
     // Connection Mgr
     if (!singleton<connection_mgr>::instance()->has(socket_ptr))
     {
-        connection::stream_connection *t_stream_connection = new connection::stream_connection(socket_ptr);
-        if (nullptr == t_stream_connection)
-        {
-            handler->remove(socket_ptr);
-            return;
-        }
-        bool add_res = singleton<connection_mgr>::instance()->add(socket_ptr, t_stream_connection);
-        if (!add_res)
-        {
-            delete t_stream_connection;
-            return;
-        }
+        LOG_ERROR("!singleton<connection_mgr>::instance()->has(socket_ptr)");
+        singleton<socket_handler>::instance()->remove(socket_ptr);
+        return;
     }
 
+    // get connection layer instance
     connection::stream_connection *t_stream_connection = (connection::stream_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
     if (nullptr == t_stream_connection)
     {
-        handler->remove(socket_ptr);
+        singleton<socket_handler>::instance()->remove(socket_ptr);
         return;
     }
 
-    handler->remove(socket_ptr);
-    return;
+    // connection is close
+    if (t_stream_connection->is_close())
+    {
+        singleton<socket_handler>::instance()->remove(socket_ptr);
+        singleton<connection_mgr>::instance()->remove(socket_ptr);
+        return;
+    }
 
-    // // recv data
-    // {
-    //     // can read
-    //     // read data from socket to connection layer buffer
-    //     bool b_ret = t_stream_connection->sock2buf();
-    // }
+    // recv data
+    bool b_recv = false;
+    {
+        // read data from socket to connection layer buffer
+        b_recv = t_stream_connection->sock2buf();
+    }
 
-    // // process data
-    // {
-    // // process pack
-    //     try
-    //     {
-    //         t_stream_connection->send("hello tubekit", 14);
-    //     }
-    //     catch (...)
-    //     {
-    //     }
-    // }
+    // process data
+    {
+        stream_app::process_connection(*t_stream_connection);
+    }
 
-    // // send data
-    // {
-    //     // send data to socket from connection layer
-    //     bool bRet = t_stream_connection->buf2sock();
-    // }
+    bool b_send = false;
+
+    // send data
+    {
+        // send data to socket from connection layer
+        b_send = t_stream_connection->buf2sock();
+    }
+
+    if (b_send)
+    {
+        singleton<socket_handler>::instance()->attach(socket_ptr, true);
+        return;
+    }
+
+    singleton<socket_handler>::instance()->attach(socket_ptr);
 }

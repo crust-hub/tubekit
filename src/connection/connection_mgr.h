@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-// #include <unordered_map>
+#include <unordered_map>
 #include <vector>
 #include "thread/mutex.h"
 #include "connection/connection.h"
@@ -27,7 +27,7 @@ namespace tubekit::connection
         static bool is_stream(connection *conn_ptr);
 
     private:
-        std::map<void *, connection *> m_map;
+        std::unordered_map<void *, connection *> m_map;
         // std::unordered_multimap<void *, std::vector<char>> m_wait_send_data;
         tubekit::thread::mutex m_mutex;
     };

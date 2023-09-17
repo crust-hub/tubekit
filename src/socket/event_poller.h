@@ -47,7 +47,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            void add(int fd, void *ptr, __uint32_t events);
+            int add(int fd, void *ptr, __uint32_t events);
             /**
              * @brief epoll句柄更新已存在的epoll_event
              *
@@ -67,7 +67,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            void mod(int fd, void *ptr, __uint32_t events);
+            int mod(int fd, void *ptr, __uint32_t events);
             /**
              * @brief 从epoll句柄删除epoll_event
              *
@@ -87,7 +87,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            void del(int fd, void *ptr, __uint32_t events);
+            int del(int fd, void *ptr, __uint32_t events);
             /**
              * @brief 获取epoll事件
              *

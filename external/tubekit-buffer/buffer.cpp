@@ -152,3 +152,10 @@ u_int64_t buffer::get_limit_max()
 {
     return m_limit_max;
 }
+
+void buffer::clear()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_read_ptr = m_buffer;
+    m_write_ptr = m_buffer;
+}

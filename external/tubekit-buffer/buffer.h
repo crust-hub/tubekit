@@ -21,6 +21,7 @@ namespace tubekit
             u_int64_t can_readable_size() const;
             void set_limit_max(u_int64_t limit_max);
             u_int64_t get_limit_max();
+            void clear();
 
         private:
             u_int64_t m_limit_max;

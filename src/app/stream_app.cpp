@@ -13,4 +13,6 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     protoMessageHead.set_bodylen(0);
     ProtoExampleReq protoExampleReq;
     protoExampleReq.set_testcontext("hello world");
+    m_stream_connection.m_recv_buffer.clear();
+    m_stream_connection.send("hello tubekit", 14);
 }

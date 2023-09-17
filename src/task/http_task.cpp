@@ -115,37 +115,36 @@ void http_task::run()
     {
         return;
     }
-    socket_handler *handler = singleton<socket_handler>::instance();
+
     socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
 
     if (!socket_ptr->close_callback)
     {
-        socket_ptr->close_callback = [socket_ptr]()
-        {
-            singleton<connection_mgr>::instance()->remove(socket_ptr);
+        socket_ptr->close_callback = [socket_ptr]() {
         };
     }
 
     if (!singleton<connection_mgr>::instance()->has(socket_ptr))
     {
-        connection::http_connection *t_http_connection = new connection::http_connection(socket_ptr);
-        if (nullptr == t_http_connection)
-        {
-            handler->remove(socket_ptr);
-            return;
-        }
-        bool add_res = singleton<connection_mgr>::instance()->add(socket_ptr, t_http_connection);
-        if (!add_res)
-        {
-            delete t_http_connection;
-            return;
-        }
+        LOG_ERROR("!singleton<connection_mgr>::instance()->has(socket_ptr)");
+        singleton<socket_handler>::instance()->remove(socket_ptr);
+        return;
     }
+
+    // get connection layer instance
     connection::http_connection *t_http_connection = (connection::http_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
     if (nullptr == t_http_connection)
     {
-        handler->remove(socket_ptr);
+        singleton<socket_handler>::instance()->remove(socket_ptr);
+        return;
+    }
+
+    // connection is close
+    if (t_http_connection->is_close())
+    {
+        singleton<socket_handler>::instance()->remove(socket_ptr);
+        singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
 
@@ -276,13 +275,16 @@ void http_task::run()
     // continue to epoll_wait
     if (!t_http_connection->get_recv_end()) // next loop for reading
     {
-        handler->attach(socket_ptr); // continue registe epoll wait read
+        singleton<socket_handler>::instance()->attach(socket_ptr); // continue registe epoll wait read
         return;
     }
+
     if (!t_http_connection->get_everything_end())
     {
-        handler->attach(socket_ptr, true); // wait write
+        singleton<socket_handler>::instance()->attach(socket_ptr, true); // wait write
         return;
     }
-    handler->remove(socket_ptr); // remove
+
+    t_http_connection->mark_close();
+    singleton<socket_handler>::instance()->attach(socket_ptr, true);
 }

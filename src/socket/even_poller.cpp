@@ -78,19 +78,19 @@ int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
     return epoll_ctl(m_epfd, op, fd, &ev);
 }
 
-void event_poller::add(int fd, void *ptr, __uint32_t events)
+int event_poller::add(int fd, void *ptr, __uint32_t events)
 {
-    ctrl(fd, ptr, events, EPOLL_CTL_ADD);
+    return ctrl(fd, ptr, events, EPOLL_CTL_ADD);
 }
 
-void event_poller::mod(int fd, void *ptr, __uint32_t events)
+int event_poller::mod(int fd, void *ptr, __uint32_t events)
 {
-    ctrl(fd, ptr, events, EPOLL_CTL_MOD);
+    return ctrl(fd, ptr, events, EPOLL_CTL_MOD);
 }
 
-void event_poller::del(int fd, void *ptr, __uint32_t events)
+int event_poller::del(int fd, void *ptr, __uint32_t events)
 {
-    int result = ctrl(fd, ptr, events, EPOLL_CTL_DEL);
+    return ctrl(fd, ptr, events, EPOLL_CTL_DEL);
 }
 
 int event_poller::wait(int millsecond)

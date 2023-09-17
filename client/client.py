@@ -24,15 +24,25 @@ if __name__ == '__main__':
     start_time = time.time()
     m_list = [];
     
-    client = socket.socket()  # tcp socket
-    client.connect((host, port))  # init connection
-    m_list.append(client)
+    for i in range(10):
+        client = socket.socket()  # tcp socket
+        client.connect((host, port))  # init connection
+        m_list.append(client)
+
     print('connected')
-    while True:
-        send_data(client, data)
+
+    while True:   
+        
+        for client in m_list:
+            send_data(client, data)
+        
         print(index)
         index+=1
-    client.close()
+
+    #send_data(client, data)
+
+    #client.close()
+
     end_time=time.time()
     print('time count: ')
     print((end_time-start_time))

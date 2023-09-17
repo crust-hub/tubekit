@@ -23,8 +23,8 @@ namespace tubekit
             bool sock2buf();
             bool buf2sock();
 
-        // public:
-        //     bool send(char *buffer, size_t buffer_size);
+        public:
+            bool send(char *buffer, size_t buffer_size);
 
         public:
             buffer::buffer m_send_buffer;

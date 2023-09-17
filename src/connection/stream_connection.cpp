@@ -151,23 +151,38 @@ bool stream_connection::buf2sock()
     return false;
 }
 
-// bool stream_connection::send(char *buffer, size_t buffer_size)
-// {
-//     if (buffer == nullptr)
-//     {
-//         return false;
-//     }
-//     try
-//     {
-//         u_int64_t len = m_wating_send_pack.write(buffer, buffer_size);
-//     }
-//     catch (...)
-//     {
-//         return false;
-//     }
-//     if (socket_ptr)
-//     {
-//         singleton<socket_handler>::instance()->attach(socket_ptr, true);
-//     }
-//     return true;
-// }
+bool stream_connection::send(char *buffer, size_t buffer_size)
+{
+    if (buffer == nullptr)
+    {
+        return false;
+    }
+
+    uint64_t len = 0;
+
+    try
+    {
+        len = m_wating_send_pack.write(buffer, buffer_size);
+    }
+    catch (const std::runtime_error &e)
+    {
+        LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
+        return false;
+    }
+
+    if (socket_ptr)
+    {
+        int iret = singleton<socket_handler>::instance()->attach(socket_ptr, true);
+        if (0 != iret)
+        {
+            // LOG_ERROR("attach(socket_ptr, true) return %d", iret);
+        }
+    }
+    else
+    {
+        LOG_ERROR("socket_ptr is nullptr");
+        return false;
+    }
+
+    return true;
+}
