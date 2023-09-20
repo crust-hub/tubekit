@@ -17,6 +17,7 @@ namespace tubekit
 
             virtual void run() = 0;     // pure virtual function
             virtual void destroy() = 0; // interface
+            virtual bool compare(task *other);
 
         protected:
             void *m_data;

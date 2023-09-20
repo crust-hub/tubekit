@@ -141,7 +141,7 @@ void http_task::run()
         singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
-  
+
     // read from socket
     if (reason_recv && !t_http_connection->get_recv_end())
     {

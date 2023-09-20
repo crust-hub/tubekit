@@ -67,7 +67,7 @@ void stream_task::run()
         singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
-  
+
     // recv data
     bool b_recv = false;
     {

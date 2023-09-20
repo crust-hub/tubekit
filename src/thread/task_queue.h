@@ -1,4 +1,4 @@
-#include <queue>
+#include <list>
 #include "thread/mutex.h"
 #include "thread/condition.h"
 #include "thread/auto_lock.h"
@@ -17,7 +17,7 @@ namespace tubekit::thread
     private:
         mutex m_mutex;
         condition m_condition;
-        std::queue<TASK *> m_task;
+        std::list<TASK *> m_task;
     };
 
     template <typename TASK>
@@ -34,7 +34,14 @@ namespace tubekit::thread
     void task_queue<TASK>::push(TASK *task)
     {
         auto_lock lock(m_mutex);
-        m_task.push(task);
+        for (auto ptr : m_task)
+        {
+            if (ptr && ptr->compare(task))
+            {
+                return;
+            }
+        }
+        m_task.push_back(task);
         m_condition.broadcast();
     }
 
@@ -47,7 +54,7 @@ namespace tubekit::thread
             m_condition.wait(&m_mutex);
         }
         TASK *task = m_task.front();
-        m_task.pop();
+        m_task.pop_front();
         return task;
     }
 }

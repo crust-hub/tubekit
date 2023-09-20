@@ -25,3 +25,16 @@ void task::set_data(void *data)
 {
     m_data = data;
 }
+
+bool task::compare(task *other)
+{
+    if (this == other)
+    {
+        return true;
+    }
+    if (other && this->m_data == other->m_data)
+    {
+        return true;
+    }
+    return false;
+}

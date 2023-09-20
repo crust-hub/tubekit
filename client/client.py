@@ -10,7 +10,7 @@ def send_data(client, data):
     print("send data len:")
     print(len(data))
     info = client.recv(1024).decode()
-    print(info)
+    print(len(info),":",info)
 
 if __name__ == '__main__':
     data=''
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     index = 0 
 
     host = '61.171.51.135'
-    #host = '172.29.94.203'
+    host = '172.29.94.203'
     port = 20023
     start_time = time.time()
     m_list = [];
@@ -31,8 +31,7 @@ if __name__ == '__main__':
 
     print('connected')
 
-    while True:   
-        
+    while True:
         for client in m_list:
             send_data(client, data)
         
