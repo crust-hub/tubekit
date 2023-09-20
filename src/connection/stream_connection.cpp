@@ -40,7 +40,7 @@ bool stream_connection::sock2buf()
             }
             catch (const std::runtime_error &e)
             {
-                LOG_ERROR(e.what());
+                //LOG_ERROR(e.what());
             }
         }
         else
@@ -166,7 +166,7 @@ bool stream_connection::send(char *buffer, size_t buffer_size)
     }
     catch (const std::runtime_error &e)
     {
-        LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
+        //LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
         return false;
     }
 
