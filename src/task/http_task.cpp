@@ -124,7 +124,7 @@ void http_task::run()
         };
     }
 
-    if (!singleton<connection_mgr>::instance()->has(socket_ptr))
+    if (false == singleton<connection_mgr>::instance()->has(socket_ptr))
     {
         LOG_ERROR("!singleton<connection_mgr>::instance()->has(socket_ptr)");
         singleton<socket_handler>::instance()->remove(socket_ptr);
@@ -134,20 +134,14 @@ void http_task::run()
     // get connection layer instance
     connection::http_connection *t_http_connection = (connection::http_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
-    if (nullptr == t_http_connection)
-    {
-        singleton<socket_handler>::instance()->remove(socket_ptr);
-        return;
-    }
-
     // connection is close
-    if (t_http_connection->is_close())
+    if (nullptr == t_http_connection || t_http_connection->is_close())
     {
         singleton<socket_handler>::instance()->remove(socket_ptr);
         singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
-
+  
     // read from socket
     if (reason_recv && !t_http_connection->get_recv_end())
     {
