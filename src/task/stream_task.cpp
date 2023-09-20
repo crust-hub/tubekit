@@ -50,7 +50,7 @@ void stream_task::run()
     }
 
     // Connection Mgr
-    if (!singleton<connection_mgr>::instance()->has(socket_ptr))
+    if (false == singleton<connection_mgr>::instance()->has(socket_ptr))
     {
         LOG_ERROR("!singleton<connection_mgr>::instance()->has(socket_ptr)");
         singleton<socket_handler>::instance()->remove(socket_ptr);
@@ -60,20 +60,14 @@ void stream_task::run()
     // get connection layer instance
     connection::stream_connection *t_stream_connection = (connection::stream_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 
-    if (nullptr == t_stream_connection)
-    {
-        singleton<socket_handler>::instance()->remove(socket_ptr);
-        return;
-    }
-
     // connection is close
-    if (t_stream_connection->is_close())
+    if (nullptr == t_stream_connection || t_stream_connection->is_close())
     {
         singleton<socket_handler>::instance()->remove(socket_ptr);
         singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
-
+  
     // recv data
     bool b_recv = false;
     {
