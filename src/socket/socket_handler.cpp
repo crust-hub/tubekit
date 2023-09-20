@@ -69,7 +69,7 @@ int socket_handler::remove(socket *m_socket)
     int iret = detach(m_socket);
     if (0 != iret)
     {
-        LOG_ERROR("detach(m_socket) return %d", iret);
+        //LOG_ERROR("detach(m_socket) return %d", iret);
     }
     m_socket->close();
     socket_pool.release(m_socket); // return back to socket object poll
