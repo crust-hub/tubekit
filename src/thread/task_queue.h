@@ -38,6 +38,10 @@ namespace tubekit::thread
         {
             if (ptr && ptr->compare(task))
             {
+                if(task)
+                {
+                    delete task;
+                }
                 return;
             }
         }
