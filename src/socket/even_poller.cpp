@@ -57,7 +57,7 @@ int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
     ev.data.ptr = ptr;
     if (m_et)
     {
-        ev.events = events | EPOLLET;
+        ev.events = events | EPOLLET; // decause epoll default LT
         /*
         epoll是linux系统最新的处理多连接的高效率模型， 工作在两种方式下， EPOLLLT方式和EPOLLET方式。
         EPOLLLT是系统默认， 工作在这种方式下， 程序员不易出问题， 在接收数据时，只要socket输入缓存有数据，

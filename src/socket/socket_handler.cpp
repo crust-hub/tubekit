@@ -51,11 +51,26 @@ void socket_handler::listen(const string &ip, int port)
 int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
 {
     auto_lock lock(m_mutex);
+    uint_least32_t events = 0;
     if (listen_send)
     {
-        return m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR));
+        events = (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR);
     }
-    return m_epoll->add(m_socket->m_sockfd, (void *)m_socket, (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR));
+    else
+    {
+        events = (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR);
+    }
+    int i_ret = m_epoll->add(m_socket->m_sockfd, (void *)m_socket, events);
+    if (0 == i_ret)
+    {
+        return 0;
+    }
+    // using EPOLL_CTL_MOD
+    if (!(i_ret == -1 && errno == EEXIST))
+    {
+        return i_ret;
+    }
+    return m_epoll->mod(m_socket->m_sockfd, (void *)m_socket, events);
 }
 
 int socket_handler::detach(socket *m_socket)
@@ -69,7 +84,7 @@ int socket_handler::remove(socket *m_socket)
     int iret = detach(m_socket);
     if (0 != iret)
     {
-        //LOG_ERROR("detach(m_socket) return %d", iret);
+        // LOG_ERROR("detach(m_socket) return %d", iret);
     }
     m_socket->close();
     socket_pool.release(m_socket); // return back to socket object poll

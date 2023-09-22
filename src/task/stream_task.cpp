@@ -69,10 +69,9 @@ void stream_task::run()
     }
 
     // recv data
-    bool b_recv = false;
     {
         // read data from socket to connection layer buffer
-        b_recv = t_stream_connection->sock2buf();
+        t_stream_connection->sock2buf();
     }
 
     // process data
@@ -88,11 +87,10 @@ void stream_task::run()
         b_send = t_stream_connection->buf2sock();
     }
 
-    if (b_send)
+    int i_ret = singleton<socket_handler>::instance()->attach(socket_ptr, b_send);
+    if (i_ret != 0)
     {
-        singleton<socket_handler>::instance()->attach(socket_ptr, true);
-        return;
+        LOG_ERROR("socket handler attach error %d", i_ret);
     }
-
-    singleton<socket_handler>::instance()->attach(socket_ptr);
+    return;
 }
