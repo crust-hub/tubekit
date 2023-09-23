@@ -187,10 +187,9 @@ void socket_handler::handle(int max_connections, int wait_time)
                     remove(socket_object);
                     continue;
                 }
-
                 attach(socket_object); // listen read
-            }
-            else
+            }                          // There is a new socket connection
+            else                       // already connection socket has event happen
             {
                 // already connection socket process
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);

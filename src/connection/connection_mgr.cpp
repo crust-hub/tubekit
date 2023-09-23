@@ -1,6 +1,8 @@
 #include "connection/connection_mgr.h"
 #include "thread/auto_lock.h"
+#include "app/stream_app.h"
 
+using tubekit::app::stream_app;
 using tubekit::connection::connection;
 using tubekit::connection::connection_mgr;
 using tubekit::connection::http_connection;
@@ -27,6 +29,10 @@ bool connection_mgr::add(void *index_ptr, connection *conn_ptr)
         return false;
     }
     m_map.insert({index_ptr, conn_ptr});
+    if (is_stream(conn_ptr))
+    {
+        stream_app::on_new_connection(*convert_to_stream(conn_ptr));
+    }
     return true;
 }
 
@@ -37,6 +43,10 @@ bool connection_mgr::remove(void *index_ptr)
     if (res != m_map.end())
     {
         res->second->close_before();
+        if (is_stream(res->second))
+        {
+            stream_app::on_close_connection(*convert_to_stream(res->second));
+        }
         // triger delete connection
         delete res->second;
         m_map.erase(res);
