@@ -66,6 +66,18 @@ bool connection_mgr::has(void *index_ptr)
     return false;
 }
 
+void connection_mgr::for_each(std::function<void(connection &conn)> callback)
+{
+    tubekit::thread::auto_lock lock(m_mutex);
+    if (callback)
+    {
+        for (auto p : m_map)
+        {
+            callback(*p.second);
+        }
+    }
+}
+
 connection *connection_mgr::get(void *index_ptr)
 {
     tubekit::thread::auto_lock lock(m_mutex);
@@ -75,6 +87,18 @@ connection *connection_mgr::get(void *index_ptr)
         return res->second;
     }
     return nullptr;
+}
+
+bool connection_mgr::mark_close(void *index_ptr)
+{
+    tubekit::thread::auto_lock lock(m_mutex);
+    auto res = m_map.find(index_ptr);
+    if (res != m_map.end())
+    {
+        res->second->mark_close();
+        return true;
+    }
+    return false;
 }
 
 http_connection *connection_mgr::convert_to_http(connection *conn_ptr)

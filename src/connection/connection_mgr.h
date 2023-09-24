@@ -3,6 +3,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 #include "thread/mutex.h"
 #include "connection/connection.h"
 #include "connection/http_connection.h"
@@ -19,6 +20,8 @@ namespace tubekit::connection
         bool remove(void *index_ptr);
         bool has(void *index_ptr);
         connection *get(void *index_ptr);
+        bool mark_close(void *index_ptr);
+        void for_each(std::function<void(connection &conn)> callback);
 
     public:
         static http_connection *convert_to_http(connection *conn_ptr);

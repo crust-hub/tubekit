@@ -124,13 +124,6 @@ void http_task::run()
         };
     }
 
-    if (false == singleton<connection_mgr>::instance()->has(socket_ptr))
-    {
-        LOG_ERROR("!singleton<connection_mgr>::instance()->has(socket_ptr)");
-        singleton<socket_handler>::instance()->remove(socket_ptr);
-        return;
-    }
-
     // get connection layer instance
     connection::http_connection *t_http_connection = (connection::http_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
 

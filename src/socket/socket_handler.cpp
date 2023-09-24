@@ -51,16 +51,22 @@ void socket_handler::listen(const string &ip, int port)
 int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
 {
     auto_lock lock(m_mutex);
-    uint_least32_t events = 0;
+    __uint32_t target_events = 0;
+    __uint32_t now_events = m_epoll->get_events_by_fd(m_socket->m_sockfd);
+    if (now_events & EPOLLOUT) // must have the next loop
+    {
+        return 0;
+    }
+    // m_socket not in epoll
     if (listen_send)
     {
-        events = (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR);
+        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR);
     }
     else
     {
-        events = (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR);
+        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR);
     }
-    int i_ret = m_epoll->add(m_socket->m_sockfd, (void *)m_socket, events);
+    int i_ret = m_epoll->add(m_socket->m_sockfd, (void *)m_socket, target_events);
     if (0 == i_ret)
     {
         return 0;
@@ -70,7 +76,7 @@ int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
     {
         return i_ret;
     }
-    return m_epoll->mod(m_socket->m_sockfd, (void *)m_socket, events);
+    return m_epoll->mod(m_socket->m_sockfd, (void *)m_socket, target_events);
 }
 
 int socket_handler::detach(socket *m_socket)
@@ -198,18 +204,15 @@ void socket_handler::handle(int max_connections, int wait_time)
                 connection::connection *p_connection = singleton<connection_mgr>::instance()->get(socket_ptr);
                 if (p_connection == nullptr)
                 {
+                    LOG_ERROR("exsit socket,but not exist connection");
                     remove(socket_ptr);
                     continue;
                 }
 
-                if (m_epoll->m_events[i].events & EPOLLHUP) // The file descriptor is hung up,client closed
+                if ((m_epoll->m_events[i].events & EPOLLHUP) || (m_epoll->m_events[i].events & EPOLLERR))
                 {
-                    p_connection->mark_close();
-                }
-
-                if (m_epoll->m_events[i].events & EPOLLERR) // An error occurred with the file descriptor
-                {
-                    p_connection->mark_close();
+                    // using connection_mgr mark_close,to prevent connection already free
+                    singleton<connection_mgr>::instance()->mark_close(socket_ptr);
                 }
 
                 // Different processing is triggered for different poll events
@@ -255,6 +258,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                 {
                     remove(socket_ptr);
                     LOG_ERROR("new_task is nullptr");
+                    exit(EXIT_FAILURE);
                     singleton<connection_mgr>::instance()->remove(socket_ptr);
                     continue;
                 }

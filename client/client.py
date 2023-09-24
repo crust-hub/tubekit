@@ -27,7 +27,7 @@ def recv_thread():
 if __name__ == '__main__':
     for i in range(10):
         will_send_data = will_send_data + 'aaaaaaaaaaaaaaaaaaaa高万禄aaaaaaaaaaaaaaaabhdsbjchbfvjbdfjvbfjdhvbjhfbh'
-    for i in range(10):
+    for i in range(10000):
         client = socket.socket()  # tcp socket
         client.connect((host, port))  # init connection
         client.setblocking(False)

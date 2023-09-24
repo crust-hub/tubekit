@@ -27,6 +27,9 @@ namespace tubekit
             bool send(char *buffer, size_t buffer_size);
 
         public:
+            virtual void on_mark_close() override;
+
+        public:
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
             buffer::buffer m_wating_send_pack;

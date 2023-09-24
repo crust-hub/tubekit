@@ -17,6 +17,7 @@ void connection::close_before()
 void connection::mark_close()
 {
     close_flag = true;
+    on_mark_close();
 }
 
 bool connection::is_close()

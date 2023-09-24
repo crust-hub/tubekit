@@ -80,17 +80,37 @@ int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
 
 int event_poller::add(int fd, void *ptr, __uint32_t events)
 {
-    return ctrl(fd, ptr, events, EPOLL_CTL_ADD);
+    int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_ADD);
+    if (0 == int_ret)
+    {
+        m_map_fd_envets[fd] = events;
+    }
+    return int_ret;
 }
 
 int event_poller::mod(int fd, void *ptr, __uint32_t events)
 {
-    return ctrl(fd, ptr, events, EPOLL_CTL_MOD);
+    int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_MOD);
+    if (0 == int_ret)
+    {
+        m_map_fd_envets[fd] = events;
+    }
+    return int_ret;
 }
 
 int event_poller::del(int fd, void *ptr, __uint32_t events)
 {
-    return ctrl(fd, ptr, events, EPOLL_CTL_DEL);
+    int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_DEL);
+    if (0 == int_ret)
+    {
+        m_map_fd_envets[fd] = 0;
+    }
+    return int_ret;
+}
+
+__uint32_t event_poller::get_events_by_fd(int fd)
+{
+    return m_map_fd_envets[fd];
 }
 
 int event_poller::wait(int millsecond)

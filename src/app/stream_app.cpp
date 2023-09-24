@@ -12,24 +12,25 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
 {
     m_stream_connection.m_recv_buffer.clear();
 
-    ProtoMessageHead protoMessageHead;
-    protoMessageHead.set_cmd(0);
+    // ProtoMessageHead protoMessageHead;
+    // protoMessageHead.set_cmd(0);
 
-    std::string buffer;
+    // std::string buffer;
 
-    ProtoExampleReq protoExampleReq;
-    protoExampleReq.set_testcontext("hello world");
+    // ProtoExampleReq protoExampleReq;
+    // protoExampleReq.set_testcontext("hello world");
 
-    protoMessageHead.set_bodylen(buffer.size());
+    // protoMessageHead.set_bodylen(buffer.size());
 
-    protoMessageHead.SerializeToString(&buffer);
-    m_stream_connection.send(buffer.data(), buffer.size());
-    buffer.clear();
+    // protoMessageHead.SerializeToString(&buffer);
+    // m_stream_connection.send(buffer.data(), buffer.size());
+    // buffer.clear();
 
-    protoExampleReq.SerializeToString(&buffer);
+    // protoExampleReq.SerializeToString(&buffer);
 
-    m_stream_connection.send(buffer.data(), buffer.size());
-    buffer.clear();
+    // m_stream_connection.send(buffer.data(), buffer.size());
+    // buffer.clear();
+    // m_stream_connection.mark_close();
 }
 
 void stream_app::on_close_connection(tubekit::connection::stream_connection &m_stream_connection)

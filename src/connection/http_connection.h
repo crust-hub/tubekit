@@ -35,6 +35,9 @@ namespace tubekit
             bool get_everything_end();
 
         public:
+            virtual void on_mark_close() override;
+
+        public:
             std::string url;
             std::string method;
             std::map<std::string, std::vector<std::string>> headers;

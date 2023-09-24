@@ -103,3 +103,7 @@ ostream &operator<<(ostream &os, const http_connection &m_http_connection)
 {
     return os;
 }
+
+void http_connection::on_mark_close()
+{
+}

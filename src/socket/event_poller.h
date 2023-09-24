@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string>
 #include <cstring>
+#include <unordered_map>
 
 namespace tubekit
 {
@@ -96,6 +97,8 @@ namespace tubekit
              */
             int wait(int millsecond);
 
+            __uint32_t get_events_by_fd(int fd);
+
         protected:
             /**
              * @brief 控制 epoll，将EPOLL设为边缘触发EPOLLET模式
@@ -137,6 +140,11 @@ namespace tubekit
              *
              */
             bool m_et;
+            /**
+             * @brief event what store fd is listenning
+             *
+             */
+            std::unordered_map<int, __uint32_t> m_map_fd_envets;
         };
     }
 };

@@ -12,6 +12,13 @@ namespace tubekit
             virtual void close_before();
 
         public:
+            virtual void on_mark_close() = 0;
+
+        public:
+            /**
+             * @brief connection will be closed
+             *
+             */
             void mark_close();
             bool is_close();
 
