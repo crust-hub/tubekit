@@ -1,8 +1,9 @@
 #pragma once
-#include <list>
+#include <set>
 
 #include "thread/mutex.h"
 #include "thread/auto_lock.h"
+#include "thread/condition.h"
 
 namespace tubekit
 {
@@ -37,13 +38,14 @@ namespace tubekit
             void release(T *t);
 
         private:
-            std::list<T *> m_list;
+            std::set<T *> m_set;
 
             /**
              * @brief ensure thread safety for m_list operations
              *
              */
             mutex m_mutex;
+            condition m_condition;
         };
 
         template <typename T>
@@ -51,11 +53,11 @@ namespace tubekit
         {
             auto_lock lock(m_mutex);
             // free space of the all objects
-            for (auto t : m_list)
+            for (auto t : m_set)
             {
                 delete t;
             }
-            m_list.clear();
+            m_set.clear();
         }
 
         template <typename T>
@@ -66,7 +68,7 @@ namespace tubekit
             {
                 T *p = new T();
                 if (p)
-                    m_list.push_back(p);
+                    m_set.insert(p);
             }
         }
 
@@ -74,12 +76,12 @@ namespace tubekit
         T *object_pool<T>::allocate()
         {
             auto_lock lock(m_mutex);
-            if (0 == m_list.size())
+            while (m_set.empty())
             {
-                return nullptr;
+                m_condition.wait(&m_mutex);
             }
-            T *p = m_list.front(); // head node
-            m_list.pop_front();    // remove head node
+            T *p = *m_set.begin();
+            m_set.erase(m_set.begin());
             return p;
         }
 
@@ -88,7 +90,10 @@ namespace tubekit
         {
             auto_lock lock(m_mutex);
             if (t)
-                m_list.push_back(t);
+            {
+                m_set.insert(t);
+                m_condition.broadcast();
+            }
         }
 
     }

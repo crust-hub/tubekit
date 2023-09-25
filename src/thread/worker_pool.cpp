@@ -35,7 +35,8 @@ void worker_pool::assign(task *m_task)
     std::uint32_t hash = uintptr;
 
     uint32_t addr2idx = hash;
-    addr2idx = (addr2idx + 3) % worker_map.size();
+    addr2idx = addr2idx >> 16;
+    addr2idx = (addr2idx + 5) % worker_map.size();
 
     // LOG_ERROR("addr2idx=%d", addr2idx);
 

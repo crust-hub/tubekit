@@ -256,11 +256,8 @@ void socket_handler::handle(int max_connections, int wait_time)
                 // create task failed
                 if (new_task == nullptr)
                 {
-                    remove(socket_ptr);
                     LOG_ERROR("new_task is nullptr");
                     exit(EXIT_FAILURE);
-                    singleton<connection_mgr>::instance()->remove(socket_ptr);
-                    continue;
                 }
 
                 // Submit the task to the queue of task_dispatcher
