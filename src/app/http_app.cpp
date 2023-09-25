@@ -5,6 +5,7 @@
 #include <tubekit-log/logger.h>
 
 #include "utility/mime_type.h"
+#include "utility/url.h"
 
 using std::string;
 using std::vector;
@@ -37,7 +38,7 @@ public:
 
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
-    m_http_connection.m_buffer.set_limit_max(20480);
+    m_http_connection.m_buffer.set_limit_max(202300);
     // load callback
     m_http_connection.destory_callback = [](http_connection &m_connection) -> void
     {
@@ -50,7 +51,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
     };
     m_http_connection.process_callback = [](http_connection &connection) -> void
     {
-        string url = connection.url;
+        string url = utility::url::decode(connection.url);
         auto find_res = url.find("..");
         if (std::string::npos != find_res)
         {
@@ -59,7 +60,15 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
         }
         const string prefix = "/";
 
-        fs::path t_path(prefix + url);
+        fs::path t_path;
+        if (url.empty() || url[0] != '/')
+        {
+            t_path = prefix + url;
+        }
+        else
+        {
+            t_path = url;
+        }
 
         if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::regular)
         {
@@ -94,9 +103,9 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             // and the response must be set response_end to true, then write after write_end_callback will be continuously recalled
             connection.write_end_callback = [](http_connection &m_connection) -> void
             {
-                char buf[1024] = {0};
+                char buf[202300] = {0};
                 int len = 0;
-                len = ::fread(buf, sizeof(char), 1024, (FILE *)m_connection.ptr);
+                len = ::fread(buf, sizeof(char), 202300, (FILE *)m_connection.ptr);
                 if (len > 0)
                 {
                     try
@@ -133,7 +142,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             for (const auto &dir_entry : fs::directory_iterator{t_path})
             {
                 std::string sub_path = dir_entry.path().string().substr(prefix.size());
-                a_tags.push_back(html_loader::a_tag(sub_path, sub_path));
+                a_tags.push_back(html_loader::a_tag(utility::url::encode(sub_path), sub_path));
             }
             string body;
             for (const auto &a_tag : a_tags)
