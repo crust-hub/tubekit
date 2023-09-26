@@ -23,6 +23,20 @@ namespace tubekit::connection
         bool mark_close(void *index_ptr);
         void for_each(std::function<void(connection &conn)> callback);
 
+        /**
+         * @brief Sending data to a stream connection can prevent the problem
+         *        of using a null pointer in the connection.
+         *        In addition to processing the allocated connection
+         *        within the worker thread, safe_send should be used
+         *
+         * @param index_ptr
+         * @param buffer
+         * @param len
+         * @return true
+         * @return false
+         */
+        bool safe_send(void *index_ptr, const char *buffer, size_t len);
+
     public:
         static http_connection *convert_to_http(connection *conn_ptr);
         static stream_connection *convert_to_stream(connection *conn_ptr);

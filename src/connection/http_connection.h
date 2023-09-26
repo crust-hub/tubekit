@@ -61,7 +61,6 @@ namespace tubekit
             bool process_end;
             bool response_end;
             bool everything_end;
-            tubekit::socket::socket *socket_ptr;
         };
     }
 }

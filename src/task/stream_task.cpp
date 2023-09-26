@@ -63,7 +63,10 @@ void stream_task::run()
     // recv data
     {
         // read data from socket to connection layer buffer
-        t_stream_connection->sock2buf();
+        if (false == t_stream_connection->sock2buf())
+        {
+            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+        }
     }
 
     // process data

@@ -22,6 +22,7 @@ namespace tubekit
             void set_limit_max(u_int64_t limit_max);
             u_int64_t get_limit_max();
             void clear();
+            u_int64_t copy_all(char *out, u_int64_t out_len);
 
         private:
             u_int64_t m_limit_max;
@@ -37,6 +38,7 @@ namespace tubekit
             bool check_and_write(const char *source, u_int64_t size);
             void move_to_before();
             u_int64_t after_size();
+            char *get_read_ptr();
         };
     }
 }

@@ -24,7 +24,16 @@ namespace tubekit
             bool buf2sock();
 
         public:
-            bool send(char *buffer, size_t buffer_size);
+            /**
+             * @brief Only when processing stream_connection, the worker thread of the connection uses its own send,
+             *        and if sending to other connections, the connection mgr's safe_send needs to be used.
+             *
+             * @param buffer
+             * @param buffer_size
+             * @return true
+             * @return false
+             */
+            bool send(const char *buffer, size_t buffer_size);
 
         public:
             virtual void on_mark_close() override;
@@ -33,9 +42,6 @@ namespace tubekit
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
             buffer::buffer m_wating_send_pack;
-
-        private:
-            tubekit::socket::socket *socket_ptr;
         };
     }
 }

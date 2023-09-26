@@ -159,3 +159,24 @@ void buffer::clear()
     m_read_ptr = m_buffer;
     m_write_ptr = m_buffer;
 }
+
+char *buffer::get_read_ptr()
+{
+    return m_read_ptr;
+}
+
+u_int64_t buffer::copy_all(char *out, u_int64_t out_len)
+{
+    if (!out)
+    {
+        return 0;
+    }
+    std::lock_guard<std::mutex> guard(m_mutex);
+    uint64_t all_bytes = can_readable_size();
+    if (out_len < all_bytes)
+    {
+        return 0;
+    }
+    memcpy(out, get_read_ptr(), all_bytes);
+    return all_bytes;
+}

@@ -1,4 +1,5 @@
 #pragma once
+#include "socket/socket.h"
 
 namespace tubekit
 {
@@ -7,7 +8,7 @@ namespace tubekit
         class connection
         {
         public:
-            connection();
+            connection(tubekit::socket::socket *socket_ptr);
             virtual ~connection();
             virtual void close_before();
 
@@ -21,9 +22,13 @@ namespace tubekit
              */
             void mark_close();
             bool is_close();
+            tubekit::socket::socket *get_socket_ptr();
 
         private:
             bool close_flag;
+
+        protected:
+            tubekit::socket::socket *socket_ptr;
         };
     }
 }

@@ -7,7 +7,7 @@ using tubekit::connection::stream_connection;
 using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
-stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : socket_ptr(socket_ptr),
+stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
                                                                             m_send_buffer(2048),
                                                                             m_recv_buffer(2048),
                                                                             m_wating_send_pack(2048)
@@ -151,7 +151,7 @@ bool stream_connection::buf2sock()
     return false;
 }
 
-bool stream_connection::send(char *buffer, size_t buffer_size)
+bool stream_connection::send(const char *buffer, size_t buffer_size)
 {
     if (buffer == nullptr)
     {

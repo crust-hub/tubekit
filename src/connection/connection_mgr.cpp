@@ -89,6 +89,30 @@ connection *connection_mgr::get(void *index_ptr)
     return nullptr;
 }
 
+bool connection_mgr::safe_send(void *index_ptr, const char *buffer, size_t len)
+{
+    if (!buffer || 0 == len)
+    {
+        return false;
+    }
+    tubekit::thread::auto_lock lock(m_mutex);
+    auto res = m_map.find(index_ptr);
+    if (res == m_map.end())
+    {
+        return false;
+    }
+    if (!is_stream(res->second))
+    {
+        return false;
+    }
+    stream_connection *stream_conn = convert_to_stream(res->second);
+    if (!stream_conn)
+    {
+        return false;
+    }
+    return stream_conn->send(buffer, len);
+}
+
 bool connection_mgr::mark_close(void *index_ptr)
 {
     tubekit::thread::auto_lock lock(m_mutex);
