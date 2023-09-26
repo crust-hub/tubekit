@@ -87,7 +87,6 @@ int socket_handler::detach(socket *m_socket)
 
 int socket_handler::remove(socket *m_socket)
 {
-    auto_lock lock(m_mutex);
     int iret = detach(m_socket);
     if (0 != iret)
     {
