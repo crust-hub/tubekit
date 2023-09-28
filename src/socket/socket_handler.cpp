@@ -198,6 +198,7 @@ void socket_handler::handle(int max_connections, int wait_time)
             else                       // already connection socket has event happen
             {
                 // already connection socket process
+                uint32_t events = m_epoll->m_events[i].events;
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 detach(socket_ptr);
                 // get connection layer instance
@@ -209,7 +210,7 @@ void socket_handler::handle(int max_connections, int wait_time)
                     continue;
                 }
 
-                if ((m_epoll->m_events[i].events & EPOLLHUP) || (m_epoll->m_events[i].events & EPOLLERR))
+                if ((events & EPOLLHUP) || (events & EPOLLERR))
                 {
                     // using connection_mgr mark_close,to prevent connection already free
                     singleton<connection_mgr>::instance()->mark_close(socket_ptr);
@@ -218,10 +219,10 @@ void socket_handler::handle(int max_connections, int wait_time)
                 // Different processing is triggered for different poll events
                 bool recv_event = false;
                 bool send_event = false;
-                if ((m_epoll->m_events[i].events & EPOLLIN) || (m_epoll->m_events[i].events & EPOLLOUT)) // There is data,to be can read
+                if ((events & EPOLLIN) || (events & EPOLLOUT)) // There is data,to be can read
                 {
-                    recv_event = (m_epoll->m_events[i].events & EPOLLIN);
-                    send_event = (m_epoll->m_events[i].events & EPOLLOUT);
+                    recv_event = events & EPOLLIN;
+                    send_event = events & EPOLLOUT;
                 }
 
                 // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
