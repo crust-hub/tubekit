@@ -88,10 +88,11 @@ namespace tubekit
         template <typename T>
         void object_pool<T>::release(T *t)
         {
-            auto_lock lock(m_mutex);
             if (t)
             {
+                m_mutex.lock();
                 m_set.insert(t);
+                m_mutex.unlock();
                 m_condition.broadcast();
             }
         }

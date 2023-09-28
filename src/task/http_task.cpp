@@ -130,8 +130,11 @@ void http_task::run()
     // connection is close
     if (nullptr == t_http_connection || t_http_connection->is_close())
     {
+        if (t_http_connection)
+        {
+            singleton<connection_mgr>::instance()->remove(socket_ptr);
+        }
         singleton<socket_handler>::instance()->remove(socket_ptr);
-        singleton<connection_mgr>::instance()->remove(socket_ptr);
         return;
     }
 
