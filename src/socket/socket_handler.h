@@ -15,7 +15,7 @@ namespace tubekit
         public:
             socket_handler();
             ~socket_handler();
-            void listen(const std::string &ip, int port);
+            bool init(const std::string &ip, int port, int max_connections, int wait_time);
 
             /**
              * @brief Register the m_socket with the epoll
@@ -40,14 +40,17 @@ namespace tubekit
              */
             int remove(socket *m_socket);
 
-            socket* alloc_socket();
+            socket *alloc_socket();
 
-            void handle(int max_connections, int wait_time);
+            void handle();
 
         public:
             void on_tick();
 
         private:
+            bool m_init;
+            int m_max_connections;
+            int m_wait_time;
             event_poller *m_epoll;
             socket *m_server;
             tubekit::utility::object_pool<socket> socket_pool;

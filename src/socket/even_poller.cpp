@@ -53,7 +53,7 @@ void event_poller::create(int max_connections)
  * @param op 操作选项 EPOLL_CTL_ADD，EPOLL_CTL_MOD，EPOLL_CTL_DEL
  */
 
-int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
+int event_poller::ctrl(int fd, void *ptr, uint32_t events, int op)
 {
     struct ::epoll_event ev;
     ev.data.ptr = ptr;
@@ -80,7 +80,7 @@ int event_poller::ctrl(int fd, void *ptr, __uint32_t events, int op)
     return epoll_ctl(m_epfd, op, fd, &ev);
 }
 
-int event_poller::add(int fd, void *ptr, __uint32_t events)
+int event_poller::add(int fd, void *ptr, uint32_t events)
 {
     int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_ADD);
     if (0 == int_ret)
@@ -90,7 +90,7 @@ int event_poller::add(int fd, void *ptr, __uint32_t events)
     return int_ret;
 }
 
-int event_poller::mod(int fd, void *ptr, __uint32_t events)
+int event_poller::mod(int fd, void *ptr, uint32_t events)
 {
     int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_MOD);
     if (0 == int_ret)
@@ -100,7 +100,7 @@ int event_poller::mod(int fd, void *ptr, __uint32_t events)
     return int_ret;
 }
 
-int event_poller::del(int fd, void *ptr, __uint32_t events)
+int event_poller::del(int fd, void *ptr, uint32_t events)
 {
     int int_ret = ctrl(fd, ptr, events, EPOLL_CTL_DEL);
     if (0 == int_ret)
@@ -110,7 +110,7 @@ int event_poller::del(int fd, void *ptr, __uint32_t events)
     return int_ret;
 }
 
-__uint32_t event_poller::get_events_by_fd(int fd)
+uint32_t event_poller::get_events_by_fd(int fd)
 {
     return m_map_fd_envets[fd];
 }

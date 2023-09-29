@@ -48,7 +48,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            int add(int fd, void *ptr, __uint32_t events);
+            int add(int fd, void *ptr, uint32_t events);
             /**
              * @brief epoll句柄更新已存在的epoll_event
              *
@@ -68,7 +68,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            int mod(int fd, void *ptr, __uint32_t events);
+            int mod(int fd, void *ptr, uint32_t events);
             /**
              * @brief 从epoll句柄删除epoll_event
              *
@@ -88,7 +88,7 @@ namespace tubekit
              *               采用EPOLLONETSHOT事件的文件描述符上的注册事件只触发一次，要想重新注册事件则需要调用epoll_ctl重置文件描述符上的事件，
              *               这样前面的socket就不会出现竞态。
              */
-            int del(int fd, void *ptr, __uint32_t events);
+            int del(int fd, void *ptr, uint32_t events);
             /**
              * @brief 获取epoll事件
              *
@@ -97,7 +97,7 @@ namespace tubekit
              */
             int wait(int millsecond);
 
-            __uint32_t get_events_by_fd(int fd);
+            uint32_t get_events_by_fd(int fd);
 
         protected:
             /**
@@ -117,7 +117,7 @@ namespace tubekit
              *                 EPOLL_CTL_DEL：从 epfd中删除一个fd；
              *
              */
-            int ctrl(int fd, void *ptr, __uint32_t events, int op);
+            int ctrl(int fd, void *ptr, uint32_t events, int op);
 
         protected:
             /**
@@ -144,7 +144,7 @@ namespace tubekit
              * @brief event what store fd is listenning
              *
              */
-            std::unordered_map<int, __uint32_t> m_map_fd_envets;
+            std::unordered_map<int, uint32_t> m_map_fd_envets;
         };
     }
 };

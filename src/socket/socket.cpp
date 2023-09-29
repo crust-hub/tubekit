@@ -87,6 +87,9 @@ bool socket::close()
         ::close(m_sockfd);
         m_sockfd = 0;
     }
+    close_callback = nullptr;
+    m_ip.clear();
+    m_port = 0;
     return true;
 }
 

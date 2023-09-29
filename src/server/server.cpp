@@ -43,8 +43,8 @@ void server::start()
 
     // init the socket handler in epoll
     socket_handler *handler = singleton<socket_handler>::instance();
-    handler->listen(m_ip, m_port);
-    handler->handle(m_connects, m_wait_time); // main thread loop
+    handler->init(m_ip, m_port, m_connects, m_wait_time);
+    handler->handle(); // main thread loop
 
     LOG_ERROR("socket_handler handle return");
 }

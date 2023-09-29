@@ -25,7 +25,7 @@ using namespace tubekit::server;
 using namespace tubekit::app;
 using namespace tubekit::connection;
 
-socket_handler::socket_handler()
+socket_handler::socket_handler() : m_init(false)
 {
 }
 
@@ -43,16 +43,15 @@ socket_handler::~socket_handler()
     }
 }
 
-void socket_handler::listen(const string &ip, int port)
-{
-    m_server = new server_socket(ip, port);
-}
-
 int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
 {
+    if (!m_init)
+    {
+        return -1;
+    }
     auto_lock lock(m_mutex);
-    __uint32_t target_events = 0;
-    __uint32_t now_events = m_epoll->get_events_by_fd(m_socket->m_sockfd);
+    uint32_t target_events = 0;
+    uint32_t now_events = m_epoll->get_events_by_fd(m_socket->m_sockfd);
     if (now_events & EPOLLOUT) // must have the next loop
     {
         return 0;
@@ -81,12 +80,20 @@ int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
 
 int socket_handler::detach(socket *m_socket)
 {
+    if (!m_init)
+    {
+        return -1;
+    }
     auto_lock lock(m_mutex);
     return m_epoll->del(m_socket->m_sockfd, (void *)m_socket, 0);
 }
 
 int socket_handler::remove(socket *m_socket)
 {
+    if (!m_init)
+    {
+        return -1;
+    }
     int iret = detach(m_socket);
     if (0 != iret)
     {
@@ -99,6 +106,10 @@ int socket_handler::remove(socket *m_socket)
 
 socket *socket_handler::alloc_socket()
 {
+    if (!m_init)
+    {
+        return nullptr;
+    }
     return socket_pool.allocate();
 }
 
@@ -107,12 +118,30 @@ void socket_handler::on_tick()
     singleton<app::tick>::instance()->run();
 }
 
-void socket_handler::handle(int max_connections, int wait_time)
+bool socket_handler::init(const string &ip, int port, int max_connections, int wait_time)
 {
-    m_epoll = new event_poller(false); // EPOLLLT mode
+    if (m_init)
+    {
+        LOG_ERROR("socket handler already init");
+        return true;
+    }
+    m_server = new server_socket(ip, port);
+    m_max_connections = max_connections;
+    m_wait_time = wait_time;
+    m_epoll = new event_poller(false); // false:EPOLLLT mode
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     socket_pool.init(max_connections);
+    m_init = true;
+}
+
+void socket_handler::handle()
+{
+    if (!m_init)
+    {
+        LOG_ERROR("socket_handler not init,can not execute handle");
+        return;
+    }
     // main thread loop
     while (true)
     {
@@ -123,7 +152,7 @@ void socket_handler::handle(int max_connections, int wait_time)
             singleton<app::stop>::instance()->run();
             break; // main process to exit
         }
-        int num = m_epoll->wait(wait_time);
+        int num = m_epoll->wait(m_wait_time);
         on_tick();
         if (num == 0)
         {
