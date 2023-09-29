@@ -14,19 +14,31 @@ namespace tubekit
         class singleton
         {
         public:
-            static T *instance()
+            template <typename... Args>
+            static T *instance(Args &&...args)
             {
-                static std::shared_ptr<T> instance = nullptr;
-                if (instance == nullptr)
+                if (m_instance == nullptr)
                 {
-                    instance = std::make_shared<T>();
+                    m_instance = std::make_shared<T>(std::forward<Args>(args)...);
                 }
-                return instance.get();
+                return m_instance.get();
+            }
+            static T *get_instance()
+            {
+                return m_instance.get();
+            }
+            static void destory_instance()
+            {
+                m_instance.reset();
             }
 
         protected:
             singleton() = default;
             ~singleton() = default;
+            static std::shared_ptr<T> m_instance;
         };
+
+        template <typename T>
+        std::shared_ptr<T> singleton<T>::m_instance = nullptr;
     }
 }
