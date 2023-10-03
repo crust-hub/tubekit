@@ -139,7 +139,7 @@ void http_task::run()
     }
 
     // read from socket
-    if (reason_recv && !t_http_connection->get_recv_end())
+    if (!t_http_connection->get_recv_end())
     {
         t_http_connection->buffer_used_len = 0;
         while (true)
@@ -197,7 +197,7 @@ void http_task::run()
     }
 
     // write
-    if (reason_send && t_http_connection->get_process_end() && !t_http_connection->get_everything_end())
+    if (t_http_connection->get_process_end() && !t_http_connection->get_everything_end())
     {
         while (t_http_connection->buffer_used_len > t_http_connection->buffer_start_use)
         {
