@@ -42,7 +42,7 @@ std::string url::encode(const std::string &str)
     encoded << std::hex << std::uppercase;
     for (char c : str)
     {
-        if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+        if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '/')
         {
             encoded << c;
         }
