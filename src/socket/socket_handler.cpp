@@ -190,14 +190,14 @@ void socket_handler::handle()
                     switch (task_type)
                     {
                     case server::server::STREAM_TASK:
-                        p_connection = new connection::stream_connection(socket_object);
+                        p_connection = new (std::nothrow) connection::stream_connection(socket_object);
                         if (p_connection == nullptr)
                         {
                             LOG_ERROR("new connection::stream_connection error");
                         }
                         break;
                     case server::server::HTTP_TASK:
-                        p_connection = new connection::http_connection(socket_object);
+                        p_connection = new (std::nothrow) connection::http_connection(socket_object);
                         if (p_connection == nullptr)
                         {
                             LOG_ERROR("new connection::http_connection error");
