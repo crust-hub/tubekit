@@ -22,10 +22,10 @@ namespace tubekit
                 switch (type)
                 {
                 case STREAM_TASK:
-                    return new stream_task(m_socket);
+                    return new (std::nothrow) stream_task(m_socket);
                     break;
                 case HTTP_TASK:
-                    return new http_task(m_socket);
+                    return new (std::nothrow) http_task(m_socket);
                 default:
                     break;
                 }
