@@ -43,7 +43,8 @@ u_int64_t buffer::read(char *dest, u_int64_t size)
         throw std::runtime_error("dest == nullptr || size == 0");
     }
     // read size of bytes from m_buffer
-    const auto &can_readable = can_readable_size();
+    u_int64_t can_readable = 0;
+    get_readable_size(can_readable);
     if (size <= can_readable)
     {
         memcpy(dest, m_read_ptr, size);
@@ -125,8 +126,10 @@ bool buffer::check_and_write(const char *source, u_int64_t size)
 
 void buffer::move_to_before()
 {
-    memmove(m_buffer, m_read_ptr, can_readable_size());
-    m_write_ptr = m_buffer + can_readable_size();
+    u_int64_t readable = 0;
+    get_readable_size(readable);
+    memmove(m_buffer, m_read_ptr, readable);
+    m_write_ptr = m_buffer + readable;
     m_read_ptr = m_buffer;
 }
 
@@ -137,19 +140,28 @@ u_int64_t buffer::after_size()
     return after_size;
 }
 
-u_int64_t buffer::can_readable_size() const
+u_int64_t buffer::can_readable_size()
 {
-    u_int64_t size = m_write_ptr - m_read_ptr;
+    std::lock_guard<std::mutex> guard(m_mutex);
+    u_int64_t size;
+    get_readable_size(size);
     return size;
+}
+
+void buffer::get_readable_size(u_int64_t &out)
+{
+    out = m_write_ptr - m_read_ptr;
 }
 
 void buffer::set_limit_max(u_int64_t limit_max)
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
     m_limit_max = limit_max;
 }
 
 u_int64_t buffer::get_limit_max()
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
     return m_limit_max;
 }
 
@@ -172,11 +184,29 @@ u_int64_t buffer::copy_all(char *out, u_int64_t out_len)
         return 0;
     }
     std::lock_guard<std::mutex> guard(m_mutex);
-    uint64_t all_bytes = can_readable_size();
+    uint64_t all_bytes = 0;
+    get_readable_size(all_bytes);
     if (out_len < all_bytes)
     {
         return 0;
     }
     memcpy(out, get_read_ptr(), all_bytes);
     return all_bytes;
+}
+
+bool buffer::read_ptr_move_n(u_int64_t n)
+{
+    if (n == 0)
+    {
+        return true;
+    }
+    std::lock_guard<std::mutex> guard(m_mutex);
+    uint64_t all_bytes = 0;
+    get_readable_size(all_bytes);
+    if (n > all_bytes)
+    {
+        return false;
+    }
+    m_read_ptr = m_read_ptr + n;
+    return true;
 }
