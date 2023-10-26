@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "util_time.h"
+#include "util_uuid.h"
 using namespace std;
 using namespace tubekit::ecsactor;
 
@@ -11,5 +12,7 @@ int main(int argc, char **argv)
     cout << timeutil::add_seconds(point, 3) << endl;      // 4000
     cout << timeutil::to_string(timeutil::add_milliseconds(point, 5)) << endl;
     // 1970-01-01 08:00:01.005
+    std::string uuid = generate_uuid();
+    cout << uuid << endl;
     return 0;
 }
