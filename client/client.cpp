@@ -21,13 +21,13 @@ int main(int argc, const char **argv)
         std::cout << "arg<2" << std::endl;
         return 1;
     }
-    ProtoMessageHead message;
+    ProtoPackage message;
     ProtoExampleReq exampleReq;
     std::string send_str(argv[1]);
     exampleReq.set_testcontext(send_str);
     message.set_cmd(ProtoCmd::EXAMPLE_REQ);
 
-    const char *server_ip = "61.171.51.135";
+    const char *server_ip = "172.29.94.203";
     int server_port = 20023;
 
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -54,26 +54,13 @@ int main(int argc, const char **argv)
     google::protobuf::io::ArrayOutputStream output_stream_1(&body_str[0], body_str.size());
     google::protobuf::io::CodedOutputStream coded_output_1(&output_stream_1);
     exampleReq.SerializeToCodedStream(&coded_output_1);
-    message.set_bodylen(body_str.size());
+    message.set_body(body_str);
     std::string data = message.SerializePartialAsString();
 
-    uint64_t headLen = data.size();
-    headLen = htobe64(headLen);
+    uint64_t packageLen = data.size();
 
     for (int i = 0; i < 5; i++)
     {
-
-        if (send(client_socket, &headLen, sizeof(headLen), 0) != sizeof(headLen))
-        {
-            perror("Send Head failed");
-            close(client_socket);
-            return 1;
-        }
-        else
-        {
-            printf("Send HeadLen succ\n");
-        }
-
         if (send(client_socket, data.c_str(), data.size(), 0) != data.size())
         {
             perror("Send Head failed");
@@ -85,18 +72,7 @@ int main(int argc, const char **argv)
             printf("Send Head succ\n");
         }
 
-        if (send(client_socket, body_str.c_str(), body_str.size(), 0) != body_str.size())
-        {
-            perror("Send Body failed");
-            close(client_socket);
-            return 1;
-        }
-        else
-        {
-            printf("Send Body succ\n");
-        }
-
-        printf("Send all bytes head %ld body %ld all %ld\n", data.size(), body_str.size(), data.size() + body_str.size());
+        printf("Send all bytes package %ld body %ld all %ld\n", data.size(), body_str.size(), data.size() + body_str.size());
     }
 
     close(client_socket);

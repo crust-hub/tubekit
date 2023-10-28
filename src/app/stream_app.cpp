@@ -26,15 +26,15 @@ namespace tubekit::app
     tubekit::thread::mutex global_player_mutex;
 }
 
-int process_protocol(tubekit::connection::stream_connection &m_stream_connection, int cmd, std::string &&packet)
+int process_protocol(tubekit::connection::stream_connection &m_stream_connection, ProtoPackage &package)
 {
     // EXAMPLE_REQ
-    if (cmd == ProtoCmd::EXAMPLE_REQ)
+    if (package.cmd() == ProtoCmd::EXAMPLE_REQ)
     {
         ProtoExampleReq exampleReq;
-        if (exampleReq.ParsePartialFromArray(packet.c_str(), packet.size()))
+        if (exampleReq.ParseFromString(package.body()))
         {
-            std::cout << exampleReq.testcontext() << std::endl;
+            // std::cout << exampleReq.testcontext() << std::endl;
         }
         else
         {
@@ -58,39 +58,28 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     {
         char *tmp_buffer = all_data_buffer + offset;
         uint64_t data_len = all_data_len - offset;
-        if (data_len <= sizeof(uint64_t))
+        if (data_len == 0)
         {
             break;
         }
 
-        uint64_t headLen = *(uint64_t *)tmp_buffer;
-        headLen = be64toh(headLen);
-        if (headLen + sizeof(uint64_t) > data_len)
+        ProtoPackage protoPackage;
+        if (!protoPackage.ParseFromArray(tmp_buffer, data_len))
         {
-            break;
-        }
-
-        ProtoMessageHead protoHead;
-        if (!protoHead.ParseFromArray(tmp_buffer + sizeof(uint64_t), headLen))
-        {
+            // std::cout << "protoPackage.ParseFromArray failed" << std::endl;
             m_stream_connection.mark_close();
             break;
         }
-        uint32_t bodyLen = protoHead.bodylen();
-        uint32_t cmd = protoHead.cmd();
 
-        if (data_len < sizeof(uint64_t) + headLen + bodyLen)
+        if (0 != process_protocol(m_stream_connection, protoPackage))
         {
-            break;
-        }
-
-        if (0 != process_protocol(m_stream_connection, cmd, std::move(std::string(tmp_buffer + sizeof(uint64_t) + headLen, bodyLen))))
-        {
+            // std::cout << "process_protocol failed" << std::endl;
             m_stream_connection.mark_close();
             m_stream_connection.m_recv_buffer.clear();
             break;
         }
-        offset += sizeof(uint64_t) + headLen + bodyLen;
+        // std::cout << "datalen " << data_len << " package size " << protoPackage.ByteSizeLong() << std::endl;
+        offset += protoPackage.ByteSizeLong();
     }
 
     if (!m_stream_connection.m_recv_buffer.read_ptr_move_n(offset))
