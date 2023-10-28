@@ -10,8 +10,6 @@
 #include "connection/connection_mgr.h"
 #include "socket/socket.h"
 #include "socket/socket_handler.h"
-#include <vector>
-#include <endian.h>
 
 using tubekit::app::stream_app;
 using tubekit::connection::connection_mgr;
@@ -86,20 +84,6 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     {
         m_stream_connection.mark_close();
     }
-    // std::vector<void *> vec;
-    // global_player_mutex.lock();
-    // for (auto socket_ptr : global_player)
-    // {
-    //     if (socket_ptr != m_stream_connection.get_socket_ptr())
-    //     {
-    //         vec.push_back(socket_ptr);
-    //     }
-    // }
-    // global_player_mutex.unlock();
-    // for (auto socket_ptr : vec)
-    // {
-    //     bool b_ret = singleton<connection_mgr>::instance()->safe_send(socket_ptr, tmp_buffer, data_len);
-    // }
     delete all_data_buffer;
 }
 
