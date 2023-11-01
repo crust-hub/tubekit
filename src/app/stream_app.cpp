@@ -65,7 +65,10 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
         if (!protoPackage.ParseFromArray(tmp_buffer, data_len))
         {
             // std::cout << "protoPackage.ParseFromArray failed" << std::endl;
-            m_stream_connection.mark_close();
+            if(data_len > 64)
+            {
+                m_stream_connection.mark_close();
+            }
             break;
         }
 
