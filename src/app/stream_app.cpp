@@ -32,6 +32,7 @@ int process_protocol(tubekit::connection::stream_connection &m_stream_connection
         ProtoExampleReq exampleReq;
         if (exampleReq.ParseFromString(package.body()))
         {
+            LOG_ERROR("%s", exampleReq.testcontext().c_str());
             // std::cout << exampleReq.testcontext() << std::endl;
         }
         else
