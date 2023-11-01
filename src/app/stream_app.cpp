@@ -85,11 +85,6 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
         offset += protoPackage.ByteSizeLong();
     }
 
-    if(b_pack == false && all_data_len > 64)
-    {
-        m_stream_connection.mark_close();
-    }
-
     if (!m_stream_connection.m_recv_buffer.read_ptr_move_n(offset))
     {
         m_stream_connection.mark_close();
