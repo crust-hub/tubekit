@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Example</title>
+</head>
+<body>
+    <h1>WebSocket Example</h1>
+
+    <script>
+        // 创建WebSocket连接
+        const socket = new WebSocket("ws://172.29.94.203:20023/");
+
+        // 连接成功时的回调函数
+        socket.addEventListener("open", (event) => {
+            console.log("WebSocket connection opened:", event);
+            // 发送消息
+            socket.send("Hello, Server!");
+        });
+
+        // 接收到消息时的回调函数
+        socket.addEventListener("message", (event) => {
+            console.log("Received message:", event.data);
+        });
+
+        // 连接关闭时的回调函数
+        socket.addEventListener("close", (event) => {
+            console.log("WebSocket connection closed:", event);
+        });
+
+        // 发生错误时的回调函数
+        socket.addEventListener("error", (event) => {
+            console.error("WebSocket error:", event);
+        });
+    </script>
+</body>
+</html>
+

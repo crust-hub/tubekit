@@ -7,6 +7,7 @@ using tubekit::connection::connection;
 using tubekit::connection::connection_mgr;
 using tubekit::connection::http_connection;
 using tubekit::connection::stream_connection;
+using tubekit::connection::websocket_connection;
 
 connection_mgr::connection_mgr()
 {
@@ -171,6 +172,19 @@ bool connection_mgr::is_stream(connection *conn_ptr)
         return false;
     }
     if (typeid(*conn_ptr) == typeid(stream_connection))
+    {
+        return true;
+    }
+    return false;
+}
+
+static bool is_websocket(connection *conn_ptr)
+{
+    if (nullptr == conn_ptr)
+    {
+        return false;
+    }
+    if (typeid(*conn_ptr) == typeid(websocket_connection))
     {
         return true;
     }

@@ -8,6 +8,7 @@
 #include "connection/connection.h"
 #include "connection/http_connection.h"
 #include "connection/stream_connection.h"
+#include "connection/websocket_connection.h"
 
 namespace tubekit::connection
 {
@@ -42,6 +43,7 @@ namespace tubekit::connection
         static stream_connection *convert_to_stream(connection *conn_ptr);
         static bool is_http(connection *conn_ptr);
         static bool is_stream(connection *conn_ptr);
+        static bool is_websocket(connection *conn_ptr);
 
     private:
         std::unordered_map<void *, connection *> m_map;
