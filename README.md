@@ -57,5 +57,5 @@ support tcp keep-alive stream (protobuf) and http app (http-parser)
 
 ## Third Party
 
-[@http-parser](https://github.com/nodejs/http-parser)  
-[@yazi](https://github.com/oldjun/yazi)(source of inspiration)
+[@http-parser](https://github.com/nodejs/http-parser)
+
