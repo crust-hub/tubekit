@@ -1,5 +1,7 @@
 #pragma once
 
+#include <http-parser/http_parser.h>
+
 #include "thread/task.h"
 #include "socket/socket.h"
 #include "connection/websocket_connection.h"
@@ -15,6 +17,9 @@ namespace tubekit
             ~websocket_task();
             void run() override;
             void destroy() override;
+
+        public:
+            static http_parser_settings *settings;
         };
     }
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <http-parser/http_parser.h>
 #include <tubekit-buffer/buffer.h>
 
 #include "connection/connection.h"
@@ -30,6 +31,10 @@ namespace tubekit
             std::function<void(websocket_connection &connection)> write_end_callback;
             std::function<void(websocket_connection &connection)> destory_callback;
             void *ptr{nullptr};
+
+        private:
+            http_parser m_http_parser;
+            bool connected{false};
         };
     }
 }
