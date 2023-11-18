@@ -84,6 +84,10 @@ enum server::TaskType server::get_task_type()
     {
         return STREAM_TASK;
     }
+    else if (m_task_type == "WEBSOCKET_TASK")
+    {
+        return WEBSOCKET_TASK;
+    }
     return NONE;
 }
 

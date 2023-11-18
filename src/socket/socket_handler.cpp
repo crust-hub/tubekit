@@ -133,6 +133,7 @@ bool socket_handler::init(const string &ip, int port, int max_connections, int w
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     socket_pool.init(max_connections);
     m_init = true;
+    return m_init;
 }
 
 void socket_handler::handle()
@@ -201,6 +202,13 @@ void socket_handler::handle()
                         if (p_connection == nullptr)
                         {
                             LOG_ERROR("new connection::http_connection error");
+                        }
+                        break;
+                    case server::server::WEBSOCKET_TASK:
+                        p_connection = new (std::nothrow) connection::websocket_connection(socket_object);
+                        if (p_connection == nullptr)
+                        {
+                            LOG_ERROR("new connection::websocket_connection error");
                         }
                         break;
                     default:
@@ -277,6 +285,13 @@ void socket_handler::handle()
                         auto http_task_ptr = (http_task *)new_task;
                         http_task_ptr->reason_recv = recv_event;
                         http_task_ptr->reason_send = send_event;
+                    }
+                    break;
+                case server::server::WEBSOCKET_TASK:
+                    new_task = task_factory::create(socket_ptr, task_factory::WEBSOCKET_TASK);
+                    if (new_task)
+                    {
+                        auto websocket_task_ptr = (websocket_task *)new_task;
                     }
                     break;
                 default:

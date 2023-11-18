@@ -12,6 +12,7 @@ namespace tubekit
             {
                 HTTP_TASK = 0,
                 STREAM_TASK,
+                WEBSOCKET_TASK,
                 NONE
             };
 
