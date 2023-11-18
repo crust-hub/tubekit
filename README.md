@@ -3,7 +3,7 @@
 The C++ TCP server framework based on the Reactor model continues to implement POSIX thread pool, Epoll, non blocking IO, object pool, log, socket network programming, support the dynamic library to implement custom protocol extensions, and use http parser to process http requests. Currently only supports Linux systems
 
 Platform: `Linux`  
-Protocol: `HTTP` `Protobuf` `TCP Stream`
+Protocol: `HTTP` `TCP Stream(Protobuf)` `WebSocket(coming soon)`
 
 ## Get Start
 
@@ -58,4 +58,4 @@ support tcp keep-alive stream (protobuf) and http app (http-parser)
 ## Third Party
 
 [@http-parser](https://github.com/nodejs/http-parser)  
-[@yazi](https://github.com/oldjun/yazi)(source of inspiration)
+[@lua](https://github.com/lua/lua)  
