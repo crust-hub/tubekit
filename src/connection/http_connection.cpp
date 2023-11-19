@@ -92,6 +92,7 @@ bool http_connection::get_response_end()
 bool http_connection::set_everything_end(bool everything_end)
 {
     this->everything_end = everything_end;
+    return this->everything_end;
 }
 
 bool http_connection::get_everything_end()

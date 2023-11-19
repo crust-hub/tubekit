@@ -1,15 +1,20 @@
 #include "task/websocket_task.h"
 
+#include <tubekit-log/logger.h>
+
 #include "utility/singleton.h"
 #include "connection/connection_mgr.h"
 #include "connection/connection.h"
 #include "socket/socket_handler.h"
-#include <iostream>
+#include "app/websocket_app.h"
+#include "utility/sha1.h"
+#include "utility/base64.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::connection;
+using namespace tubekit::app;
 
 http_parser_settings *websocket_task::settings = nullptr;
 
@@ -128,8 +133,7 @@ void websocket_task::run()
     {
         if (t_websocket_connection->http_processed)
         {
-            t_websocket_connection->mark_close();
-            singleton<socket_handler>::instance()->attach(socket_ptr, true);
+            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
             return;
         }
 
@@ -184,8 +188,7 @@ void websocket_task::run()
     // is not websocket
     if (!(t_websocket_connection->http_processed && t_websocket_connection->is_upgrade))
     {
-        t_websocket_connection->mark_close();
-        singleton<socket_handler>::instance()->attach(socket_ptr, true);
+        singleton<connection_mgr>::instance()->mark_close(socket_ptr);
         return;
     }
 
@@ -209,29 +212,61 @@ void websocket_task::run()
         }
         else
         {
-            std::cout << "Sec-WebSocket-Key:" << t_websocket_connection->sec_websocket_key << "\n";
-            std::cout << "Sec-WebSocket-Version:" << t_websocket_connection->sec_websocket_version << "\n";
-            std::cout << "websocket http header parser succ, try send http header to client" << std::endl;
+            // response websocket connect header
+            std::string combine_key = t_websocket_connection->sec_websocket_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+            // calculate SHA1 hash
+            SHA1 sha1;
+            sha1.update(combine_key);
+            std::string sha1_str = sha1.final();
+
+            // Base64 encode the hash
+            std::string base64_encoded = base64::base64_encode(sha1.to_binary(sha1_str));
+            std::string response = "HTTP/1.1 101 Switching Protocols\r\n";
+            response += "Upgrade: websocket\r\n";
+            response += "Connection: Upgrade\r\n";
+            response += "Sec-WebSocket-Accept: " + base64_encoded + "\r\n\r\n";
+
+            t_websocket_connection->send(response.c_str(), response.size());
             t_websocket_connection->set_connected(true);
         }
     }
 
     if (t_websocket_connection->get_connected())
     {
-        // TODO:read data from sock
-        t_websocket_connection->everything_end = true;
+        // read data from socket to connection layer buffer
+        if (false == t_websocket_connection->sock2buf())
+        {
+            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+            return;
+        }
+        // process data
+        {
+            websocket_app::process_connection(*t_websocket_connection);
+        }
+        // send data
+        bool b_send = false;
+        {
+            // send data to socket from connection layer
+            b_send = t_websocket_connection->buf2sock();
+        }
+        if (b_send)
+        {
+            int i_ret = singleton<socket_handler>::instance()->attach(socket_ptr, b_send);
+            if (i_ret != 0)
+            {
+                LOG_ERROR("socket handler attach error %d", i_ret);
+            }
+            return;
+        }
     }
-
-    // TODO:try send data
 
     if (t_websocket_connection->everything_end)
     {
-        t_websocket_connection->mark_close();
-        singleton<socket_handler>::instance()->attach(socket_ptr, true);
+        singleton<connection_mgr>::instance()->mark_close(socket_ptr);
         return;
     }
 
-    std::cout << "maybe something be done" << std::endl;
     singleton<socket_handler>::instance()->attach(socket_ptr);
     return;
 }

@@ -1,8 +1,10 @@
 #include "connection/connection_mgr.h"
 #include "thread/auto_lock.h"
 #include "app/stream_app.h"
+#include "app/websocket_app.h"
 
 using tubekit::app::stream_app;
+using tubekit::app::websocket_app;
 using tubekit::connection::connection;
 using tubekit::connection::connection_mgr;
 using tubekit::connection::http_connection;
@@ -34,6 +36,10 @@ bool connection_mgr::add(void *index_ptr, connection *conn_ptr)
     {
         stream_app::on_new_connection(*convert_to_stream(conn_ptr));
     }
+    if (is_websocket(conn_ptr))
+    {
+        websocket_app::on_new_connection(*convert_to_websocket(conn_ptr));
+    }
     return true;
 }
 
@@ -47,6 +53,10 @@ bool connection_mgr::remove(void *index_ptr)
         if (is_stream(res->second))
         {
             stream_app::on_close_connection(*convert_to_stream(res->second));
+        }
+        if (is_websocket(res->second))
+        {
+            websocket_app::on_close_connection(*convert_to_websocket(res->second));
         }
         // triger delete connection
         delete res->second;
@@ -102,16 +112,26 @@ bool connection_mgr::safe_send(void *index_ptr, const char *buffer, size_t len)
     {
         return false;
     }
-    if (!is_stream(res->second))
+    if (is_stream(res->second))
     {
-        return false;
+        stream_connection *stream_conn = convert_to_stream(res->second);
+        if (!stream_conn)
+        {
+            return false;
+        }
+        return stream_conn->send(buffer, len);
     }
-    stream_connection *stream_conn = convert_to_stream(res->second);
-    if (!stream_conn)
+
+    if (is_websocket(res->second))
     {
-        return false;
+        websocket_connection *websocket_conn = convert_to_websocket(res->second);
+        if (!websocket_conn)
+        {
+            return false;
+        }
+        return websocket_conn->send(buffer, len);
     }
-    return stream_conn->send(buffer, len);
+    return false;
 }
 
 bool connection_mgr::mark_close(void *index_ptr)
@@ -152,6 +172,19 @@ stream_connection *connection_mgr::convert_to_stream(connection *conn_ptr)
     return nullptr;
 }
 
+websocket_connection *connection_mgr::convert_to_websocket(connection *conn_ptr)
+{
+    if (nullptr == conn_ptr)
+    {
+        return nullptr;
+    }
+    if (is_websocket(conn_ptr))
+    {
+        return (websocket_connection *)conn_ptr;
+    }
+    return nullptr;
+}
+
 bool connection_mgr::is_http(connection *conn_ptr)
 {
     if (nullptr == conn_ptr)
@@ -178,7 +211,7 @@ bool connection_mgr::is_stream(connection *conn_ptr)
     return false;
 }
 
-static bool is_websocket(connection *conn_ptr)
+bool connection_mgr::is_websocket(connection *conn_ptr)
 {
     if (nullptr == conn_ptr)
     {

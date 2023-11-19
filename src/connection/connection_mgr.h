@@ -41,6 +41,7 @@ namespace tubekit::connection
     public:
         static http_connection *convert_to_http(connection *conn_ptr);
         static stream_connection *convert_to_stream(connection *conn_ptr);
+        websocket_connection *convert_to_websocket(connection *conn_ptr);
         static bool is_http(connection *conn_ptr);
         static bool is_stream(connection *conn_ptr);
         static bool is_websocket(connection *conn_ptr);

@@ -4,7 +4,6 @@
 
 #include "thread/task.h"
 #include "socket/socket.h"
-#include "connection/websocket_connection.h"
 
 namespace tubekit
 {

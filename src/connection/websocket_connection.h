@@ -10,6 +10,7 @@
 
 #include "connection/connection.h"
 #include "socket/socket.h"
+#include "task/websocket_task.h"
 
 namespace tubekit
 {
@@ -18,6 +19,9 @@ namespace tubekit
         class websocket_connection : public connection
         {
         public:
+            friend class tubekit::task::websocket_task;
+
+        public:
             websocket_connection(tubekit::socket::socket *socket_ptr);
             ~websocket_connection();
 
@@ -25,6 +29,10 @@ namespace tubekit
             virtual void on_mark_close() override;
             http_parser *get_parser();
             void add_header(const std::string &key, const std::string &value);
+
+        private:
+            bool sock2buf();
+            bool buf2sock();
 
         public:
             std::string url;
@@ -41,15 +49,25 @@ namespace tubekit
             bool everything_end{false};
             bool is_upgrade{false};
             tubekit::buffer::buffer m_recv_buffer;
+            tubekit::buffer::buffer m_send_buffer;
+            buffer::buffer m_wating_send_pack;
 
-            std::function<void(websocket_connection &connection)> process_callback;
-            std::function<void(websocket_connection &connection)> write_end_callback;
             std::function<void(websocket_connection &connection)> destory_callback;
             void *ptr{nullptr};
 
         public:
             bool get_connected();
             void set_connected(bool connected);
+            /**
+             * @brief Only when processing websocket_connection, the worker thread of the connection uses its own send,
+             *        and if sending to other connections, the connection mgr's safe_send needs to be used.
+             *
+             * @param buffer
+             * @param buffer_size
+             * @return true
+             * @return false
+             */
+            bool send(const char *buffer, size_t buffer_size);
 
         private:
             http_parser m_http_parser;

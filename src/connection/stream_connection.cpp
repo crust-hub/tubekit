@@ -20,7 +20,7 @@ stream_connection::~stream_connection()
 
 bool stream_connection::sock2buf()
 {
-    static char buffer[1024];
+    static char buffer[1024] = {0};
     while (true)
     {
         int len = socket_ptr->recv(buffer, 1024);
@@ -54,12 +54,12 @@ bool stream_connection::sock2buf()
 bool stream_connection::buf2sock()
 {
     static char buffer[1024];
-    static int shouldSendIndex = -1;
-    static int shouldSendSize = 0;
+    static int should_send_idx = -1;
+    static int should_send_size = 0;
     while (true)
     {
         // static char buffer no data
-        if (shouldSendIndex < 0)
+        if (should_send_idx < 0)
         {
             int len = -1;
             try
@@ -73,8 +73,8 @@ bool stream_connection::buf2sock()
 
             if (len > 0)
             {
-                shouldSendIndex = 0;
-                shouldSendSize = len;
+                should_send_idx = 0;
+                should_send_size = len;
                 continue;
             }
 
@@ -118,7 +118,7 @@ bool stream_connection::buf2sock()
                 return have_data;
             }
         }
-        int len = socket_ptr->send(&buffer[shouldSendIndex], shouldSendSize);
+        int len = socket_ptr->send(&buffer[should_send_idx], should_send_size);
         if (0 > len)
         {
             if (errno == EINTR)
@@ -140,11 +140,11 @@ bool stream_connection::buf2sock()
         }
         else
         {
-            shouldSendSize -= len;
-            if (shouldSendSize <= 0)
+            should_send_size -= len;
+            if (should_send_size <= 0)
             {
-                shouldSendSize = 0;
-                shouldSendIndex = -1;
+                should_send_size = 0;
+                should_send_idx = -1;
             }
         }
     }
