@@ -89,7 +89,7 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     {
         m_stream_connection.mark_close();
     }
-    delete all_data_buffer;
+    delete[] all_data_buffer;
 }
 
 void stream_app::on_close_connection(tubekit::connection::stream_connection &m_stream_connection)
