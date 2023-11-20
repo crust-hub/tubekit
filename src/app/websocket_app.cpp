@@ -104,7 +104,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
 
         if (frame.payloadLength == 0)
         {
-            return;
+            break;
         }
 
         if (frame.mask)
@@ -143,6 +143,8 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payloadLength);
         index += frame.payloadLength;
     }
+
+    delete[] data;
 }
 
 void websocket_app::on_close_connection(tubekit::connection::websocket_connection &m_websocket_connection)
