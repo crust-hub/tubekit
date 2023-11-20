@@ -3,6 +3,7 @@
 #include <tubekit-log/logger.h>
 #include "utility/singleton.h"
 #include "connection/connection_mgr.h"
+#include <arpa/inet.h>
 
 using namespace tubekit::app;
 using namespace tubekit::utility;
@@ -61,12 +62,19 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
 
         if (frame.payloadLength == 126)
         {
+            frame.payloadLength = 0;
             if (index + 2 >= all_data_len)
             {
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 2, all_data_len);
                 break;
             }
-            frame.payloadLength = (data[index] << 8 | data[index + 1]);
+            uint16_t tmp = 0;
+            u_char *ph;
+            ph = (u_char *)&tmp;
+            *ph++ = data[index];
+            *ph++ = data[index + 1];
+            tmp = ntohs(tmp);
+            frame.payloadLength = tmp;
             index += 2;
         }
         else if (frame.payloadLength == 127)
@@ -77,11 +85,28 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 8, all_data_len);
                 break;
             }
-            for (int i = 0; i < 8; i++)
-            {
-                frame.payloadLength = (frame.payloadLength << 8) | data[index++];
-            }
+            uint32_t tmp = 0;
+            u_char *ph = (u_char *)&tmp;
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            frame.payloadLength = ntohl(tmp);
+            frame.payloadLength = frame.payloadLength << 32;
+            ph = (u_char *)&tmp;
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            *ph++ = data[index++];
+            tmp = ntohl(tmp);
+            frame.payloadLength = frame.payloadLength | tmp;
         }
+
+        if (frame.payloadLength == 0)
+        {
+            return;
+        }
+
         if (frame.mask)
         {
             if (index + 3 >= all_data_len)
