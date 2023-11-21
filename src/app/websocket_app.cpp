@@ -9,14 +9,14 @@ using namespace tubekit::app;
 using namespace tubekit::utility;
 using namespace tubekit::connection;
 
-struct WebSocketFrame
+struct websocket_frame
 {
     uint8_t fin;
     uint8_t opcode;
     uint8_t mask;
-    uint64_t payloadLength;
-    std::vector<uint8_t> maskingKey;
-    std::string payloadData;
+    uint64_t payload_length;
+    std::vector<uint8_t> masking_key;
+    std::string payload_data;
 };
 
 void websocket_app::process_connection(tubekit::connection::websocket_connection &m_websocket_connection)
@@ -40,7 +40,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
     {
         size_t start_index = index;
 
-        WebSocketFrame frame;
+        websocket_frame frame;
 
         frame.fin = (data[index] & 0x80) != 0;
         frame.opcode = data[index] & 0x0F;
@@ -52,7 +52,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         }
 
         frame.mask = (data[index] & 0x80) != 0;
-        frame.payloadLength = data[index] & 0x7F;
+        frame.payload_length = data[index] & 0x7F;
         index++;
         if (index >= all_data_len)
         {
@@ -60,9 +60,9 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
             break;
         }
 
-        if (frame.payloadLength == 126)
+        if (frame.payload_length == 126)
         {
-            frame.payloadLength = 0;
+            frame.payload_length = 0;
             if (index + 2 >= all_data_len)
             {
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 2, all_data_len);
@@ -74,12 +74,12 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
             *ph++ = data[index];
             *ph++ = data[index + 1];
             tmp = ntohs(tmp);
-            frame.payloadLength = tmp;
+            frame.payload_length = tmp;
             index += 2;
         }
-        else if (frame.payloadLength == 127)
+        else if (frame.payload_length == 127)
         {
-            frame.payloadLength = 0;
+            frame.payload_length = 0;
             if (index + 8 >= all_data_len)
             {
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 8, all_data_len);
@@ -91,18 +91,18 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
             *ph++ = data[index++];
             *ph++ = data[index++];
             *ph++ = data[index++];
-            frame.payloadLength = ntohl(tmp);
-            frame.payloadLength = frame.payloadLength << 32;
+            frame.payload_length = ntohl(tmp);
+            frame.payload_length = frame.payload_length << 32;
             ph = (u_char *)&tmp;
             *ph++ = data[index++];
             *ph++ = data[index++];
             *ph++ = data[index++];
             *ph++ = data[index++];
             tmp = ntohl(tmp);
-            frame.payloadLength = frame.payloadLength | tmp;
+            frame.payload_length = frame.payload_length | tmp;
         }
 
-        if (frame.payloadLength == 0)
+        if (frame.payload_length == 0)
         {
             break;
         }
@@ -114,34 +114,34 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 3, all_data_len);
                 break;
             }
-            frame.maskingKey = {data[index], data[index + 1], data[index + 2], data[index + 3]};
+            frame.masking_key = {data[index], data[index + 1], data[index + 2], data[index + 3]};
             index += 4;
         }
-        // payload data [data+index,data+index+frame.payloadLength]
+        // payload data [data+index,data+index+frame.payload_length]
         if (index >= all_data_len)
         {
             LOG_ERROR("index[%llu] >= all_data_len[%llu]", index, all_data_len);
             break;
         }
-        if (index - 1 + frame.payloadLength >= all_data_len)
+        if (index - 1 + frame.payload_length >= all_data_len)
         {
-            LOG_ERROR("index - 1 + frame.payloadLength=[%llu] >= all_data_len[%llu]", index - 1 + frame.payloadLength, all_data_len);
+            LOG_ERROR("index - 1 + frame.payload_length=[%llu] >= all_data_len[%llu]", index - 1 + frame.payload_length, all_data_len);
             break;
         }
-        std::string payloadData(data + index, frame.payloadLength);
+        std::string payload_data(data + index, frame.payload_length);
         if (frame.mask)
         {
-            for (size_t i = 0; i < payloadData.size(); ++i)
+            for (size_t i = 0; i < payload_data.size(); ++i)
             {
-                payloadData[i] ^= frame.maskingKey[i % 4];
+                payload_data[i] ^= frame.masking_key[i % 4];
             }
         }
-        frame.payloadData = std::move(payloadData);
-        websocket_app::send_packet(m_websocket_connection, frame.payloadData.c_str(), frame.payloadLength, false);
-        // frame.payloadData.push_back(0);
-        // LOG_ERROR("%s", frame.payloadData.c_str());
-        m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payloadLength);
-        index += frame.payloadLength;
+        frame.payload_data = std::move(payload_data);
+        websocket_app::send_packet(m_websocket_connection, frame.payload_data.c_str(), frame.payload_length, false);
+        // frame.payload_data.push_back(0);
+        // LOG_ERROR("%s", frame.payload_data.c_str());
+        m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);
+        index += frame.payload_length;
     }
 
     delete[] data;
@@ -164,26 +164,26 @@ bool websocket_app::send_packet(tubekit::connection::websocket_connection &m_web
         return false;
     }
     uint8_t opcode = 0x81;
-    size_t messageLength = data_len;
+    size_t message_length = data_len;
     std::vector<uint8_t> frame;
     frame.push_back(opcode);
 
-    if (messageLength <= 125)
+    if (message_length <= 125)
     {
-        frame.push_back(static_cast<uint8_t>(messageLength));
+        frame.push_back(static_cast<uint8_t>(message_length));
     }
-    else if (messageLength <= 0xFFFF)
+    else if (message_length <= 0xFFFF)
     {
         frame.push_back(126);
-        frame.push_back((messageLength >> 8) & 0xFF);
-        frame.push_back(messageLength & 0xFF);
+        frame.push_back((message_length >> 8) & 0xFF);
+        frame.push_back(message_length & 0xFF);
     }
     else
     {
         frame.push_back(127);
         for (int i = 7; i >= 0; --i)
         {
-            frame.push_back((messageLength >> (8 * i)) & 0xFF);
+            frame.push_back((message_length >> (8 * i)) & 0xFF);
         }
     }
 
