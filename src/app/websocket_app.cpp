@@ -114,7 +114,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 3, all_data_len);
                 break;
             }
-            frame.masking_key = {data[index], data[index + 1], data[index + 2], data[index + 3]};
+            frame.masking_key = {(uint8_t)data[index], (uint8_t)data[index + 1], (uint8_t)data[index + 2], (uint8_t)data[index + 3]};
             index += 4;
         }
         // payload data [data+index,data+index+frame.payload_length]
@@ -137,7 +137,16 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
             }
         }
         frame.payload_data = std::move(payload_data);
-        websocket_app::send_packet(m_websocket_connection, frame.payload_data.c_str(), frame.payload_length, false);
+
+        // broadcast
+        singleton<connection_mgr>::instance()->for_each(
+            [&frame](connection::connection &conn) -> void
+            {
+                websocket_connection *ptr_conn = static_cast<websocket_connection *>(&conn);
+                websocket_app::send_packet(*ptr_conn, frame.payload_data.c_str(), frame.payload_length, false);
+            });
+
+        // websocket_app::send_packet(m_websocket_connection, frame.payload_data.c_str(), frame.payload_length, false);
         // frame.payload_data.push_back(0);
         // LOG_ERROR("%s", frame.payload_data.c_str());
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);

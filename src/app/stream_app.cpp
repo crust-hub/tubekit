@@ -53,8 +53,7 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     m_stream_connection.m_recv_buffer.copy_all(all_data_buffer, all_data_len);
     uint64_t offset = 0;
 
-    bool b_pack = false;
-    while (1)
+    do
     {
         char *tmp_buffer = all_data_buffer + offset;
         uint64_t data_len = all_data_len - offset;
@@ -69,10 +68,6 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
             // std::cout << "protoPackage.ParseFromArray failed" << std::endl;
             break;
         }
-        else
-        {
-            b_pack = true;
-        }
 
         if (0 != process_protocol(m_stream_connection, protoPackage))
         {
@@ -83,12 +78,14 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
         }
         // std::cout << "datalen " << data_len << " package size " << protoPackage.ByteSizeLong() << std::endl;
         offset += protoPackage.ByteSizeLong();
-    }
+
+    } while (true);
 
     if (!m_stream_connection.m_recv_buffer.read_ptr_move_n(offset))
     {
         m_stream_connection.mark_close();
     }
+
     delete[] all_data_buffer;
 }
 
