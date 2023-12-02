@@ -19,6 +19,17 @@ struct websocket_frame
     std::string payload_data;
 };
 
+enum class websocket_frame_type
+{
+    CONNECTION_CLOSE_FRAME = 0,
+    TEXT_FRAME = 1,
+    BINARY_FRAME = 2,
+    PONG = 3,
+    PING = 4,
+    CONTINUATION_FRAME = 5,
+    ERROR = 6
+};
+
 void websocket_app::process_connection(tubekit::connection::websocket_connection &m_websocket_connection)
 {
     LOG_ERROR("process_connection");
@@ -33,14 +44,57 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
     {
         return;
     }
-    m_websocket_connection.m_recv_buffer.copy_all(data, all_data_len);
+    all_data_len = m_websocket_connection.m_recv_buffer.copy_all(data, all_data_len);
     size_t index = 0;
 
     while (true)
     {
+        if (index >= all_data_len)
+        {
+            break;
+        }
+
         size_t start_index = index;
 
         websocket_frame frame;
+        websocket_frame_type type = websocket_frame_type::ERROR;
+        switch ((uint8_t)data[index])
+        {
+        case 0x81:
+        {
+            type = websocket_frame_type::TEXT_FRAME;
+            break;
+        }
+        case 0x82:
+        {
+            type = websocket_frame_type::BINARY_FRAME;
+            break;
+        }
+        case 0x88:
+        {
+            type = websocket_frame_type::CONNECTION_CLOSE_FRAME;
+            break;
+        }
+        case 0x89:
+        {
+            type = websocket_frame_type::PING;
+            break;
+        }
+        default:
+        {
+            if (data[index] >= 0x00 && data[index] <= 0x7F)
+            {
+                type = websocket_frame_type::CONTINUATION_FRAME;
+            }
+            break;
+        }
+        }
+
+        if (type != websocket_frame_type::TEXT_FRAME && type != websocket_frame_type::BINARY_FRAME)
+        {
+            m_websocket_connection.mark_close();
+            break;
+        }
 
         frame.fin = (data[index] & 0x80) != 0;
         frame.opcode = data[index] & 0x0F;
@@ -109,7 +163,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
 
         if (frame.mask)
         {
-            if (index + 3 >= all_data_len)
+            if (index + 4 >= all_data_len)
             {
                 LOG_ERROR("index[%llu] >= all_data_len[%llu]", index + 3, all_data_len);
                 break;
