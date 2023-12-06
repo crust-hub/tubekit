@@ -24,7 +24,7 @@ namespace tubekit::app
     tubekit::thread::mutex global_player_mutex;
 }
 
-int process_protocol(tubekit::connection::stream_connection &m_stream_connection, ProtoPackage &package)
+static int process_protocol(tubekit::connection::stream_connection &m_stream_connection, ProtoPackage &package)
 {
     // EXAMPLE_REQ
     if (package.cmd() == ProtoCmd::EXAMPLE_REQ)
@@ -42,6 +42,22 @@ int process_protocol(tubekit::connection::stream_connection &m_stream_connection
         return 0;
     }
     return -1;
+}
+
+int stream_app::on_init()
+{
+    LOG_ERROR("stream_app::on_init()");
+    return 0;
+}
+
+void stream_app::on_stop()
+{
+    LOG_ERROR("stream_app::on_stop()");
+}
+
+void stream_app::on_tick()
+{
+    LOG_ERROR("stream_app::on_tick()");
 }
 
 void stream_app::process_connection(tubekit::connection::stream_connection &m_stream_connection)

@@ -30,6 +30,22 @@ enum class websocket_frame_type
     ERROR = 6
 };
 
+int websocket_app::on_init()
+{
+    LOG_ERROR("websocket_app::on_init()");
+    return 0;
+}
+
+void websocket_app::on_stop()
+{
+    LOG_ERROR("websocket_app::on_stop()");
+}
+
+void websocket_app::on_tick()
+{
+    // LOG_ERROR("websocket_app::on_tick()");
+}
+
 void websocket_app::process_connection(tubekit::connection::websocket_connection &m_websocket_connection)
 {
     LOG_ERROR("process_connection");

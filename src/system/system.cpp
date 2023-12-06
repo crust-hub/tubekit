@@ -13,12 +13,14 @@
 #include "system/system.h"
 #include "utility/singleton.h"
 #include "server/server.h"
+#include "hooks/init.h"
 
 using namespace tubekit::utility;
 using namespace tubekit::system;
 using namespace tubekit::inifile;
 using namespace tubekit::log;
 using namespace tubekit::server;
+using namespace tubekit::hooks;
 using namespace std;
 
 void system::init()
@@ -58,6 +60,12 @@ void system::init()
     // server
     auto m_server = singleton<server::server>::instance();
     m_server->config(ip, port, threads, max_conn, wait_time, task_type, daemon);
+    int ret = singleton<hooks::init>::instance()->run();
+    if (ret != 0)
+    {
+        LOG_ERROR("singleton<hooks::init>::instance()->run() err[%d]", ret);
+        return;
+    }
     m_server->start(); // main thread loop
 }
 

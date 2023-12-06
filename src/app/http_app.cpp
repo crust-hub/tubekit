@@ -36,6 +36,22 @@ public:
     }
 };
 
+int http_app::on_init()
+{
+    LOG_ERROR("http_app::on_init()");
+    return 0;
+}
+
+void http_app::on_stop()
+{
+    LOG_ERROR("http_app::on_stop()");
+}
+
+void http_app::on_tick()
+{
+    LOG_ERROR("http_app::on_tick()");
+}
+
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
     m_http_connection.m_buffer.set_limit_max(202300);

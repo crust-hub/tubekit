@@ -9,6 +9,9 @@ namespace tubekit
         {
         public:
             static void process_connection(tubekit::connection::http_connection &m_http_connection);
+            static int on_init();
+            static void on_stop();
+            static void on_tick();
         };
     }
 }

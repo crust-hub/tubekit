@@ -54,11 +54,9 @@ support tcp keep-alive stream (protobuf) and http app (http-parser)、websocket
 ## Example
 
 1. [framework config](https://github.com/crust-hub/tubekit/blob/main/bin/config/main.ini)
-1. [tick hook](https://github.com/crust-hub/tubekit/blob/main/src/app/tick.cpp)
-2. [stop hook](https://github.com/crust-hub/tubekit/blob/main/src/app/stop.cpp)
-3. [stream protobuf app](https://github.com/crust-hub/tubekit/blob/main/src/app/stream_app.cpp)
-4. [http app](https://github.com/crust-hub/tubekit/blob/main/src/app/http_app.cpp)
-5. [websocket app](https://github.com/crust-hub/tubekit/blob/main/src/app/websocket_app.cpp)
+2. [stream protobuf app](https://github.com/crust-hub/tubekit/blob/main/src/app/stream_app.cpp)
+3. [http app](https://github.com/crust-hub/tubekit/blob/main/src/app/http_app.cpp)
+4. [websocket app](https://github.com/crust-hub/tubekit/blob/main/src/app/websocket_app.cpp)
 
 ## Directory Structure
 

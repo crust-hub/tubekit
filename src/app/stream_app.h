@@ -13,6 +13,9 @@ namespace tubekit
             static void on_close_connection(tubekit::connection::stream_connection &m_stream_connection);
             static void on_new_connection(tubekit::connection::stream_connection &m_stream_connection);
             static bool new_client_connection(const std::string &ip, int port);
+            static int on_init();
+            static void on_stop();
+            static void on_tick();
         };
     }
 }

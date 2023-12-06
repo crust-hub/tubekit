@@ -7,8 +7,8 @@
 #include "thread/worker_pool.h"
 #include "task/task_factory.h"
 #include "server/server.h"
-#include "app/tick.h"
-#include "app/stop.h"
+#include "hooks/tick.h"
+#include "hooks/stop.h"
 #include "system/system.h"
 #include "connection/connection.h"
 #include "connection/connection_mgr.h"
@@ -22,7 +22,7 @@ using namespace tubekit::task;
 using namespace tubekit::log;
 using namespace tubekit::utility;
 using namespace tubekit::server;
-using namespace tubekit::app;
+using namespace tubekit::hooks;
 using namespace tubekit::connection;
 
 socket_handler::socket_handler() : m_init(false)
@@ -115,7 +115,7 @@ socket *socket_handler::alloc_socket()
 
 void socket_handler::on_tick()
 {
-    singleton<app::tick>::instance()->run();
+    singleton<hooks::tick>::instance()->run();
 }
 
 bool socket_handler::init(const string &ip, int port, int max_connections, int wait_time)
@@ -150,7 +150,7 @@ void socket_handler::handle()
         if (singleton<tubekit::server::server>::instance()->is_stop())
         {
             singleton<tubekit::server::server>::instance()->on_stop();
-            singleton<app::stop>::instance()->run();
+            singleton<hooks::stop>::instance()->run();
             break; // main process to exit
         }
         int num = m_epoll->wait(m_wait_time);

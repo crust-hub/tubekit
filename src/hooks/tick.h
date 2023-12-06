@@ -2,11 +2,15 @@
 
 namespace tubekit
 {
-    namespace app
+    namespace hooks
     {
         class tick
         {
         public:
+            /**
+             * @brief executed in socket_handler
+             *
+             */
             void run();
         };
     };
