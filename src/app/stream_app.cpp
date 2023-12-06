@@ -57,7 +57,7 @@ void stream_app::on_stop()
 
 void stream_app::on_tick()
 {
-    LOG_ERROR("stream_app::on_tick()");
+    // LOG_ERROR("stream_app::on_tick()");
 }
 
 void stream_app::process_connection(tubekit::connection::stream_connection &m_stream_connection)

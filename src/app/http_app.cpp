@@ -49,7 +49,7 @@ void http_app::on_stop()
 
 void http_app::on_tick()
 {
-    LOG_ERROR("http_app::on_tick()");
+    // LOG_ERROR("http_app::on_tick()");
 }
 
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
