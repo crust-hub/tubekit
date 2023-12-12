@@ -1,2 +1,3 @@
-echo "workdir: `pwd`"
-cd ./bin && ./tubekit
+#!/bin/bash
+cd ./bin
+./tubekit
