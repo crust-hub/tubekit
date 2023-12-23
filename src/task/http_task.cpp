@@ -144,13 +144,14 @@ void http_task::run()
         t_http_connection->buffer_used_len = 0;
         while (true)
         {
-            t_http_connection->buffer_used_len = socket_ptr->recv(t_http_connection->buffer, t_http_connection->buffer_size);
-            if (t_http_connection->buffer_used_len == -1 && errno == EAGAIN)
+            int oper_errno = 0;
+            t_http_connection->buffer_used_len = socket_ptr->recv(t_http_connection->buffer, t_http_connection->buffer_size, oper_errno);
+            if (t_http_connection->buffer_used_len == -1 && oper_errno == EAGAIN)
             {
                 t_http_connection->buffer_used_len = 0;
                 break;
             }
-            else if (t_http_connection->buffer_used_len == -1 && errno == EINTR) // error interupt
+            else if (t_http_connection->buffer_used_len == -1 && oper_errno == EINTR) // error interupt
             {
                 t_http_connection->buffer_used_len = 0;
                 continue;
@@ -201,14 +202,15 @@ void http_task::run()
     {
         while (t_http_connection->buffer_used_len > t_http_connection->buffer_start_use)
         {
-            int sended = socket_ptr->send(t_http_connection->buffer + t_http_connection->buffer_start_use, t_http_connection->buffer_used_len - t_http_connection->buffer_start_use);
+            int oper_errno = 0;
+            int sended = socket_ptr->send(t_http_connection->buffer + t_http_connection->buffer_start_use, t_http_connection->buffer_used_len - t_http_connection->buffer_start_use, oper_errno);
             if (0 > sended)
             {
-                if (errno == EINTR)
+                if (oper_errno == EINTR)
                 {
                     continue;
                 }
-                else if (errno == EAGAIN)
+                else if (oper_errno == EAGAIN)
                 {
                     break;
                 }

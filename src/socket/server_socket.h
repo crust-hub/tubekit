@@ -9,7 +9,7 @@ namespace tubekit
         {
         public:
             server_socket();
-            server_socket(const string &ip, int port);
+            server_socket(const string &ip, int port, int max_connections);
             virtual ~server_socket();
         };
     }

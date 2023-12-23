@@ -48,11 +48,11 @@ void websocket_app::on_tick()
 
 void websocket_app::process_connection(tubekit::connection::websocket_connection &m_websocket_connection)
 {
-    LOG_ERROR("process_connection");
+    // LOG_ERROR("process_connection");
     uint64_t all_data_len = m_websocket_connection.m_recv_buffer.can_readable_size();
     if (all_data_len <= 0)
     {
-        LOG_ERROR("all_data_len <= 0");
+        // LOG_ERROR("all_data_len <= 0");
         return;
     }
     char *data = new (std::nothrow) char[all_data_len];

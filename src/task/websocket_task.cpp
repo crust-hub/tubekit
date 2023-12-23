@@ -140,13 +140,14 @@ void websocket_task::run()
         t_websocket_connection->buffer_used_len = 0;
         while (true)
         {
-            t_websocket_connection->buffer_used_len = socket_ptr->recv(t_websocket_connection->buffer, t_websocket_connection->buffer_size);
-            if (t_websocket_connection->buffer_used_len == -1 && errno == EAGAIN)
+            int oper_errno = 0;
+            t_websocket_connection->buffer_used_len = socket_ptr->recv(t_websocket_connection->buffer, t_websocket_connection->buffer_size, oper_errno);
+            if (t_websocket_connection->buffer_used_len == -1 && oper_errno == EAGAIN)
             {
                 t_websocket_connection->buffer_start_use = 0;
                 break;
             }
-            else if (t_websocket_connection->buffer_used_len == -1 && errno == EINTR)
+            else if (t_websocket_connection->buffer_used_len == -1 && oper_errno == EINTR)
             {
                 t_websocket_connection->buffer_used_len = 0;
                 continue;
@@ -216,7 +217,7 @@ void websocket_task::run()
             std::string combine_key = t_websocket_connection->sec_websocket_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
             // calculate SHA1 hash
-            SHA1 sha1;
+            utility::SHA1 sha1;
             sha1.update(combine_key);
             std::string sha1_str = sha1.final();
 

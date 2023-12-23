@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <openssl/ssl.h>
 
 namespace tubekit
 {
@@ -30,8 +31,8 @@ namespace tubekit
             bool connect(const string &ip, int port);
             bool close();
             int accept();
-            int recv(char *buf, size_t len);
-            int send(const char *buf, size_t len);
+            int recv(char *buf, size_t len, int &oper_errno);
+            int send(const char *buf, size_t len, int &oper_errno);
             bool set_non_blocking();
             bool set_blocking();
             bool set_send_buffer(size_t size);
@@ -48,10 +49,17 @@ namespace tubekit
             bool set_reuse_port();
             int get_fd();
 
+            SSL *get_ssl_instance();
+            void set_ssl_instance(SSL *ssl_instance);
+            bool get_ssl_accepted();
+            void set_ssl_accepted(bool accepted);
+
         protected:
             string m_ip;
             int m_port;
             int m_sockfd;
+            SSL *m_ssl_instance{nullptr};
+            bool m_ssl_accepted;
 
         public:
             std::function<void()> close_callback;

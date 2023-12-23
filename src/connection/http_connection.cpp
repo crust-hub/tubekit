@@ -4,7 +4,7 @@ using namespace std;
 using namespace tubekit::connection;
 
 http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                        m_buffer(2048),
+                                                                        m_buffer(204800),
                                                                         recv_end(false),
                                                                         process_end(false),
                                                                         buffer_used_len(0),

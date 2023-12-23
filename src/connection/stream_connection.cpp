@@ -8,9 +8,9 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                            m_send_buffer(20480),
-                                                                            m_recv_buffer(20480),
-                                                                            m_wating_send_pack(20480)
+                                                                            m_send_buffer(204800),
+                                                                            m_recv_buffer(204800),
+                                                                            m_wating_send_pack(204800)
 {
 }
 
@@ -23,12 +23,13 @@ bool stream_connection::sock2buf()
     static char buffer[1024] = {0};
     while (true)
     {
-        int len = socket_ptr->recv(buffer, 1024);
-        if (len == -1 && errno == EAGAIN)
+        int oper_errno = 0;
+        int len = socket_ptr->recv(buffer, 1024, oper_errno);
+        if (len == -1 && oper_errno == EAGAIN)
         {
             return true;
         }
-        else if (len == -1 && errno == EINTR)
+        else if (len == -1 && oper_errno == EINTR)
         {
             continue;
         }
@@ -118,14 +119,15 @@ bool stream_connection::buf2sock()
                 return have_data;
             }
         }
-        int len = socket_ptr->send(&buffer[should_send_idx], should_send_size);
+        int oper_errno = 0;
+        int len = socket_ptr->send(&buffer[should_send_idx], should_send_size, oper_errno);
         if (0 > len)
         {
-            if (errno == EINTR)
+            if (oper_errno == EINTR)
             {
                 continue;
             }
-            else if (errno == EAGAIN)
+            else if (oper_errno == EAGAIN)
             {
                 return true;
             }

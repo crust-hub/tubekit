@@ -15,7 +15,7 @@ server_socket::server_socket() : socket()
 {
 }
 
-server_socket::server_socket(const string &ip, int port) : socket(ip, port)
+server_socket::server_socket(const string &ip, int port, int max_connections) : socket(ip, port)
 {
     m_sockfd = socket::create_tcp_socket();
     if (m_sockfd < 0)
@@ -24,14 +24,14 @@ server_socket::server_socket(const string &ip, int port) : socket(ip, port)
         return;
     }
     set_non_blocking();
-    set_recv_buffer(10 * 1024); // 10MB
-    set_send_buffer(10 * 1024); // 10MB
+    set_recv_buffer(10 * 1024); // 10KB
+    set_send_buffer(10 * 1024); // 10KB
     set_linger(true, 0);
     set_keep_alive();
     set_reuse_addr();
     set_reuse_port();
     bind(ip, port);
-    listen(1024);
+    listen(max_connections);
 }
 
 server_socket::~server_socket()

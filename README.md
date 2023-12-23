@@ -2,8 +2,9 @@
 
 The C++ TCP server framework based on the Reactor model continues to implement POSIX thread pool, Epoll, non blocking IO, object pool, log, socket network programming, support the dynamic library to implement custom protocol extensions, and use http parser to process http requests. Currently only supports Linux systems
 
-Platform: `Linux`  
-Protocol: `HTTP` `TCP Stream(Protobuf)` `WebSocket`
+Platform: `Linux` 
+Protocol: `HTTP` `TCP Stream(Protobuf)` `WebSocket` 
+TLS/SSL: Support OpenSSL
 
 ## Get Start
 

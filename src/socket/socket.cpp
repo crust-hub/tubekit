@@ -82,6 +82,15 @@ bool socket::close()
     {
         close_callback();
     }
+
+    if (m_ssl_instance)
+    {
+        SSL_shutdown(m_ssl_instance);
+        SSL_free(m_ssl_instance);
+        m_ssl_instance = nullptr;
+    }
+    m_ssl_accepted = false;
+
     if (m_sockfd > 0)
     {
         ::close(m_sockfd);
@@ -90,6 +99,7 @@ bool socket::close()
     close_callback = nullptr;
     m_ip.clear();
     m_port = 0;
+
     return true;
 }
 
@@ -104,16 +114,97 @@ int socket::accept()
     return sockfd;
 }
 
-int socket::recv(char *buf, size_t len)
+int socket::recv(char *buf, size_t len, int &oper_errno)
 {
-    // read len bytes from m_sockfd
-    return ::recv(m_sockfd, buf, len, 0);
+    if (m_ssl_instance && !m_ssl_accepted)
+    {
+        LOG_ERROR("socket m_ssl_instance but m_ssl_accepted is false, can not to recv");
+        return -1;
+    }
+
+    // NO OPEN_SSL
+    {
+        if (!m_ssl_instance)
+        {
+            int result = ::recv(m_sockfd, buf, len, 0);
+            if (result == -1)
+            {
+                oper_errno = errno;
+            }
+            return result;
+        }
+    }
+
+    // USING OPENSSL
+    {
+        int bytes_received = SSL_read(m_ssl_instance, buf, len);
+        if (bytes_received > 0)
+        {
+        }
+        else if (bytes_received == 0)
+        {
+        }
+        else
+        {
+            int ssl_error = SSL_get_error(m_ssl_instance, bytes_received);
+            if (ssl_error != SSL_ERROR_WANT_READ || ssl_error != SSL_ERROR_WANT_WRITE)
+            {
+                oper_errno = EAGAIN;
+            }
+            else
+            {
+                oper_errno = ssl_error;
+                LOG_ERROR("ssl err %d", ssl_error);
+            }
+        }
+        return bytes_received;
+    }
 }
 
-int socket::send(const char *buf, size_t len)
+int socket::send(const char *buf, size_t len, int &oper_errno)
 {
-    // write data to m_sockfd
-    return ::send(m_sockfd, buf, len, 0);
+    if (m_ssl_instance && !m_ssl_accepted)
+    {
+        LOG_ERROR("socket m_ssl_instance but m_ssl_accepted is false, can not to send");
+        return -1;
+    }
+    // NO OPENSSL
+    {
+        // write data to m_sockfd
+        if (!m_ssl_instance)
+        {
+            int result = ::send(m_sockfd, buf, len, 0);
+            if (result == -1)
+            {
+                oper_errno = errno;
+            }
+            return result;
+        }
+    }
+    // USING OPENSSL
+    {
+        int bytes_written = SSL_write(m_ssl_instance, buf, len);
+        if (bytes_written > 0)
+        {
+        }
+        else if (bytes_written == 0)
+        {
+        }
+        else
+        {
+            int ssl_error = SSL_get_error(m_ssl_instance, bytes_written);
+            if (ssl_error != SSL_ERROR_WANT_READ || ssl_error != SSL_ERROR_WANT_WRITE)
+            {
+                oper_errno = EAGAIN;
+            }
+            else
+            {
+                oper_errno = ssl_error;
+                LOG_ERROR("ssl err %d", ssl_error);
+            }
+        }
+        return bytes_written;
+    }
 }
 
 bool socket::set_non_blocking()
@@ -246,4 +337,24 @@ int socket::create_tcp_socket()
 int socket::get_fd()
 {
     return this->m_sockfd;
+}
+
+SSL *socket::get_ssl_instance()
+{
+    return m_ssl_instance;
+}
+
+void socket::set_ssl_instance(SSL *ssl_instance)
+{
+    m_ssl_instance = ssl_instance;
+}
+
+bool socket::get_ssl_accepted()
+{
+    return m_ssl_accepted;
+}
+
+void socket::set_ssl_accepted(bool accepted)
+{
+    m_ssl_accepted = accepted;
 }

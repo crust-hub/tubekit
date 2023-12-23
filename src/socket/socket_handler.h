@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/opensslv.h>
+
 #include "socket/socket.h"
 #include "socket/event_poller.h"
 #include "utility/object_pool.h"
@@ -55,6 +59,7 @@ namespace tubekit
             socket *m_server;
             tubekit::utility::object_pool<socket> socket_pool;
             tubekit::thread::mutex m_mutex;
+            SSL_CTX *m_ssl_context{nullptr};
         };
     }
 }

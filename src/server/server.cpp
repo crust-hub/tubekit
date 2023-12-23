@@ -91,13 +91,46 @@ enum server::TaskType server::get_task_type()
     return NONE;
 }
 
+void server::set_use_ssl(bool use_ssl)
+{
+    m_use_ssl = use_ssl;
+}
+
+void server::set_crt_pem(std::string crt_pem)
+{
+    m_crt_pem = crt_pem;
+}
+
+void server::set_key_pem(std::string key_pem)
+{
+    m_key_pem = key_pem;
+}
+
+bool server::get_use_ssl()
+{
+    return m_use_ssl;
+}
+
+std::string server::get_crt_pem()
+{
+    return m_crt_pem;
+}
+
+std::string server::get_key_pem()
+{
+    return m_key_pem;
+}
+
 void server::config(const std::string &ip,
                     int port,
                     size_t threads,
                     size_t connects,
                     size_t wait_time,
                     std::string task_type,
-                    bool daemon)
+                    bool daemon, /*= false*/
+                    std::string crt_pem /*= ""*/,
+                    std::string key_pem /*= ""*/,
+                    bool use_ssl /*= false*/)
 {
     listen(ip, port);
     set_threads(threads);
@@ -105,6 +138,9 @@ void server::config(const std::string &ip,
     set_wait_time(wait_time);
     set_task_type(task_type);
     set_daemon(daemon);
+    set_use_ssl(use_ssl);
+    set_crt_pem(crt_pem);
+    set_key_pem(key_pem);
 }
 
 bool server::is_stop()
