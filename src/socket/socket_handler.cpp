@@ -337,7 +337,7 @@ void socket_handler::handle()
                     }
                     else if (0 == ssl_status)
                     {
-                        LOG_ERROR("SSL_accept ssl_status == 0");
+                        // LOG_ERROR("SSL_accept ssl_status == 0");
                         // need more data or space
                         attach(socket_ptr, true);
                         continue;
@@ -347,7 +347,7 @@ void socket_handler::handle()
                         int ssl_error = SSL_get_error(socket_ptr->get_ssl_instance(), ssl_status);
                         if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
                         {
-                            LOG_ERROR("SSL_accept SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE");
+                            // LOG_ERROR("SSL_accept SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE");
                             // need more data or space
                             attach(socket_ptr, true);
                         }
