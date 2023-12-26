@@ -37,16 +37,17 @@ namespace tubekit
              */
             int detach(socket *m_socket);
 
+            socket *alloc_socket();
+
+            void handle();
+
+        private:
             /**
              * @brief Remove from epoll and close the real socket and return it to the object pool
              *
              * @param m_socket
              */
             int remove(socket *m_socket);
-
-            socket *alloc_socket();
-
-            void handle();
 
         public:
             void on_tick();

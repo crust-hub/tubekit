@@ -59,7 +59,9 @@ void stream_task::run()
         {
             singleton<connection_mgr>::instance()->remove(socket_ptr);
         }
-        singleton<socket_handler>::instance()->remove(socket_ptr);
+
+        // socket_handler next loop, executing remove(socket_ptr)
+        singleton<socket_handler>::instance()->attach(socket_ptr, true);
         return;
     }
 

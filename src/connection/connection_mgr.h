@@ -38,6 +38,8 @@ namespace tubekit::connection
          */
         bool safe_send(void *index_ptr, const char *buffer, size_t len);
 
+        void on_new_connection(void *index_ptr);
+
     public:
         static http_connection *convert_to_http(connection *conn_ptr);
         static stream_connection *convert_to_stream(connection *conn_ptr);

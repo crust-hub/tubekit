@@ -293,9 +293,18 @@ void socket_handler::handle()
                     remove(socket_object);
                     continue;
                 }
+
+                // on_new_connection hook will be executed when it's get_ssl_accepted status first
+                // if not using openssl
+                if (!singleton<server::server>::instance()->get_use_ssl())
+                {
+                    // triger new connection hook
+                    singleton<connection_mgr>::instance()->on_new_connection(socket_object);
+                }
+
                 // first connected, try listen write and process
                 attach(socket_object, true);
-            }    // There is a new socket connection
+            }
             else // already connection socket has event happen
             {
                 // already connection socket process
@@ -332,8 +341,10 @@ void socket_handler::handle()
 
                     if (1 == ssl_status)
                     {
-                        LOG_ERROR("set_ssl_accepted(true)");
+                        // LOG_ERROR("set_ssl_accepted(true)");
                         socket_ptr->set_ssl_accepted(true);
+                        // triger new connection hook
+                        singleton<connection_mgr>::instance()->on_new_connection(socket_ptr);
                     }
                     else if (0 == ssl_status)
                     {
@@ -345,16 +356,21 @@ void socket_handler::handle()
                     else
                     {
                         int ssl_error = SSL_get_error(socket_ptr->get_ssl_instance(), ssl_status);
-                        if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
+                        if (ssl_error == SSL_ERROR_WANT_READ)
                         {
-                            // LOG_ERROR("SSL_accept SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE");
+                            // LOG_ERROR("SSL_accept SSL_ERROR_WANT_READ");
                             // need more data or space
+                            attach(socket_ptr);
+                        }
+                        else if (ssl_error == SSL_ERROR_WANT_WRITE)
+                        {
+                            // LOG_ERROR("SSL_accept SSL_ERROR_WANT_WRITE");
                             attach(socket_ptr, true);
                         }
                         else
                         {
                             LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                            p_connection->mark_close();
+                            p_connection->mark_close(); // final connection and socket
                         }
                         continue; // wait next triger
                     }
@@ -389,7 +405,7 @@ void socket_handler::handle()
                     new_task = task_factory::create(socket_ptr, task_factory::WEBSOCKET_TASK);
                     if (new_task)
                     {
-                        auto websocket_task_ptr = (websocket_task *)new_task;
+                        // auto websocket_task_ptr = (websocket_task *)new_task;
                     }
                     break;
                 default:

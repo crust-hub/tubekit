@@ -1,7 +1,11 @@
 #include "connection/http_connection.h"
+#include "utility/singleton.h"
+#include "socket/socket_handler.h"
 
 using namespace std;
 using namespace tubekit::connection;
+using tubekit::socket::socket_handler;
+using tubekit::utility::singleton;
 
 http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
                                                                         m_buffer(204800),
@@ -107,4 +111,9 @@ ostream &operator<<(ostream &os, const http_connection &m_http_connection)
 
 void http_connection::on_mark_close()
 {
+    int iret = singleton<socket_handler>::instance()->attach(socket_ptr, true);
+    if (0 != iret)
+    {
+        // LOG_ERROR("on_mark_close attach(socket_ptr, true) return %d", iret);
+    }
 }

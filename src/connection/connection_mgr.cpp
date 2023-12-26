@@ -32,15 +32,29 @@ bool connection_mgr::add(void *index_ptr, connection *conn_ptr)
         return false;
     }
     m_map.insert({index_ptr, conn_ptr});
-    if (is_stream(conn_ptr))
-    {
-        stream_app::on_new_connection(*convert_to_stream(conn_ptr));
-    }
-    if (is_websocket(conn_ptr))
-    {
-        websocket_app::on_new_connection(*convert_to_websocket(conn_ptr));
-    }
     return true;
+}
+
+void connection_mgr::on_new_connection(void *index_ptr)
+{
+    tubekit::thread::auto_lock lock(m_mutex);
+    auto res = m_map.find(index_ptr);
+    if (res == m_map.end())
+    {
+        return;
+    }
+    if (!res->second)
+    {
+        return;
+    }
+    if (is_stream(res->second))
+    {
+        stream_app::on_new_connection(*convert_to_stream(res->second));
+    }
+    if (is_websocket(res->second))
+    {
+        websocket_app::on_new_connection(*convert_to_websocket(res->second));
+    }
 }
 
 bool connection_mgr::remove(void *index_ptr)
