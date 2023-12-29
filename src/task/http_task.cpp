@@ -144,6 +144,7 @@ void http_task::run()
     if (!t_http_connection->get_recv_end())
     {
         t_http_connection->buffer_used_len = 0;
+
         while (true)
         {
             int oper_errno = 0;
@@ -167,24 +168,21 @@ void http_task::run()
                 else if (nparsed != t_http_connection->buffer_used_len) // error
                 {
                     t_http_connection->buffer_used_len = 0;
+                    t_http_connection->set_everything_end(true);
                     break;
                 }
             }
             else
             {
                 // 1. t_http_connection->buffer_used_len == 0 client closed
-                t_http_connection->set_recv_end(true);
-                t_http_connection->set_process_end(true);
-                t_http_connection->set_response_end(true);
                 t_http_connection->set_everything_end(true);
                 break;
             }
-            t_http_connection->buffer_used_len = 0;
         } // while(1)
     }
 
     // process http connection
-    if (t_http_connection->get_recv_end() && !t_http_connection->get_process_end())
+    if (!t_http_connection->get_everything_end() && t_http_connection->get_recv_end() && !t_http_connection->get_process_end())
     {
         t_http_connection->set_process_end(true);
         // app loader,loading process_callback for t_http_connection
@@ -200,7 +198,7 @@ void http_task::run()
     }
 
     // write
-    if (t_http_connection->get_process_end() && !t_http_connection->get_everything_end())
+    if (!t_http_connection->get_everything_end() && t_http_connection->get_process_end())
     {
         while (t_http_connection->buffer_used_len > t_http_connection->buffer_start_use)
         {
@@ -267,7 +265,7 @@ void http_task::run()
     }
 
     // continue to epoll_wait
-    if (!t_http_connection->get_recv_end()) // next loop for reading
+    if (!t_http_connection->get_everything_end() && !t_http_connection->get_recv_end()) // next loop for reading
     {
         singleton<socket_handler>::instance()->attach(socket_ptr); // continue registe epoll wait read
         return;
@@ -279,6 +277,7 @@ void http_task::run()
         return;
     }
 
+    t_http_connection->set_everything_end(true);
     t_http_connection->mark_close();
     singleton<socket_handler>::instance()->attach(socket_ptr, true);
 }
