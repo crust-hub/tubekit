@@ -11,10 +11,6 @@ worker_pool::worker_pool()
 
 worker_pool::~worker_pool()
 {
-    if (destory_ptr)
-    {
-        delete destory_ptr;
-    }
 }
 
 size_t worker_pool::get_size()
