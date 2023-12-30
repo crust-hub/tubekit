@@ -27,7 +27,7 @@ int main(int argc, const char **argv)
     exampleReq.set_testcontext(send_str);
     message.set_cmd(ProtoCmd::EXAMPLE_REQ);
 
-    //const char *server_ip = "61.171.51.135";
+    // const char *server_ip = "61.171.51.135";
     const char *server_ip = "172.29.94.203";
     int server_port = 20023;
 

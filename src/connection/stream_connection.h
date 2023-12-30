@@ -37,6 +37,7 @@ namespace tubekit
 
         public:
             virtual void on_mark_close() override;
+            virtual void reuse() override;
 
         public:
             buffer::buffer m_send_buffer;

@@ -23,6 +23,12 @@ namespace tubekit
             void mark_close();
             bool is_close();
             tubekit::socket::socket *get_socket_ptr();
+            void set_socket_ptr(tubekit::socket::socket *socket_ptr);
+            /**
+             * @brief be executed when allocating from object_pool
+             *
+             */
+            virtual void reuse();
 
         private:
             bool close_flag;

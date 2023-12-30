@@ -36,6 +36,7 @@ namespace tubekit
 
         public:
             virtual void on_mark_close() override;
+            virtual void reuse() override;
 
         public:
             std::string url;

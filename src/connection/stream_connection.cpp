@@ -197,3 +197,11 @@ void stream_connection::on_mark_close()
         // LOG_ERROR("on_mark_close attach(socket_ptr, true) return %d", iret);
     }
 }
+
+void stream_connection::reuse()
+{
+    connection::reuse();
+    m_send_buffer.clear();
+    m_recv_buffer.clear();
+    m_wating_send_pack.clear();
+}

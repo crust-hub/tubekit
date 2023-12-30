@@ -2,6 +2,11 @@
 #include "thread/auto_lock.h"
 #include "app/stream_app.h"
 #include "app/websocket_app.h"
+#include "task/task_type.h"
+#include "utility/object_pool.h"
+#include "utility/singleton.h"
+
+#include <tubekit-log/logger.h>
 
 using tubekit::app::stream_app;
 using tubekit::app::websocket_app;
@@ -10,6 +15,9 @@ using tubekit::connection::connection_mgr;
 using tubekit::connection::http_connection;
 using tubekit::connection::stream_connection;
 using tubekit::connection::websocket_connection;
+using tubekit::task::task_type;
+using tubekit::utility::object_pool;
+using tubekit::utility::singleton;
 
 connection_mgr::connection_mgr()
 {
@@ -72,8 +80,9 @@ bool connection_mgr::remove(void *index_ptr)
         {
             websocket_app::on_close_connection(*convert_to_websocket(res->second));
         }
-        // triger delete connection
-        delete res->second;
+        // connection back to pool
+        release(res->second);
+
         m_map.erase(res);
         return true;
     }
@@ -236,4 +245,66 @@ bool connection_mgr::is_websocket(connection *conn_ptr)
         return true;
     }
     return false;
+}
+
+void connection_mgr::init(tubekit::task::task_type task_type)
+{
+    m_task_type = task_type;
+}
+
+void connection_mgr::release(connection *connection_ptr)
+{
+    if (!connection_ptr)
+    {
+        return;
+    }
+    switch (m_task_type)
+    {
+    case task_type::STREAM_TASK:
+    {
+        singleton<object_pool<stream_connection>>::instance()->release(dynamic_cast<stream_connection *>(connection_ptr));
+        LOG_DEBUG("connection space:%d", singleton<object_pool<stream_connection>>::instance()->space());
+        break;
+    }
+    case task_type::HTTP_TASK:
+    {
+        singleton<object_pool<http_connection>>::instance()->release(dynamic_cast<http_connection *>(connection_ptr));
+        LOG_DEBUG("connection space:%d", singleton<object_pool<http_connection>>::instance()->space());
+        break;
+    }
+    case task_type::WEBSOCKET_TASK:
+    {
+        singleton<object_pool<websocket_connection>>::instance()->release(dynamic_cast<websocket_connection *>(connection_ptr));
+        LOG_DEBUG("connection space:%d", singleton<object_pool<websocket_connection>>::instance()->space());
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+connection *connection_mgr::create()
+{
+    connection *p_connection = nullptr;
+    switch (m_task_type)
+    {
+    case task_type::STREAM_TASK:
+    {
+        p_connection = singleton<object_pool<stream_connection>>::instance()->allocate();
+        break;
+    }
+    case task_type::HTTP_TASK:
+    {
+        p_connection = singleton<object_pool<http_connection>>::instance()->allocate();
+        break;
+    }
+    case task_type::WEBSOCKET_TASK:
+    {
+        p_connection = singleton<object_pool<websocket_connection>>::instance()->allocate();
+        break;
+    }
+    default:
+        break;
+    }
+    return p_connection;
 }

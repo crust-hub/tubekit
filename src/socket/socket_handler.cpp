@@ -5,7 +5,7 @@
 #include "thread/auto_lock.h"
 #include "utility/singleton.h"
 #include "thread/worker_pool.h"
-#include "task/task_factory.h"
+#include "task/task_mgr.h"
 #include "server/server.h"
 #include "hooks/tick.h"
 #include "hooks/stop.h"
@@ -14,6 +14,9 @@
 #include "connection/connection_mgr.h"
 #include "connection/http_connection.h"
 #include "connection/stream_connection.h"
+#include "task/http_task.h"
+#include "task/stream_task.h"
+#include "task/websocket_task.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -100,7 +103,11 @@ int socket_handler::remove(socket *m_socket)
         // LOG_ERROR("detach(m_socket) return %d", iret);
     }
     m_socket->close();
-    socket_pool.release(m_socket); // return back to socket object poll
+
+    // return back to socket object poll
+    singleton<object_pool<socket>>::instance()->release(m_socket);
+    LOG_DEBUG("socket space:%d", singleton<object_pool<socket>>::instance()->space());
+
     return iret;
 }
 
@@ -110,7 +117,7 @@ socket *socket_handler::alloc_socket()
     {
         return nullptr;
     }
-    return socket_pool.allocate();
+    return singleton<object_pool<socket>>::instance()->allocate();
 }
 
 void socket_handler::on_tick()
@@ -131,7 +138,6 @@ bool socket_handler::init(const string &ip, int port, int max_connections, int w
     m_epoll = new event_poller(false); // false:EPOLLLT mode
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
-    socket_pool.init(max_connections);
 
     if (singleton<server::server>::instance()->get_use_ssl())
     {
@@ -247,36 +253,7 @@ void socket_handler::handle()
                 }
 
                 // create connection layer instance
-                auto task_type = singleton<server::server>::instance()->get_task_type();
-                connection::connection *p_connection = nullptr;
-                {
-                    switch (task_type)
-                    {
-                    case server::server::STREAM_TASK:
-                        p_connection = new (std::nothrow) connection::stream_connection(socket_object);
-                        if (p_connection == nullptr)
-                        {
-                            LOG_ERROR("new connection::stream_connection error");
-                        }
-                        break;
-                    case server::server::HTTP_TASK:
-                        p_connection = new (std::nothrow) connection::http_connection(socket_object);
-                        if (p_connection == nullptr)
-                        {
-                            LOG_ERROR("new connection::http_connection error");
-                        }
-                        break;
-                    case server::server::WEBSOCKET_TASK:
-                        p_connection = new (std::nothrow) connection::websocket_connection(socket_object);
-                        if (p_connection == nullptr)
-                        {
-                            LOG_ERROR("new connection::websocket_connection error");
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                }
+                connection::connection *p_connection = singleton<connection_mgr>::instance()->create();
 
                 if (p_connection == nullptr)
                 {
@@ -284,12 +261,17 @@ void socket_handler::handle()
                     remove(socket_object);
                     continue;
                 }
+                else
+                {
+                    p_connection->reuse();
+                    p_connection->set_socket_ptr(socket_object);
+                }
 
                 bool bret = singleton<connection_mgr>::instance()->add(socket_object, p_connection);
                 if (!bret)
                 {
                     LOG_ERROR("singleton<connection_mgr>::instance()->add error");
-                    delete p_connection;
+                    singleton<connection_mgr>::instance()->release(p_connection);
                     remove(socket_object);
                     continue;
                 }
@@ -378,13 +360,12 @@ void socket_handler::handle()
 
                 // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
                 auto task_type = singleton<server::server>::instance()->get_task_type();
-                thread::task *new_task = nullptr;
+                thread::task *new_task = singleton<task_mgr>::instance()->create(socket_ptr);
 
                 // create task
                 switch (task_type)
                 {
-                case server::server::STREAM_TASK:
-                    new_task = task_factory::create(socket_ptr, task_factory::STREAM_TASK);
+                case task_type::STREAM_TASK:
                     if (new_task)
                     {
                         auto stream_task_ptr = (stream_task *)new_task;
@@ -392,8 +373,7 @@ void socket_handler::handle()
                         stream_task_ptr->reason_send = send_event;
                     }
                     break;
-                case server::server::HTTP_TASK:
-                    new_task = task_factory::create(socket_ptr, task_factory::HTTP_TASK);
+                case task_type::HTTP_TASK:
                     if (new_task)
                     {
                         auto http_task_ptr = (http_task *)new_task;
@@ -401,8 +381,7 @@ void socket_handler::handle()
                         http_task_ptr->reason_send = send_event;
                     }
                     break;
-                case server::server::WEBSOCKET_TASK:
-                    new_task = task_factory::create(socket_ptr, task_factory::WEBSOCKET_TASK);
+                case task_type::WEBSOCKET_TASK:
                     if (new_task)
                     {
                         // auto websocket_task_ptr = (websocket_task *)new_task;

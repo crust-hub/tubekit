@@ -39,6 +39,30 @@ void websocket_connection::on_mark_close()
     }
 }
 
+void websocket_connection::reuse()
+{
+    connection::reuse();
+    this->url.clear();
+    this->method.clear();
+    this->sec_websocket_key.clear();
+    this->sec_websocket_version.clear();
+    this->headers.clear();
+    this->buffer_used_len = 0;
+    this->buffer_start_use = 0;
+    this->head_filed_tmp.clear();
+    this->http_processed = false;
+    this->everything_end = false;
+    this->is_upgrade = false;
+    this->m_recv_buffer.clear();
+    this->m_send_buffer.clear();
+    this->m_wating_send_pack.clear();
+
+    this->destory_callback = nullptr;
+
+    http_parser_init(&m_http_parser, HTTP_REQUEST);
+    m_http_parser.data = this;
+}
+
 bool websocket_connection::get_connected()
 {
     return this->connected;

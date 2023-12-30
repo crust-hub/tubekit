@@ -11,6 +11,10 @@ worker_pool::worker_pool()
 
 worker_pool::~worker_pool()
 {
+    if (destory_ptr)
+    {
+        delete destory_ptr;
+    }
 }
 
 size_t worker_pool::get_size()
@@ -18,11 +22,11 @@ size_t worker_pool::get_size()
     return worker_map.size();
 }
 
-void worker_pool::create(size_t size)
+void worker_pool::create(size_t size, task_destory *destory_ptr)
 {
     for (size_t i = 0; i < size; i++)
     {
-        worker *new_worker = new worker();
+        worker *new_worker = new worker(destory_ptr);
         LOG_DEBUG("create worker thread %x", new_worker);
         worker_map[i] = new_worker;
         new_worker->start();

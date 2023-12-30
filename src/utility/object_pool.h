@@ -10,6 +10,7 @@ namespace tubekit
     namespace utility
     {
         using namespace thread;
+
         template <typename T>
         class object_pool
         {
@@ -22,7 +23,8 @@ namespace tubekit
              *
              * @param max_size number of object
              */
-            void init(size_t max_size);
+            template <typename... ARGS>
+            void init(size_t max_size, ARGS &&...args);
 
             /**
              * @brief get a object from list
@@ -36,6 +38,8 @@ namespace tubekit
              *
              */
             void release(T *t);
+
+            uint space();
 
         private:
             std::set<T *> m_set;
@@ -61,12 +65,13 @@ namespace tubekit
         }
 
         template <typename T>
-        void object_pool<T>::init(size_t max_size)
+        template <typename... ARGS>
+        void object_pool<T>::init(size_t max_size, ARGS &&...args)
         {
             auto_lock lock(m_mutex);
             for (size_t i = 0; i < max_size; ++i)
             {
-                T *p = new T();
+                T *p = new T(std::forward<ARGS>(args)...);
                 if (p)
                     m_set.insert(p);
             }
@@ -97,5 +102,14 @@ namespace tubekit
             }
         }
 
+        template <typename T>
+        uint object_pool<T>::space()
+        {
+            uint space = 0;
+            m_mutex.lock();
+            space = m_set.size();
+            m_mutex.unlock();
+            return space;
+        }
     }
 }

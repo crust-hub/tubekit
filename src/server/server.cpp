@@ -11,6 +11,16 @@
 #include "thread/worker_pool.h"
 #include "socket/socket_handler.h"
 #include "utility/singleton.h"
+#include "connection/http_connection.h"
+#include "connection/stream_connection.h"
+#include "connection/websocket_connection.h"
+#include "connection/connection_mgr.h"
+#include "task/http_task.h"
+#include "task/stream_task.h"
+#include "task/websocket_task.h"
+#include "task/task_type.h"
+#include "task/task_mgr.h"
+#include "task/task_destory_impl.h"
 
 using namespace std;
 using namespace tubekit::server;
@@ -18,6 +28,8 @@ using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::thread;
 using namespace tubekit::log;
+using namespace tubekit::connection;
+using namespace tubekit::task;
 
 server::server() : m_ip("0.0.0.0"),
                    m_port(0),
@@ -39,9 +51,46 @@ void server::start()
 
     // worker pool
     worker_pool *m_worker_pool = singleton<worker_pool>::instance();
-    m_worker_pool->create(m_threads);
+    m_worker_pool->create(m_threads, new task_destory_impl());
 
-    // init the socket handler in epoll
+    // socket object pool
+    singleton<object_pool<socket::socket>>::instance()->init(m_connects);
+
+    // connection object pool and task object pool
+    task::task_type task_type = get_task_type();
+    switch (task_type)
+    {
+    case task::task_type::HTTP_TASK:
+    {
+        singleton<object_pool<connection::http_connection>>::instance()->init(m_connects, nullptr);
+        singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, nullptr);
+        break;
+    }
+    case task::task_type::STREAM_TASK:
+    {
+        singleton<object_pool<connection::stream_connection>>::instance()->init(m_connects, nullptr);
+        singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, nullptr);
+        break;
+    }
+    case task::task_type::WEBSOCKET_TASK:
+    {
+        singleton<object_pool<connection::websocket_connection>>::instance()->init(m_connects, nullptr);
+        singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, nullptr);
+        break;
+    }
+    default:
+    {
+        LOG_ERROR("not found task::task_type");
+        return;
+    }
+    }
+
+    // connection_mgr
+    singleton<connection::connection_mgr>::instance()->init(task_type);
+
+    // task_mgr
+    singleton<task::task_mgr>::instance()->init(task_type);
+
     socket_handler *handler = singleton<socket_handler>::instance();
     handler->init(m_ip, m_port, m_connects, m_wait_time);
     handler->handle(); // main thread loop
@@ -74,7 +123,7 @@ void server::set_daemon(bool daemon)
     m_daemon = daemon;
 }
 
-enum server::TaskType server::get_task_type()
+enum tubekit::task::task_type server::get_task_type()
 {
     if (m_task_type == "HTTP_TASK")
     {

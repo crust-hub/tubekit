@@ -58,7 +58,6 @@ namespace tubekit
             int m_wait_time;
             event_poller *m_epoll;
             socket *m_server;
-            tubekit::utility::object_pool<socket> socket_pool;
             tubekit::thread::mutex m_mutex;
             SSL_CTX *m_ssl_context{nullptr};
         };

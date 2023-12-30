@@ -33,3 +33,14 @@ tubekit::socket::socket *connection::get_socket_ptr()
 {
     return socket_ptr;
 }
+
+void connection::set_socket_ptr(tubekit::socket::socket *socket_ptr)
+{
+    this->socket_ptr = socket_ptr;
+}
+
+void connection::reuse()
+{
+    this->close_flag = false;
+    this->socket_ptr = nullptr;
+}

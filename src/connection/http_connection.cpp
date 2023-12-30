@@ -117,3 +117,29 @@ void http_connection::on_mark_close()
         // LOG_ERROR("on_mark_close attach(socket_ptr, true) return %d", iret);
     }
 }
+
+void http_connection::reuse()
+{
+    connection::reuse();
+    this->url.clear();
+    this->method.clear();
+    this->headers.clear();
+    this->body.clear();
+    this->chunks.clear();
+    this->data.clear();
+    this->m_buffer.clear();
+    this->buffer_used_len = 0;
+    this->buffer_start_use = 0;
+    this->head_field_tmp.clear();
+    this->process_callback = nullptr;
+    this->write_end_callback = nullptr;
+    this->destory_callback = nullptr;
+    this->ptr = nullptr;
+    this->recv_end = false;
+    this->process_end = false;
+    this->response_end = false;
+    this->everything_end = false;
+
+    http_parser_init(&m_http_parser, HTTP_REQUEST);
+    m_http_parser.data = this;
+}

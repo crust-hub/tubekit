@@ -5,13 +5,14 @@
 #include "thread/thread.h"
 #include "thread/task_queue.h"
 #include "thread/task.h"
+#include "thread/task_destory.h"
 
 namespace tubekit::thread
 {
     class worker : public thread
     {
     public:
-        worker();
+        worker(task_destory *destory_ptr);
         virtual ~worker();
         virtual void run();
 
@@ -24,5 +25,6 @@ namespace tubekit::thread
 
     private:
         task_queue<task> m_task_queue;
+        task_destory *m_destory_ptr;
     };
 }

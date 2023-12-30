@@ -26,9 +26,12 @@ namespace tubekit
             ~websocket_connection();
 
         public:
-            virtual void on_mark_close() override;
             http_parser *get_parser();
             void add_header(const std::string &key, const std::string &value);
+
+        public:
+            virtual void on_mark_close() override;
+            virtual void reuse() override;
 
         private:
             bool sock2buf();
@@ -53,7 +56,6 @@ namespace tubekit
             buffer::buffer m_wating_send_pack;
 
             std::function<void(websocket_connection &connection)> destory_callback;
-            void *ptr{nullptr};
 
         public:
             bool get_connected();

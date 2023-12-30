@@ -9,6 +9,7 @@
 #include "connection/http_connection.h"
 #include "connection/stream_connection.h"
 #include "connection/websocket_connection.h"
+#include "task/task_type.h"
 
 namespace tubekit::connection
 {
@@ -40,6 +41,12 @@ namespace tubekit::connection
 
         void on_new_connection(void *index_ptr);
 
+        void init(tubekit::task::task_type task_type);
+
+    public:
+        connection *create();
+        void release(connection *connection_ptr);
+
     public:
         static http_connection *convert_to_http(connection *conn_ptr);
         static stream_connection *convert_to_stream(connection *conn_ptr);
@@ -52,5 +59,6 @@ namespace tubekit::connection
         std::unordered_map<void *, connection *> m_map;
         // std::unordered_multimap<void *, std::vector<char>> m_wait_send_data;
         tubekit::thread::mutex m_mutex;
+        tubekit::task::task_type m_task_type;
     };
 }

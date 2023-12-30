@@ -3,12 +3,13 @@
 #include "thread/worker.h"
 #include "utility/singleton.h"
 #include "thread/task.h"
+#include "task/task_mgr.h"
 
 using namespace tubekit::thread;
 using namespace tubekit::log;
 using namespace tubekit::utility;
 
-worker::worker() : thread()
+worker::worker(task_destory *destory_ptr) : thread(), m_destory_ptr(destory_ptr)
 {
 }
 
@@ -70,7 +71,9 @@ void worker::run()
         // 执行任务
         will_run_task->run();
 
-        delete will_run_task; // free task object
+        // destory task
+        m_destory_ptr->execute(will_run_task);
+
         will_run_task = nullptr;
 
         // 允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
@@ -89,7 +92,12 @@ void worker::push(task *m_task)
         LOG_ERROR("worker thread already stoped, cannot add task to queue");
         return;
     }
-    m_task_queue.push(m_task);
+    bool b_res = m_task_queue.push(m_task);
+    if (!b_res)
+    {
+        // destory task
+        m_destory_ptr->execute(m_task);
+    }
 }
 
 void worker::stop()

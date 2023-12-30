@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "task/task_type.h"
 
 namespace tubekit
 {
@@ -7,15 +8,6 @@ namespace tubekit
     {
         class server
         {
-        public:
-            enum TaskType
-            {
-                HTTP_TASK = 0,
-                STREAM_TASK,
-                WEBSOCKET_TASK,
-                NONE
-            };
-
         public:
             server();
             ~server() = default;
@@ -45,7 +37,7 @@ namespace tubekit
                         std::string crt_pem = "",
                         std::string key_pem = "",
                         bool use_ssl = false);
-            enum TaskType get_task_type();
+            enum tubekit::task::task_type get_task_type();
             bool on_stop();
             void to_stop();
             bool is_stop();
