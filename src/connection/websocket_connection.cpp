@@ -61,6 +61,7 @@ void websocket_connection::reuse()
 
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
+    this->connected = false;
 }
 
 bool websocket_connection::get_connected()

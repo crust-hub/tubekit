@@ -38,6 +38,20 @@ namespace tubekit
             bool buf2sock();
 
         public:
+            bool get_connected();
+            void set_connected(bool connected);
+            /**
+             * @brief Only when processing websocket_connection, the worker thread of the connection uses its own send,
+             *        and if sending to other connections, the connection mgr's safe_send needs to be used.
+             *
+             * @param buffer
+             * @param buffer_size
+             * @return true
+             * @return false
+             */
+            bool send(const char *buffer, size_t buffer_size);
+
+        public:
             std::string url;
             std::string method;
             std::string sec_websocket_key;
@@ -56,20 +70,6 @@ namespace tubekit
             buffer::buffer m_wating_send_pack;
 
             std::function<void(websocket_connection &connection)> destory_callback;
-
-        public:
-            bool get_connected();
-            void set_connected(bool connected);
-            /**
-             * @brief Only when processing websocket_connection, the worker thread of the connection uses its own send,
-             *        and if sending to other connections, the connection mgr's safe_send needs to be used.
-             *
-             * @param buffer
-             * @param buffer_size
-             * @return true
-             * @return false
-             */
-            bool send(const char *buffer, size_t buffer_size);
 
         private:
             http_parser m_http_parser;
