@@ -320,7 +320,6 @@ void socket_handler::handle()
 
                 if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted() && !p_connection->is_close())
                 {
-                    bool jump
                     int ssl_status = SSL_accept(socket_ptr->get_ssl_instance());
 
                     if (1 == ssl_status)
