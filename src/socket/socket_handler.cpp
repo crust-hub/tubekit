@@ -221,6 +221,7 @@ void socket_handler::handle()
                 socket *socket_object = alloc_socket();
                 if (socket_object == nullptr)
                 {
+                    ::close(socket_fd);
                     continue;
                 }
                 socket_object->m_sockfd = socket_fd;

@@ -25,8 +25,8 @@
 
     <script>
         let pingpongcount = 0;
-        // const socket = new WebSocket("ws://61.171.51.135:20023/");
-        const socket = new WebSocket("ws://172.29.94.203:20023/");
+        const socket = new WebSocket("ws://61.171.51.135:20023/");
+        //const socket = new WebSocket("ws://172.29.94.203:20023/");
         socket.addEventListener("open", (event) => {
             console.log("WebSocket connection opened:", event);
             //setTimeout(sendMessage, 0);

@@ -54,7 +54,7 @@ void server::start()
     m_worker_pool->create(m_threads, new task_destory_impl());
 
     // socket object pool
-    singleton<object_pool<socket::socket>>::instance()->init(m_connects);
+    singleton<object_pool<socket::socket>>::instance()->init(m_connects, false);
 
     // connection object pool and task object pool
     task::task_type task_type = get_task_type();
@@ -62,20 +62,20 @@ void server::start()
     {
     case task::task_type::HTTP_TASK:
     {
-        singleton<object_pool<connection::http_connection>>::instance()->init(m_connects, nullptr);
-        singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, nullptr);
+        singleton<object_pool<connection::http_connection>>::instance()->init(m_connects, false, nullptr);
+        singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, true, nullptr);
         break;
     }
     case task::task_type::STREAM_TASK:
     {
-        singleton<object_pool<connection::stream_connection>>::instance()->init(m_connects, nullptr);
-        singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, nullptr);
+        singleton<object_pool<connection::stream_connection>>::instance()->init(m_connects, false, nullptr);
+        singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, true, nullptr);
         break;
     }
     case task::task_type::WEBSOCKET_TASK:
     {
-        singleton<object_pool<connection::websocket_connection>>::instance()->init(m_connects, nullptr);
-        singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, nullptr);
+        singleton<object_pool<connection::websocket_connection>>::instance()->init(m_connects, false, nullptr);
+        singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, true, nullptr);
         break;
     }
     default:
