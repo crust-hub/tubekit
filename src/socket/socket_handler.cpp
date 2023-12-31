@@ -320,6 +320,7 @@ void socket_handler::handle()
 
                 if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted() && !p_connection->is_close())
                 {
+                    bool jump
                     int ssl_status = SSL_accept(socket_ptr->get_ssl_instance());
 
                     if (1 == ssl_status)
@@ -339,15 +340,19 @@ void socket_handler::handle()
                     else
                     {
                         int ssl_error = SSL_get_error(socket_ptr->get_ssl_instance(), ssl_status);
-                        if (ssl_error == SSL_ERROR_WANT_READ || ssl_error == SSL_ERROR_WANT_WRITE)
+                        if (ssl_error == SSL_ERROR_WANT_READ)
                         {
                             // need more data or space
+                            attach(socket_ptr);
+                        }
+                        else if(ssl_error == SSL_ERROR_WANT_WRITE)
+                        {
                             attach(socket_ptr, true);
                         }
                         else
                         {
                             LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                            p_connection->mark_close(); // final connection and socket
+                            singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
                         }
                         continue; // wait next triger
                     }
