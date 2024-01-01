@@ -13,12 +13,14 @@
 #include "connection/http_connection.h"
 #include "app/http_app.h"
 #include "connection/connection_mgr.h"
+#include "server/server.h"
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
 using namespace tubekit::utility;
 using namespace tubekit::connection;
 using namespace tubekit::app;
+using namespace tubekit::server;
 
 http_parser_settings *http_task::settings = nullptr;
 
@@ -140,6 +142,48 @@ void http_task::run()
             singleton<socket_handler>::instance()->remove(socket_ptr);
         }
         return;
+    }
+
+    // ssl
+    if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted() && !t_http_connection->is_close())
+    {
+        int ssl_status = SSL_accept(socket_ptr->get_ssl_instance());
+
+        if (1 == ssl_status)
+        {
+            // LOG_ERROR("set_ssl_accepted(true)");
+            socket_ptr->set_ssl_accepted(true);
+            // triger new connection hook
+            singleton<connection_mgr>::instance()->on_new_connection(socket_ptr);
+        }
+        else if (0 == ssl_status)
+        {
+            // LOG_ERROR("SSL_accept ssl_status == 0");
+            // need more data or space
+            singleton<socket_handler>::instance()->attach(socket_ptr, true);
+            return;
+        }
+        else
+        {
+            int ssl_error = SSL_get_error(socket_ptr->get_ssl_instance(), ssl_status);
+            if (ssl_error == SSL_ERROR_WANT_READ)
+            {
+                // need more data or space
+                singleton<socket_handler>::instance()->attach(socket_ptr);
+                return;
+            }
+            else if (ssl_error == SSL_ERROR_WANT_WRITE)
+            {
+                singleton<socket_handler>::instance()->attach(socket_ptr, true);
+                return;
+            }
+            else
+            {
+                LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
+                singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
+                return;
+            }
+        }
     }
 
     // read from socket

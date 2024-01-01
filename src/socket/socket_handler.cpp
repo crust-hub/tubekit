@@ -138,37 +138,6 @@ bool socket_handler::init(const string &ip, int port, int max_connections, int w
     m_epoll = new event_poller(false); // false:EPOLLLT mode
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
-
-    if (singleton<server::server>::instance()->get_use_ssl())
-    {
-        LOG_ERROR("OpenSSL_version %s", OpenSSL_version(OPENSSL_VERSION));
-        LOG_ERROR("SSLeay_version %s", SSLeay_version(SSLEAY_VERSION));
-        SSL_library_init();
-        SSL_load_error_strings();
-        m_ssl_context = SSL_CTX_new(SSLv23_server_method());
-        if (!m_ssl_context)
-        {
-            LOG_ERROR("SSL_CTX_new error");
-            return false;
-        }
-        SSL_CTX_set_options(m_ssl_context, SSL_OP_SINGLE_DH_USE);
-
-        std::string crt_pem_path = singleton<server::server>::instance()->get_crt_pem();
-        int i_ret = SSL_CTX_use_certificate_file(m_ssl_context, crt_pem_path.c_str(), SSL_FILETYPE_PEM);
-        if (1 != i_ret)
-        {
-            LOG_ERROR("SSL_CTX_use_certificate_file error: %s", ERR_error_string(ERR_get_error(), nullptr));
-            return false;
-        }
-        std::string key_pem_path = singleton<server::server>::instance()->get_key_pem();
-        i_ret = SSL_CTX_use_PrivateKey_file(m_ssl_context, key_pem_path.c_str(), SSL_FILETYPE_PEM);
-        if (1 != i_ret)
-        {
-            LOG_ERROR("SSL_CTX_use_PrivateKey_file error: %s", ERR_error_string(ERR_get_error(), nullptr));
-            return false;
-        }
-    }
-
     m_init = true;
     return m_init;
 }
@@ -188,13 +157,6 @@ void socket_handler::handle()
         {
             singleton<tubekit::server::server>::instance()->on_stop();
             singleton<hooks::stop>::instance()->run();
-
-            // release SSL_CTX
-            if (singleton<server::server>::instance()->get_use_ssl() && m_ssl_context)
-            {
-                SSL_CTX_free(m_ssl_context);
-            }
-
             break; // main process to exit
         }
         int num = m_epoll->wait(m_wait_time);
@@ -232,7 +194,7 @@ void socket_handler::handle()
                 if (singleton<server::server>::instance()->get_use_ssl())
                 {
                     bool ssl_err = false;
-                    SSL *ssl_instance = SSL_new(m_ssl_context);
+                    SSL *ssl_instance = SSL_new(singleton<server::server>::instance()->get_ssl_ctx());
                     if (!ssl_instance)
                     {
                         ssl_err = true;
@@ -295,7 +257,7 @@ void socket_handler::handle()
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 detach(socket_ptr);
 
-                // get connection layer instance
+                // get connection layer instance, dont to use p_connection thread no safe
                 connection::connection *p_connection = singleton<connection_mgr>::instance()->get(socket_ptr);
                 if (p_connection == nullptr)
                 {
@@ -318,47 +280,6 @@ void socket_handler::handle()
                 {
                     recv_event = events & EPOLLIN;
                     send_event = events & EPOLLOUT;
-                }
-
-                if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted() && !p_connection->is_close())
-                {
-                    int ssl_status = SSL_accept(socket_ptr->get_ssl_instance());
-
-                    if (1 == ssl_status)
-                    {
-                        // LOG_ERROR("set_ssl_accepted(true)");
-                        socket_ptr->set_ssl_accepted(true);
-                        // triger new connection hook
-                        singleton<connection_mgr>::instance()->on_new_connection(socket_ptr);
-                    }
-                    else if (0 == ssl_status)
-                    {
-                        // LOG_ERROR("SSL_accept ssl_status == 0");
-                        // need more data or space
-                        attach(socket_ptr, true);
-                        continue;
-                    }
-                    else
-                    {
-                        int ssl_error = SSL_get_error(socket_ptr->get_ssl_instance(), ssl_status);
-                        if (ssl_error == SSL_ERROR_WANT_READ)
-                        {
-                            // need more data or space
-                            attach(socket_ptr);
-                            continue;
-                        }
-                        else if (ssl_error == SSL_ERROR_WANT_WRITE)
-                        {
-                            attach(socket_ptr, true);
-                            continue;
-                        }
-                        else
-                        {
-                            LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                            singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
-                            // process using task
-                        }
-                    }
                 }
 
                 // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK

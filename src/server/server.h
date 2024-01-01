@@ -1,5 +1,10 @@
 #pragma once
 #include <string>
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/opensslv.h>
+
 #include "task/task_type.h"
 
 namespace tubekit
@@ -10,7 +15,7 @@ namespace tubekit
         {
         public:
             server();
-            ~server() = default;
+            ~server();
 
             void listen(const std::string &ip, int port);
             void start();
@@ -26,6 +31,8 @@ namespace tubekit
             bool get_use_ssl();
             std::string get_crt_pem();
             std::string get_key_pem();
+
+            SSL_CTX *get_ssl_ctx();
 
             void config(const std::string &ip,
                         int port,
@@ -54,6 +61,7 @@ namespace tubekit
             std::string m_crt_pem;
             std::string m_key_pem;
             volatile bool stop_flag{false};
+            SSL_CTX *m_ssl_context{nullptr};
         };
     }
 }

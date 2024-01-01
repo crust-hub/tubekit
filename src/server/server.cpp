@@ -39,6 +39,15 @@ server::server() : m_ip("0.0.0.0"),
 {
 }
 
+server::~server()
+{
+    // release SSL_CTX
+    if (get_use_ssl() && m_ssl_context)
+    {
+        SSL_CTX_free(m_ssl_context);
+    }
+}
+
 void server::listen(const std::string &ip, int port)
 {
     m_ip = ip;
@@ -48,6 +57,36 @@ void server::listen(const std::string &ip, int port)
 void server::start()
 {
     std::cout << "server start..." << std::endl;
+
+    if (get_use_ssl())
+    {
+        LOG_ERROR("OpenSSL_version %s", OpenSSL_version(OPENSSL_VERSION));
+        LOG_ERROR("SSLeay_version %s", SSLeay_version(SSLEAY_VERSION));
+        SSL_library_init();
+        SSL_load_error_strings();
+        m_ssl_context = SSL_CTX_new(SSLv23_server_method());
+        if (!m_ssl_context)
+        {
+            LOG_ERROR("SSL_CTX_new error");
+            return;
+        }
+        SSL_CTX_set_options(m_ssl_context, SSL_OP_SINGLE_DH_USE);
+
+        std::string crt_pem_path = get_crt_pem();
+        int i_ret = SSL_CTX_use_certificate_file(m_ssl_context, crt_pem_path.c_str(), SSL_FILETYPE_PEM);
+        if (1 != i_ret)
+        {
+            LOG_ERROR("SSL_CTX_use_certificate_file error: %s", ERR_error_string(ERR_get_error(), nullptr));
+            return;
+        }
+        std::string key_pem_path = get_key_pem();
+        i_ret = SSL_CTX_use_PrivateKey_file(m_ssl_context, key_pem_path.c_str(), SSL_FILETYPE_PEM);
+        if (1 != i_ret)
+        {
+            LOG_ERROR("SSL_CTX_use_PrivateKey_file error: %s", ERR_error_string(ERR_get_error(), nullptr));
+            return;
+        }
+    }
 
     // worker pool
     worker_pool *m_worker_pool = singleton<worker_pool>::instance();
@@ -210,4 +249,9 @@ bool server::on_stop()
 void server::to_stop()
 {
     stop_flag = true;
+}
+
+SSL_CTX *server::get_ssl_ctx()
+{
+    return m_ssl_context;
 }
