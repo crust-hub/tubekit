@@ -294,12 +294,13 @@ void socket_handler::handle()
                 uint32_t events = m_epoll->m_events[i].events;
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 detach(socket_ptr);
+
                 // get connection layer instance
                 connection::connection *p_connection = singleton<connection_mgr>::instance()->get(socket_ptr);
                 if (p_connection == nullptr)
                 {
-                    // LOG_ERROR("exsit socket,but not exist connection");
-                    remove(socket_ptr);
+                    LOG_ERROR("exsit socket,but not exist connection");
+                    // remove(socket_ptr);
                     continue;
                 }
 

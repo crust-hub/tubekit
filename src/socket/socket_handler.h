@@ -41,7 +41,6 @@ namespace tubekit
 
             void handle();
 
-        private:
             /**
              * @brief Remove from epoll and close the real socket and return it to the object pool
              *
