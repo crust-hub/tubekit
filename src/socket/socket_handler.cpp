@@ -257,15 +257,6 @@ void socket_handler::handle()
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 detach(socket_ptr);
 
-                // get connection layer instance, dont to use p_connection thread no safe
-                connection::connection *p_connection = singleton<connection_mgr>::instance()->get(socket_ptr);
-                if (p_connection == nullptr)
-                {
-                    LOG_ERROR("exsit socket,but not exist connection");
-                    // remove(socket_ptr);
-                    continue;
-                }
-
                 if ((events & EPOLLHUP) || (events & EPOLLERR))
                 {
                     // using connection_mgr mark_close,to prevent connection already free
