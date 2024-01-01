@@ -62,11 +62,11 @@ int socket_handler::attach(socket *m_socket, bool listen_send /*= false*/)
     // m_socket not in epoll
     if (listen_send)
     {
-        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR);
+        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLRDHUP);
     }
     else
     {
-        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR);
+        target_events = (EPOLLONESHOT | EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP);
     }
     int i_ret = m_epoll->add(m_socket->m_sockfd, (void *)m_socket, target_events);
     if (0 == i_ret)
@@ -257,7 +257,7 @@ void socket_handler::handle()
                 socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
                 detach(socket_ptr);
 
-                if ((events & EPOLLHUP) || (events & EPOLLERR))
+                if ((events & EPOLLHUP) || (events & EPOLLERR) || (events & EPOLLRDHUP))
                 {
                     // using connection_mgr mark_close,to prevent connection already free
                     singleton<connection_mgr>::instance()->mark_close(socket_ptr);
