@@ -263,19 +263,19 @@ void connection_mgr::release(connection *connection_ptr)
     case task_type::STREAM_TASK:
     {
         singleton<object_pool<stream_connection>>::instance()->release(dynamic_cast<stream_connection *>(connection_ptr));
-        LOG_DEBUG("connection space:%d", singleton<object_pool<stream_connection>>::instance()->space());
+        // LOG_DEBUG("connection space:%d", singleton<object_pool<stream_connection>>::instance()->space());
         break;
     }
     case task_type::HTTP_TASK:
     {
         singleton<object_pool<http_connection>>::instance()->release(dynamic_cast<http_connection *>(connection_ptr));
-        LOG_DEBUG("connection space:%d", singleton<object_pool<http_connection>>::instance()->space());
+        // LOG_DEBUG("connection space:%d", singleton<object_pool<http_connection>>::instance()->space());
         break;
     }
     case task_type::WEBSOCKET_TASK:
     {
         singleton<object_pool<websocket_connection>>::instance()->release(dynamic_cast<websocket_connection *>(connection_ptr));
-        LOG_DEBUG("connection space:%d", singleton<object_pool<websocket_connection>>::instance()->space());
+        // LOG_DEBUG("connection space:%d", singleton<object_pool<websocket_connection>>::instance()->space());
         break;
     }
     default:

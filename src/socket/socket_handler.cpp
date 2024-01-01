@@ -106,7 +106,7 @@ int socket_handler::remove(socket *m_socket)
 
     // return back to socket object poll
     singleton<object_pool<socket>>::instance()->release(m_socket);
-    LOG_DEBUG("socket space:%d", singleton<object_pool<socket>>::instance()->space());
+    // LOG_DEBUG("socket space:%d", singleton<object_pool<socket>>::instance()->space());
 
     return iret;
 }
@@ -298,7 +298,7 @@ void socket_handler::handle()
                 connection::connection *p_connection = singleton<connection_mgr>::instance()->get(socket_ptr);
                 if (p_connection == nullptr)
                 {
-                    LOG_ERROR("exsit socket,but not exist connection");
+                    // LOG_ERROR("exsit socket,but not exist connection");
                     remove(socket_ptr);
                     continue;
                 }
@@ -307,6 +307,7 @@ void socket_handler::handle()
                 {
                     // using connection_mgr mark_close,to prevent connection already free
                     singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+                    // process using task
                 }
 
                 // Different processing is triggered for different poll events
@@ -343,17 +344,19 @@ void socket_handler::handle()
                         {
                             // need more data or space
                             attach(socket_ptr);
+                            continue;
                         }
-                        else if(ssl_error == SSL_ERROR_WANT_WRITE)
+                        else if (ssl_error == SSL_ERROR_WANT_WRITE)
                         {
                             attach(socket_ptr, true);
+                            continue;
                         }
                         else
                         {
                             LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
                             singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
+                            // process using task
                         }
-                        continue; // wait next triger
                     }
                 }
 

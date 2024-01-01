@@ -24,10 +24,6 @@ websocket_connection::websocket_connection(tubekit::socket::socket *socket_ptr) 
 
 websocket_connection::~websocket_connection()
 {
-    if (destory_callback)
-    {
-        destory_callback(*this);
-    }
 }
 
 void websocket_connection::on_mark_close()

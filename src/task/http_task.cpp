@@ -132,6 +132,10 @@ void http_task::run()
     {
         if (t_http_connection)
         {
+            if (t_http_connection->destory_callback)
+            {
+                t_http_connection->destory_callback(*t_http_connection);
+            }
             singleton<connection_mgr>::instance()->remove(socket_ptr);
         }
 

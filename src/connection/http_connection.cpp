@@ -22,10 +22,6 @@ http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connecti
 
 http_connection::~http_connection()
 {
-    if (destory_callback)
-    {
-        destory_callback(*this);
-    }
 }
 
 http_parser *http_connection::get_parser()

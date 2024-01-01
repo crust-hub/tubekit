@@ -123,6 +123,10 @@ void websocket_task::run()
     {
         if (t_websocket_connection)
         {
+            if (t_websocket_connection->destory_callback)
+            {
+                t_websocket_connection->destory_callback(*t_websocket_connection);
+            }
             singleton<connection_mgr>::instance()->remove(socket_ptr);
         }
 

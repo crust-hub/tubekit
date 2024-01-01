@@ -59,19 +59,19 @@ void task_mgr::release(tubekit::thread::task *task_ptr)
     case STREAM_TASK:
     {
         tubekit::utility::singleton<tubekit::utility::object_pool<stream_task>>::instance()->release(dynamic_cast<stream_task *>(task_ptr));
-        LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<stream_task>>::instance()->space());
+        // LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<stream_task>>::instance()->space());
         break;
     }
     case HTTP_TASK:
     {
         tubekit::utility::singleton<tubekit::utility::object_pool<http_task>>::instance()->release(dynamic_cast<http_task *>(task_ptr));
-        LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<http_task>>::instance()->space());
+        // LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<http_task>>::instance()->space());
         break;
     }
     case WEBSOCKET_TASK:
     {
         tubekit::utility::singleton<tubekit::utility::object_pool<websocket_task>>::instance()->release(dynamic_cast<websocket_task *>(task_ptr));
-        LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<websocket_task>>::instance()->space());
+        // LOG_DEBUG("task space:%d", tubekit::utility::singleton<tubekit::utility::object_pool<websocket_task>>::instance()->space());
         break;
     }
     default:
