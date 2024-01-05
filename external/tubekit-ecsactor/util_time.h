@@ -20,6 +20,12 @@ namespace tubekit::ecsactor
             return time_value + milliseconds;
         }
 
+        inline time get_milliseconds()
+        {
+            auto time_value = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+            return time_value.time_since_epoch().count();
+        }
+
         std::string to_string(uint64_t time_tick);
     }
 }

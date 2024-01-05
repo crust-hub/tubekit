@@ -1,5 +1,6 @@
 #pragma once
 #include <stdexcept>
+#include <memory>
 
 namespace tubekit::ecsactor
 {
@@ -12,9 +13,9 @@ namespace tubekit::ecsactor
         {
             if (m_ptr == nullptr)
             {
-                m_ptr = new T(std::forward<Args>(args)...);
+                m_ptr.reset(new T(std::forward<Args>(args)...));
             }
-            return m_ptr;
+            return m_ptr.get();
         }
 
         static T *get_instance()
@@ -23,19 +24,19 @@ namespace tubekit::ecsactor
             {
                 throw std::logic_error("the instance is not init, please initialize the instance first");
             }
-            return m_ptr;
+            return m_ptr.get();
         }
 
         static void destory_instance()
         {
-            delete m_ptr;
-            m_ptr = nullptr;
+            m_ptr.release();
+            m_ptr.reset(nullptr);
         }
 
     private:
-        static T *m_ptr;
+        static std::unique_ptr<T> m_ptr;
     };
 
     template <class T>
-    T *singleton<T>::m_ptr = nullptr;
+    std::unique_ptr<T> singleton<T>::m_ptr = nullptr;
 };

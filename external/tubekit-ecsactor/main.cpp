@@ -2,6 +2,7 @@
 #include <vector>
 #include "util_time.h"
 #include "util_uuid.h"
+#include "global.h"
 using namespace std;
 using namespace tubekit::ecsactor;
 
@@ -14,5 +15,11 @@ int main(int argc, char **argv)
     // 1970-01-01 08:00:01.005
     std::string uuid = generate_uuid();
     cout << uuid << endl;
+
+    global::instance(1, 2);
+    uint64_t sn = global::get_instance()->generate_sn();
+    cout << global::get_instance()->get_app_id_from_sn(sn) << endl;
+    cout << global::get_instance()->generate_uuid() << endl;
+
     return 0;
 }
