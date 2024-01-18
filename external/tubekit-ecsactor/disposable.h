@@ -2,6 +2,10 @@
 
 namespace tubekit::ecsactor
 {
+    /**
+     * @brief 销毁接口
+     *
+     */
     class interface_disposable
     {
     public:

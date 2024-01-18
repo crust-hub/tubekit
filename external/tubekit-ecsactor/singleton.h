@@ -4,6 +4,11 @@
 
 namespace tubekit::ecsactor
 {
+    /**
+     * @brief 单例模式
+     *
+     * @tparam T
+     */
     template <typename T>
     class singleton
     {

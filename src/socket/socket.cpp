@@ -80,7 +80,14 @@ bool socket::close()
 {
     if (close_callback)
     {
-        close_callback();
+        try
+        {
+            close_callback();
+        }
+        catch (...)
+        {
+            LOG_ERROR("close_callback throw eexception");
+        }
     }
 
     if (m_ssl_instance)
