@@ -3,9 +3,11 @@
 #include <vector>
 #include <filesystem>
 #include <tubekit-log/logger.h>
+#include "server/server.h"
 
 #include "utility/mime_type.h"
 #include "utility/url.h"
+#include "utility/singleton.h"
 
 using std::string;
 using std::vector;
@@ -74,17 +76,18 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             connection.set_response_end(true);
             return;
         }
-        const string prefix = "/";
 
-        fs::path t_path;
-        if (url.empty() || url[0] != '/')
-        {
-            t_path = prefix + url;
-        }
-        else
-        {
-            t_path = url;
-        }
+        const string &prefix = utility::singleton<server::server>::instance()->get_http_static_dir();
+
+        fs::path t_path = prefix + url;
+        // if (url.empty() || url[0] != '/')
+        // {
+        //     t_path = prefix + url;
+        // }
+        // else
+        // {
+        //     t_path = url;
+        // }
 
         if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::regular)
         {
@@ -157,7 +160,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             vector<string> a_tags;
             for (const auto &dir_entry : fs::directory_iterator{t_path})
             {
-                std::string sub_path = dir_entry.path().string(); //.substr(prefix.size());
+                std::string sub_path = dir_entry.path().string().substr(prefix.size());
                 a_tags.push_back(html_loader::a_tag(utility::url::encode(sub_path), sub_path));
             }
             string body;

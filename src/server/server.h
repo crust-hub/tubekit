@@ -23,6 +23,10 @@ namespace tubekit
             void set_connects(size_t connects);
             void set_wait_time(size_t wait_time);
             void set_task_type(std::string task_type);
+
+            void set_http_static_dir(std::string http_static_dir);
+            const std::string &get_http_static_dir();
+
             void set_daemon(bool daemon);
             void set_use_ssl(bool use_ssl);
             void set_crt_pem(std::string set_crt_pem);
@@ -40,6 +44,7 @@ namespace tubekit
                         size_t connects,
                         size_t wait_time,
                         std::string task_type,
+                        std::string http_static_dir,
                         bool daemon = false,
                         std::string crt_pem = "",
                         std::string key_pem = "",
@@ -55,6 +60,8 @@ namespace tubekit
             size_t m_threads;
             size_t m_connects;
             size_t m_wait_time;
+            std::string m_http_static_dir;
+
             std::string m_task_type;
             bool m_daemon{false};
             bool m_use_ssl{false};

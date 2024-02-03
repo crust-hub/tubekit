@@ -34,6 +34,9 @@ void system::init()
     const int max_conn = (*ini)["server"]["max_conn"];
     const int wait_time = (*ini)["server"]["wait_time"];
     const string task_type = (*ini)["server"]["task_type"];
+
+    const string http_static_dir = (*ini)["server"]["http_static_dir"];
+
     const int use_ssl = (*ini)["server"]["use_ssl"];
     const string crt_pem = (*ini)["server"]["crt.pem"];
     const string key_pem = (*ini)["server"]["key.pem"];
@@ -62,7 +65,18 @@ void system::init()
 
     // server
     auto m_server = singleton<server::server>::instance();
-    m_server->config(ip, port, threads, max_conn, wait_time, task_type, daemon, crt_pem, key_pem, use_ssl);
+    m_server->config(ip,
+                     port,
+                     threads,
+                     max_conn,
+                     wait_time,
+                     task_type,
+                     http_static_dir,
+                     daemon,
+                     crt_pem,
+                     key_pem,
+                     use_ssl);
+
     int ret = singleton<hooks::init>::instance()->run();
     if (ret != 0)
     {
