@@ -16,7 +16,9 @@ websocket_connection::websocket_connection(tubekit::socket::socket *socket_ptr) 
                                                                                   buffer_start_use(0),
                                                                                   m_recv_buffer(204800),
                                                                                   m_send_buffer(204800),
-                                                                                  m_wating_send_pack(204700)
+                                                                                  m_wating_send_pack(204700),
+                                                                                  should_send_idx(-1),
+                                                                                  should_send_size(0)
 {
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
@@ -58,6 +60,8 @@ void websocket_connection::reuse()
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
     this->connected = false;
+    this->should_send_idx = -1;
+    this->should_send_size = 0;
 }
 
 http_parser *websocket_connection::get_parser()
@@ -78,11 +82,11 @@ void websocket_connection::add_header(const std::string &key, const std::string 
 
 bool websocket_connection::sock2buf()
 {
-    static char buffer[1024] = {0};
+    static char inner_buffer[1024] = {0};
     while (true)
     {
         int oper_errno = 0;
-        int len = socket_ptr->recv(buffer, 1024, oper_errno);
+        int len = socket_ptr->recv(inner_buffer, 1024, oper_errno);
         if (len == -1 && oper_errno == EAGAIN)
         {
             return true;
@@ -95,11 +99,11 @@ bool websocket_connection::sock2buf()
         {
             try
             {
-                m_recv_buffer.write(buffer, len);
+                m_recv_buffer.write(inner_buffer, len);
             }
             catch (const std::runtime_error &e)
             {
-                // LOG_ERROR(e.what());
+                LOG_ERROR(e.what());
             }
         }
         else
@@ -112,9 +116,8 @@ bool websocket_connection::sock2buf()
 
 bool websocket_connection::buf2sock()
 {
-    static char buffer[1024] = {0};
-    static int should_send_idx = -1;
-    static int should_send_size = 0;
+    static char inner_buffer[1024] = {0};
+
     while (true)
     {
         if (should_send_idx < 0)
@@ -122,7 +125,7 @@ bool websocket_connection::buf2sock()
             int len = -1;
             try
             {
-                len = m_send_buffer.read(buffer, 1024);
+                len = m_send_buffer.read(inner_buffer, 1024);
             }
             catch (const std::runtime_error &e)
             {
@@ -178,7 +181,7 @@ bool websocket_connection::buf2sock()
         }
 
         int oper_errno = 0;
-        int len = socket_ptr->send(&buffer[should_send_idx], should_send_size, oper_errno);
+        int len = socket_ptr->send(&inner_buffer[should_send_idx], should_send_size, oper_errno);
         if (0 > len)
         {
             if (oper_errno == EINTR)

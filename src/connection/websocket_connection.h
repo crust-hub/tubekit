@@ -81,6 +81,10 @@ namespace tubekit
             std::function<void(websocket_connection &connection)> destory_callback;
 
         private:
+            int should_send_idx{-1};
+            int should_send_size{0};
+
+        private:
             http_parser m_http_parser;
             bool connected{false};
         };

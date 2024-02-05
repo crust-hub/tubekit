@@ -43,6 +43,10 @@ namespace tubekit
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
             buffer::buffer m_wating_send_pack;
+
+        private:
+            int should_send_idx{-1};
+            int should_send_size{0};
         };
     }
 }
