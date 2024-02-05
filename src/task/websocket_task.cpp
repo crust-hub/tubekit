@@ -276,7 +276,7 @@ void websocket_task::run()
             response += "Connection: Upgrade\r\n";
             response += "Sec-WebSocket-Accept: " + base64_encoded + "\r\n\r\n";
 
-            t_websocket_connection->send(response.c_str(), response.size());
+            t_websocket_connection->send(response.c_str(), response.size(), false);
             t_websocket_connection->set_connected(true);
         }
     }

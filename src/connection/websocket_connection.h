@@ -38,18 +38,27 @@ namespace tubekit
             bool buf2sock();
 
         public:
-            bool get_connected();
-            void set_connected(bool connected);
+            inline bool get_connected()
+            {
+                return connected;
+            }
+
+            inline void set_connected(bool connected)
+            {
+                this->connected = connected;
+            }
+
             /**
              * @brief Only when processing websocket_connection, the worker thread of the connection uses its own send,
              *        and if sending to other connections, the connection mgr's safe_send needs to be used.
              *
              * @param buffer
              * @param buffer_size
+             * @param check_connected
              * @return true
              * @return false
              */
-            bool send(const char *buffer, size_t buffer_size);
+            bool send(const char *buffer, size_t buffer_size, bool check_connected = true);
 
         public:
             std::string url;

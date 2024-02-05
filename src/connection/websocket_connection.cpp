@@ -60,16 +60,6 @@ void websocket_connection::reuse()
     this->connected = false;
 }
 
-bool websocket_connection::get_connected()
-{
-    return this->connected;
-}
-
-void websocket_connection::set_connected(bool connected)
-{
-    this->connected = connected;
-}
-
 http_parser *websocket_connection::get_parser()
 {
     return &this->m_http_parser;
@@ -221,8 +211,13 @@ bool websocket_connection::buf2sock()
     return false;
 }
 
-bool websocket_connection::send(const char *buffer, size_t buffer_size)
+bool websocket_connection::send(const char *buffer, size_t buffer_size, bool check_connected /*= true*/)
 {
+    if (check_connected && !get_connected())
+    {
+        return false;
+    }
+
     if (buffer == nullptr)
     {
         return false;
