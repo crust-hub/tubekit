@@ -48,6 +48,18 @@ $ chmod +x ./kill.sh
 $ ./kill.sh
 ```
 
+## Docker
+
+```bash
+docker run -it -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
+$ cd protocol
+$ cd ..
+$ cmake .
+$ make -j3
+$ cd ./bin
+$ ./tubekit
+```
+
 ## App
 
 support tcp keep-alive stream (protobuf) and http app (http-parser)、websocket

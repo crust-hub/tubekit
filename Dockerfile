@@ -9,6 +9,7 @@ RUN apt-get install libssl-dev -y
 WORKDIR /tubekit
 CMD rm -rf CMakeCache.txt \
     && cd protocol \
+    && make \
     && cd .. \
     && cmake . \
     && make -j3 \
