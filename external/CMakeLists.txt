@@ -18,6 +18,6 @@ file(GLOB_RECURSE SOURCE_BUFFER "./tubekit-buffer/*.cpp")
 add_library(tubekit-buffer SHARED ${SOURCE_BUFFER})
 
 file(GLOB_RECURSE SOURCE_LUA "./lua/*.c")
-add_library(lua STATIC ${SOURCE_LUA})
+add_library(lua SHARED ${SOURCE_LUA})
 
 message("external end")

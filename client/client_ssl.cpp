@@ -95,6 +95,8 @@ int main(int argc, const char **argv)
         printf("Send all bytes package %ld body %ld all %ld\n", data.size(), body_str.size(), data.size() + body_str.size());
     }
 
+    sleep(4);
+
     SSL_shutdown(ssl);
     SSL_free(ssl);
     close(client_socket);

@@ -76,6 +76,8 @@ int main(int argc, const char **argv)
         printf("Send all bytes package %ld body %ld all %ld\n", data.size(), body_str.size(), data.size() + body_str.size());
     }
 
+    sleep(4);
+
     close(client_socket);
 
     return 0;
