@@ -36,6 +36,7 @@ void system::init()
     const string task_type = (*ini)["server"]["task_type"];
 
     const string http_static_dir = (*ini)["server"]["http_static_dir"];
+    const string lua_dir = (*ini)["server"]["lua_dir"];
 
     const int use_ssl = (*ini)["server"]["use_ssl"];
     const string crt_pem = (*ini)["server"]["crt.pem"];
@@ -72,6 +73,7 @@ void system::init()
                      wait_time,
                      task_type,
                      http_static_dir,
+                     lua_dir,
                      daemon,
                      crt_pem,
                      key_pem,

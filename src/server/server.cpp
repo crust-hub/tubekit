@@ -167,6 +167,16 @@ const std::string &server::get_http_static_dir()
     return m_http_static_dir;
 }
 
+void server::set_lua_dir(std::string lua_dir)
+{
+    m_lua_dir = lua_dir;
+}
+
+const std::string &server::get_lua_dir()
+{
+    return m_lua_dir;
+}
+
 void server::set_daemon(bool daemon)
 {
     m_daemon = daemon;
@@ -226,6 +236,7 @@ void server::config(const std::string &ip,
                     size_t wait_time,
                     std::string task_type,
                     std::string http_static_dir,
+                    std::string lua_dir,
                     bool daemon, /*= false*/
                     std::string crt_pem /*= ""*/,
                     std::string key_pem /*= ""*/,
@@ -237,6 +248,7 @@ void server::config(const std::string &ip,
     set_wait_time(wait_time);
     set_task_type(task_type);
     set_http_static_dir(http_static_dir);
+    set_lua_dir(lua_dir);
 
     set_daemon(daemon);
     set_use_ssl(use_ssl);

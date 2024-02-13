@@ -10,6 +10,7 @@
 #include "connection/connection_mgr.h"
 #include "socket/socket.h"
 #include "socket/socket_handler.h"
+#include "app/lua_plugin.h"
 
 using tubekit::app::stream_app;
 using tubekit::connection::connection_mgr;
@@ -47,12 +48,14 @@ static int process_protocol(tubekit::connection::stream_connection &m_stream_con
 int stream_app::on_init()
 {
     LOG_ERROR("stream_app::on_init()");
+    singleton<app::lua_plugin>::instance()->on_init();
     return 0;
 }
 
 void stream_app::on_stop()
 {
     LOG_ERROR("stream_app::on_stop()");
+    singleton<app::lua_plugin>::instance()->on_exit();
 }
 
 void stream_app::on_tick()

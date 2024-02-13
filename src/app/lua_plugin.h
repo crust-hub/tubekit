@@ -15,6 +15,14 @@ namespace tubekit::app
         void on_init();
         void on_exit();
 
+        void exe_OnInit();
+        void exe_OnExit();
+
+        void mount();
+
+    public:
+        static int Logger(lua_State *lua_state);
+
     private:
         lua_State *lua_state;
     };

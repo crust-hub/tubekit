@@ -8,6 +8,7 @@
 #include "utility/mime_type.h"
 #include "utility/url.h"
 #include "utility/singleton.h"
+#include "app/lua_plugin.h"
 
 using std::string;
 using std::vector;
@@ -41,12 +42,14 @@ public:
 int http_app::on_init()
 {
     LOG_ERROR("http_app::on_init()");
+    utility::singleton<app::lua_plugin>::instance()->on_init();
     return 0;
 }
 
 void http_app::on_stop()
 {
     LOG_ERROR("http_app::on_stop()");
+    utility::singleton<app::lua_plugin>::instance()->on_exit();
 }
 
 void http_app::on_tick()

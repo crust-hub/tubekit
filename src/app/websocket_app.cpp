@@ -4,6 +4,7 @@
 #include "utility/singleton.h"
 #include "connection/connection_mgr.h"
 #include <arpa/inet.h>
+#include "app/lua_plugin.h"
 
 using namespace tubekit::app;
 using namespace tubekit::utility;
@@ -33,12 +34,14 @@ enum class websocket_frame_type
 int websocket_app::on_init()
 {
     LOG_ERROR("websocket_app::on_init()");
+    singleton<app::lua_plugin>::instance()->on_init();
     return 0;
 }
 
 void websocket_app::on_stop()
 {
     LOG_ERROR("websocket_app::on_stop()");
+    singleton<app::lua_plugin>::instance()->on_exit();
 }
 
 void websocket_app::on_tick()
