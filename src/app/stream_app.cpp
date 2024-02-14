@@ -60,6 +60,7 @@ void stream_app::on_stop()
 
 void stream_app::on_tick()
 {
+    singleton<app::lua_plugin>::instance()->on_tick();
     // LOG_ERROR("stream_app::on_tick()");
 }
 

@@ -46,6 +46,7 @@ void websocket_app::on_stop()
 
 void websocket_app::on_tick()
 {
+    singleton<app::lua_plugin>::instance()->on_tick();
     // LOG_ERROR("websocket_app::on_tick()");
 }
 

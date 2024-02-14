@@ -14,9 +14,11 @@ namespace tubekit::app
         lua_plugin();
         void on_init();
         void on_exit();
+        void on_tick();
 
         void exe_OnInit();
         void exe_OnExit();
+        void exe_OnTick();
 
         void mount();
 

@@ -48,6 +48,11 @@ void lua_plugin::on_exit()
     LOG_ERROR("lua_plugin on_exit");
 }
 
+void lua_plugin::on_tick()
+{
+    exe_OnTick();
+}
+
 void lua_plugin::exe_OnInit()
 {
     lua_getglobal(lua_state, "OnInit");
@@ -96,4 +101,15 @@ int lua_plugin::Logger(lua_State *lua_state)
     LOG_ERROR("%s", str.data());
     lua_pushinteger(lua_state, 0);
     return 0;
+}
+
+void lua_plugin::exe_OnTick()
+{
+    lua_getglobal(lua_state, "OnTick");
+    static int isok = 0;
+    isok = lua_pcall(lua_state, 0, 0, 0);
+    if (0 != isok)
+    {
+        LOG_ERROR("exe_OnTick failed %s", lua_tostring(lua_state, -1));
+    }
 }
