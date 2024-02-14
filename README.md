@@ -5,6 +5,7 @@ The C++ TCP server framework based on the Reactor model continues to implement P
 Platform: `Linux`  
 Protocol: `HTTP` `TCP Stream(Protobuf)` `WebSocket`  
 Support TLS/SSL: `OpenSSL`  
+Script: `Lua`  
 
 ## Get Start
 
