@@ -115,7 +115,7 @@ int socket::accept()
     int sockfd = ::accept(m_sockfd, NULL, NULL);
     if (sockfd < 0)
     {
-        LOG_ERROR("accept call error: errno=%d errstr=%s", errno, strerror(errno));
+        // LOG_ERROR("accept call error: errno=%d errstr=%s", errno, strerror(errno));
         sockfd = -1;
     }
     return sockfd;

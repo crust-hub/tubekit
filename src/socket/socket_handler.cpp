@@ -180,6 +180,10 @@ void socket_handler::handle()
             if (m_server == static_cast<socket *>(m_epoll->m_events[i].data.ptr))
             {
                 int socket_fd = m_server->accept(); // Gets the socket_fd for the new connection
+                if (socket_fd <= 0)
+                {
+                    continue;
+                }
                 socket *socket_object = alloc_socket();
                 if (socket_object == nullptr)
                 {
@@ -249,6 +253,9 @@ void socket_handler::handle()
 
                 // first connected, try listen write and process
                 attach(socket_object, true);
+
+                // next loop, processing listen socket, stop when accept return ret <= 0
+                --i;
             }
             else // already connection socket has event happen
             {
