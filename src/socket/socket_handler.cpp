@@ -253,9 +253,6 @@ void socket_handler::handle()
 
                 // first connected, try listen write and process
                 attach(socket_object, true);
-
-                // next loop, processing listen socket, stop when accept return ret <= 0
-                --i;
             }
             else // already connection socket has event happen
             {
