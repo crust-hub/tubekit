@@ -74,36 +74,44 @@ support tcp keep-alive stream (protobuf) and http app (http-parser)、websocket
 
 ## QPS
 
-Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.3GHz
+CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60 GHz  
+Mem: 8GB  
+OS : WSL2 Ubuntu (Windows 11)
 
-`config/main.ini` theads:6
+```ini
+config/main.ini 
+    theads:6  
+    max_conn:2000  
+```
+
+testing result
 
 ```bash
-Concurrency  QPS            HttpRequest
+$ ab -c {{Concurrency}} -n {{HttpRequest}} http://IP:20023/
+```
 
-10          5998.75/sec    10000
-10          5829.98/sec    100000
-10          3672.92/sec    500000
+```bash
+Concurrency QPS             HttpRequest
 
-50          3970.39/sec    10000
-50          4854.57/sec    100000
-50          5002.02/sec    500000
+10          13872.80/sec    10000
+10          13147.52/sec    100000
+10          9789.71/sec     500000
 
-100         7370.73/sec    10000
-100         7417.3/sec     100000
-100         6780.85/sec    500000
+50          13540.06/sec    10000
+50          11490.66/sec    100000
+50          9470.44/sec     500000
 
-500         7460.77/sec    10000
-500         7717.21/sec    100000
-500         7447.16/sec    500000
+100         14059.34/sec    10000
+100         11530.81/sec    100000
+100         9420.90/sec     500000
 
-1000        7962.60/sec    10000
-1000        7357.94/sec    100000
-1000        7508.63/sec    500000
+500         13839.18/sec    10000
+500         12407.10/sec    100000
+500         9438.90/sec     500000
 
-5000        4287.76/sec    10000
-5000        5861.78/sec    100000
-5000        7196.74/sec    500000
+1000        13732.30/sec    10000
+1000        11226.25/sec    100000
+1000        9641.19/sec     500000
 ```
 
 ## Directory Structure
