@@ -171,7 +171,8 @@ void socket_handler::handle()
             {
                 continue;
             }
-            break;
+            singleton<tubekit::server::server>::instance()->to_stop();
+            continue;
         }
 
         for (int i = 0; i < num; i++) // Sockets that handle readable data
