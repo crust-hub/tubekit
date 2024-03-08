@@ -17,6 +17,7 @@
 #include "task/http_task.h"
 #include "task/stream_task.h"
 #include "task/websocket_task.h"
+#include "utility/time.h"
 
 using namespace std;
 using namespace tubekit::socket;
@@ -149,6 +150,12 @@ void socket_handler::handle()
         LOG_ERROR("socket_handler not init,can not execute handle");
         return;
     }
+
+    time::time socket_handler_time;
+    socket_handler_time.update();
+    uint64_t lastest_tick_time = socket_handler_time.get_milliseconds();
+    uint64_t gid_seq = 0;
+
     // main thread loop
     while (true)
     {
@@ -160,7 +167,16 @@ void socket_handler::handle()
             break; // main process to exit
         }
         int num = m_epoll->wait(m_wait_time);
+        socket_handler_time.update();
+        uint64_t now_tick_time = socket_handler_time.get_milliseconds();
+        if (lastest_tick_time != now_tick_time)
+        {
+            gid_seq = 0;
+            lastest_tick_time = now_tick_time;
+        }
+
         on_tick();
+
         if (num == 0)
         {
             continue; // timeout
@@ -177,6 +193,8 @@ void socket_handler::handle()
 
         for (int i = 0; i < num; i++) // Sockets that handle readable data
         {
+            uint64_t loop_gid = lastest_tick_time + (++gid_seq);
+
             // There is a new socket connection
             if (m_server == static_cast<socket *>(m_epoll->m_events[i].data.ptr))
             {
@@ -192,6 +210,7 @@ void socket_handler::handle()
                     continue;
                 }
                 socket_object->m_sockfd = socket_fd;
+                socket_object->set_gid(loop_gid);
                 socket_object->close_callback = nullptr;
                 socket_object->set_non_blocking();
                 socket_object->set_linger(false, 0);
@@ -233,6 +252,7 @@ void socket_handler::handle()
                 {
                     p_connection->reuse();
                     p_connection->set_socket_ptr(socket_object);
+                    p_connection->set_gid(loop_gid);
                 }
 
                 bool bret = singleton<connection_mgr>::instance()->add(socket_object, p_connection);
@@ -253,7 +273,7 @@ void socket_handler::handle()
                 }
 
                 // first connected, try listen write and process
-                attach(socket_object, true);
+                do_task(socket_object, true, true);
             }
             else // already connection socket has event happen
             {
@@ -278,49 +298,54 @@ void socket_handler::handle()
                     send_event = events & EPOLLOUT;
                 }
 
-                // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
-                auto task_type = singleton<server::server>::instance()->get_task_type();
-                thread::task *new_task = singleton<task_mgr>::instance()->create(socket_ptr);
-
-                // create task
-                switch (task_type)
-                {
-                case task_type::STREAM_TASK:
-                    if (new_task)
-                    {
-                        auto stream_task_ptr = (stream_task *)new_task;
-                        stream_task_ptr->reason_recv = recv_event;
-                        stream_task_ptr->reason_send = send_event;
-                    }
-                    break;
-                case task_type::HTTP_TASK:
-                    if (new_task)
-                    {
-                        auto http_task_ptr = (http_task *)new_task;
-                        http_task_ptr->reason_recv = recv_event;
-                        http_task_ptr->reason_send = send_event;
-                    }
-                    break;
-                case task_type::WEBSOCKET_TASK:
-                    if (new_task)
-                    {
-                        // auto websocket_task_ptr = (websocket_task *)new_task;
-                    }
-                    break;
-                default:
-                    break;
-                }
-
-                // create task failed
-                if (new_task == nullptr)
-                {
-                    LOG_ERROR("new_task is nullptr");
-                    exit(EXIT_FAILURE);
-                }
-
-                // Submit the task to the queue of task_dispatcher
-                singleton<worker_pool>::instance()->assign(new_task);
+                do_task(socket_ptr, recv_event, send_event);
             }
         }
     }
+}
+
+void socket_handler::do_task(socket *socket_ptr, bool recv_event, bool send_event)
+{
+    // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
+    auto task_type = singleton<server::server>::instance()->get_task_type();
+    thread::task *new_task = singleton<task_mgr>::instance()->create(socket_ptr);
+
+    // create task
+    switch (task_type)
+    {
+    case task_type::STREAM_TASK:
+        if (new_task)
+        {
+            auto stream_task_ptr = (stream_task *)new_task;
+            stream_task_ptr->reason_recv = recv_event;
+            stream_task_ptr->reason_send = send_event;
+        }
+        break;
+    case task_type::HTTP_TASK:
+        if (new_task)
+        {
+            auto http_task_ptr = (http_task *)new_task;
+            http_task_ptr->reason_recv = recv_event;
+            http_task_ptr->reason_send = send_event;
+        }
+        break;
+    case task_type::WEBSOCKET_TASK:
+        if (new_task)
+        {
+            // auto websocket_task_ptr = (websocket_task *)new_task;
+        }
+        break;
+    default:
+        break;
+    }
+
+    // create task failed
+    if (new_task == nullptr)
+    {
+        LOG_ERROR("new_task is nullptr");
+        exit(EXIT_FAILURE);
+    }
+
+    // Submit the task to the queue of task_dispatcher
+    singleton<worker_pool>::instance()->assign(new_task, socket_ptr->get_gid());
 }

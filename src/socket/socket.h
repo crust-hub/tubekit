@@ -54,12 +54,16 @@ namespace tubekit
             bool get_ssl_accepted();
             void set_ssl_accepted(bool accepted);
 
+            void set_gid(uint64_t gid);
+            uint64_t get_gid();
+
         protected:
             string m_ip;
             int m_port;
             int m_sockfd;
             SSL *m_ssl_instance{nullptr};
             bool m_ssl_accepted;
+            uint64_t gid;
 
         public:
             std::function<void()> close_callback;

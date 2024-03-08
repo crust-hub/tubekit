@@ -57,7 +57,6 @@ namespace tubekit::connection
 
     private:
         std::unordered_map<void *, connection *> m_map;
-        // std::unordered_multimap<void *, std::vector<char>> m_wait_send_data;
         tubekit::thread::mutex m_mutex;
         tubekit::task::task_type m_task_type;
     };

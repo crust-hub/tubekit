@@ -60,7 +60,7 @@ void http_app::on_tick()
 
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
-    m_http_connection.m_buffer.set_limit_max(202300);
+    m_http_connection.m_send_buffer.set_limit_max(202300);
     // load callback
     m_http_connection.destory_callback = [](http_connection &m_connection) -> void
     {
@@ -109,7 +109,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             response += mime_type + "\r\n\r\n";
             try
             {
-                connection.m_buffer.write(response.c_str(), response.size());
+                connection.m_send_buffer.write(response.c_str(), response.size());
             }
             catch (const std::runtime_error &e)
             {
@@ -133,7 +133,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
                 {
                     try
                     {
-                        m_connection.m_buffer.write(buf, len);
+                        m_connection.m_send_buffer.write(buf, len);
                     }
                     catch (const std::runtime_error &e)
                     {
@@ -154,7 +154,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
             try
             {
-                connection.m_buffer.write(response, strlen(response));
+                connection.m_send_buffer.write(response, strlen(response));
             }
             catch (const std::runtime_error &e)
             {
@@ -175,7 +175,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             string html = html_loader::load(body);
             try
             {
-                connection.m_buffer.write(html.c_str(), html.size());
+                connection.m_send_buffer.write(html.c_str(), html.size());
             }
             catch (const std::runtime_error &e)
             {
@@ -188,7 +188,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
         const char *response = "HTTP/1.1 404 Not Found\r\nServer: tubekit\r\nContent-Type: text/text; charset=UTF-8\r\n\r\n";
         try
         {
-            connection.m_buffer.write(response, strlen(response));
+            connection.m_send_buffer.write(response, strlen(response));
         }
         catch (const std::runtime_error &e)
         {

@@ -8,7 +8,7 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                        m_buffer(204800),
+                                                                        m_send_buffer(204800),
                                                                         recv_end(false),
                                                                         process_end(false),
                                                                         buffer_used_len(0),
@@ -107,11 +107,7 @@ ostream &operator<<(ostream &os, const http_connection &m_http_connection)
 
 void http_connection::on_mark_close()
 {
-    int iret = singleton<socket_handler>::instance()->attach(socket_ptr, true);
-    if (0 != iret)
-    {
-        // LOG_ERROR("on_mark_close attach(socket_ptr, true) return %d", iret);
-    }
+    singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
 }
 
 void http_connection::reuse()
@@ -123,7 +119,7 @@ void http_connection::reuse()
     this->body.clear();
     this->chunks.clear();
     this->data.clear();
-    this->m_buffer.clear();
+    this->m_send_buffer.clear();
     this->buffer_used_len = 0;
     this->buffer_start_use = 0;
     this->head_field_tmp.clear();

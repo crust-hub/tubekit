@@ -112,6 +112,7 @@ Concurrency QPS             HttpRequest
 1000        13732.30/sec    10000
 1000        11226.25/sec    100000
 1000        9641.19/sec     500000
+1000        8989.65/sec     1000000
 ```
 
 ## Directory Structure

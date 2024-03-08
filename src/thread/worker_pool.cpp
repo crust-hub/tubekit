@@ -1,6 +1,7 @@
 #include "thread/worker_pool.h"
 
 #include <tubekit-log/logger.h>
+#include <limits>
 
 using namespace tubekit::thread;
 using namespace tubekit::log;
@@ -29,18 +30,11 @@ void worker_pool::create(size_t size, task_destory *destory_ptr)
     }
 }
 
-void worker_pool::assign(task *m_task)
+void worker_pool::assign(task *m_task, uint64_t hash_key)
 {
-    std::uintptr_t uintptr = reinterpret_cast<std::uintptr_t>(m_task->get_data());
-    std::uint32_t hash = uintptr;
+    hash_key = hash_key % worker_map.size();
 
-    uint32_t addr2idx = hash;
-    addr2idx = (addr2idx % 100) % 7;
-    addr2idx = addr2idx % worker_map.size();
-
-    // LOG_ERROR("addr2idx=%d", addr2idx);
-
-    worker_map[addr2idx]->push(m_task);
+    worker_map[hash_key]->push(m_task);
 }
 
 void worker_pool::stop()

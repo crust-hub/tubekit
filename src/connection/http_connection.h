@@ -45,7 +45,7 @@ namespace tubekit
             std::vector<char> body;
             std::vector<std::vector<char>> chunks;
             std::vector<char> data;
-            buffer::buffer m_buffer;
+            buffer::buffer m_send_buffer;
             const size_t buffer_size{202300};
             char buffer[202300];
             int buffer_used_len; // effective content length in buffer

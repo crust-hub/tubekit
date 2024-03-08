@@ -125,7 +125,7 @@ connection *connection_mgr::get(void *index_ptr)
 
 bool connection_mgr::safe_send(void *index_ptr, const char *buffer, size_t len)
 {
-    if (!buffer || 0 == len)
+    if (!buffer || 0 == len || !index_ptr)
     {
         return false;
     }
@@ -133,8 +133,23 @@ bool connection_mgr::safe_send(void *index_ptr, const char *buffer, size_t len)
     auto res = m_map.find(index_ptr);
     if (res == m_map.end())
     {
+        LOG_ERROR("res == m_map.end()");
         return false;
     }
+
+    if (res->second->get_socket_ptr() != index_ptr)
+    {
+        LOG_ERROR("res->second->get_socket_ptr() != index_ptr");
+        return false;
+    }
+
+    tubekit::socket::socket *psocket = static_cast<tubekit::socket::socket *>(index_ptr);
+    if (psocket->get_gid() != res->second->get_gid())
+    {
+        LOG_ERROR("psocket->get_gid() != res->second->get_gid()");
+        return false;
+    }
+
     if (is_stream(res->second))
     {
         stream_connection *stream_conn = convert_to_stream(res->second);

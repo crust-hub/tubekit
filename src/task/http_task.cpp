@@ -279,7 +279,7 @@ void http_task::run()
             }
         }
         //  Notify the user that the content sent last time has been sent to the client
-        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_buffer.can_readable_size() && !t_http_connection->get_response_end())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_send_buffer.can_readable_size() && !t_http_connection->get_response_end())
         {
             if (t_http_connection->write_end_callback)
             {
@@ -290,12 +290,12 @@ void http_task::run()
                 t_http_connection->set_everything_end(true);
             }
         }
-        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 != t_http_connection->m_buffer.can_readable_size())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 != t_http_connection->m_send_buffer.can_readable_size())
         {
             // read from m_buffer to buffer for next write
             try
             {
-                t_http_connection->buffer_used_len = t_http_connection->m_buffer.read(t_http_connection->buffer, t_http_connection->buffer_size - 1);
+                t_http_connection->buffer_used_len = t_http_connection->m_send_buffer.read(t_http_connection->buffer, t_http_connection->buffer_size - 1);
             }
             catch (const std::runtime_error &e)
             {
@@ -304,7 +304,7 @@ void http_task::run()
             t_http_connection->buffer[t_http_connection->buffer_used_len] = 0;
             t_http_connection->buffer_start_use = 0;
         }
-        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_buffer.can_readable_size() && t_http_connection->get_response_end())
+        if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_send_buffer.can_readable_size() && t_http_connection->get_response_end())
         {
             t_http_connection->set_everything_end(true);
         }

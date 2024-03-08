@@ -20,7 +20,7 @@ namespace tubekit::thread
 
         size_t get_size();
 
-        void assign(task *m_task);
+        void assign(task *m_task, uint64_t hash_key);
 
         void stop();
 

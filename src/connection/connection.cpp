@@ -43,4 +43,15 @@ void connection::reuse()
 {
     this->close_flag = false;
     this->socket_ptr = nullptr;
+    this->gid = 0;
+}
+
+void connection::set_gid(uint64_t gid)
+{
+    this->gid = gid;
+}
+
+uint64_t connection::get_gid()
+{
+    return this->gid;
 }

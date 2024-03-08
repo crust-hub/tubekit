@@ -174,11 +174,7 @@ bool stream_connection::send(const char *buffer, size_t buffer_size)
 
     if (socket_ptr)
     {
-        int iret = singleton<socket_handler>::instance()->attach(socket_ptr, true);
-        if (0 != iret)
-        {
-            // LOG_ERROR("attach(socket_ptr, true) return %d", iret);
-        }
+        singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
     }
     else
     {
@@ -191,11 +187,7 @@ bool stream_connection::send(const char *buffer, size_t buffer_size)
 
 void stream_connection::on_mark_close()
 {
-    int iret = singleton<socket_handler>::instance()->attach(socket_ptr, true);
-    if (0 != iret)
-    {
-        // LOG_ERROR("on_mark_close attach(socket_ptr, true) return %d", iret);
-    }
+    singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
 }
 
 void stream_connection::reuse()

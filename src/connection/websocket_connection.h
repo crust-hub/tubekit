@@ -74,8 +74,8 @@ namespace tubekit
             bool http_processed{false};
             bool everything_end{false};
             bool is_upgrade{false};
-            tubekit::buffer::buffer m_recv_buffer;
-            tubekit::buffer::buffer m_send_buffer;
+            buffer::buffer m_recv_buffer;
+            buffer::buffer m_send_buffer;
             buffer::buffer m_wating_send_pack;
 
             std::function<void(websocket_connection &connection)> destory_callback;

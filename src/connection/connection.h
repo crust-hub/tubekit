@@ -30,8 +30,12 @@ namespace tubekit
              */
             virtual void reuse();
 
+            void set_gid(uint64_t gid);
+            uint64_t get_gid();
+
         private:
             bool close_flag;
+            uint64_t gid;
 
         protected:
             tubekit::socket::socket *socket_ptr;

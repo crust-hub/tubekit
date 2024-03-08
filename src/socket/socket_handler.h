@@ -44,6 +44,8 @@ namespace tubekit
              */
             int remove(socket *m_socket);
 
+            void do_task(socket *m_socket, bool recv_event, bool send_event);
+
         public:
             void on_tick();
 
