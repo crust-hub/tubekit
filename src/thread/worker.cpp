@@ -54,7 +54,6 @@ void worker::run()
         task *will_run_task = m_task_queue.pop();
         if (will_run_task == nullptr || stop_flag)
         {
-            stop_flag = true;
             break;
         }
         int rc = 0;

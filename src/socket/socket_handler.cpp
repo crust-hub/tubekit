@@ -94,10 +94,16 @@ int socket_handler::detach(socket *m_socket)
 
 int socket_handler::remove(socket *m_socket)
 {
-    if (!m_init)
+    if (!m_init || !m_socket)
     {
         return -1;
     }
+
+    if (m_socket->get_fd() <= 0)
+    {
+        return -1;
+    }
+
     int iret = detach(m_socket);
     if (0 != iret)
     {
@@ -121,6 +127,37 @@ socket *socket_handler::alloc_socket()
     return singleton<object_pool<socket>>::instance()->allocate();
 }
 
+void socket_handler::push_wait_remove(socket *m_socket)
+{
+    if (!m_init || !m_socket)
+    {
+        return;
+    }
+    m_remove_mutex.lock();
+    m_write_remove_list->push_back(m_socket);
+    m_remove_mutex.unlock();
+}
+
+void socket_handler::update_wait_remove(std::set<socket *> &removed_socket)
+{
+    if (!m_init)
+    {
+        return;
+    }
+    m_remove_mutex.lock();
+    m_write_remove_list = (m_write_remove_list == &m_remove_list1) ? &m_remove_list2 : &m_remove_list1;
+    m_read_remove_list = (m_read_remove_list == &m_remove_list1) ? &m_remove_list2 : &m_remove_list1;
+    m_remove_mutex.unlock();
+
+    removed_socket.clear();
+    for (auto item : *m_read_remove_list)
+    {
+        removed_socket.insert(item);
+        remove(item);
+    }
+    m_read_remove_list->clear();
+}
+
 void socket_handler::on_tick()
 {
     singleton<hooks::tick>::instance()->run();
@@ -140,6 +177,10 @@ bool socket_handler::init(const string &ip, int port, int max_connections, int w
     m_epoll->create(max_connections);
     m_epoll->add(m_server->m_sockfd, m_server, (EPOLLIN | EPOLLHUP | EPOLLERR)); // Register the listen socket epoll_event
     m_init = true;
+
+    m_read_remove_list = &m_remove_list1;
+    m_write_remove_list = &m_remove_list2;
+
     return m_init;
 }
 
@@ -156,27 +197,39 @@ void socket_handler::handle()
     uint64_t lastest_tick_time = socket_handler_time.get_milliseconds();
     uint64_t gid_seq = 0;
 
+    std::set<socket *> removed_socket;
+
     // main thread loop
     while (true)
     {
-        // sys stop check
-        if (singleton<tubekit::server::server>::instance()->is_stop())
-        {
-            singleton<tubekit::server::server>::instance()->on_stop();
-            singleton<hooks::stop>::instance()->run();
-            break; // main process to exit
-        }
         int num = m_epoll->wait(m_wait_time);
+
+        removed_socket.clear();
+        update_wait_remove(removed_socket);
+
+        // tick time update
         socket_handler_time.update();
         uint64_t now_tick_time = socket_handler_time.get_milliseconds();
         if (lastest_tick_time != now_tick_time)
         {
+            if (now_tick_time - lastest_tick_time > 2)
+            {
+                // sys stop check
+                if (singleton<tubekit::server::server>::instance()->is_stop())
+                {
+                    singleton<tubekit::server::server>::instance()->on_stop();
+                    singleton<hooks::stop>::instance()->run();
+                    break; // main process to exit
+                }
+            }
             gid_seq = 0;
             lastest_tick_time = now_tick_time;
         }
 
+        // on tick hook
         on_tick();
 
+        // err check
         if (num == 0)
         {
             continue; // timeout
@@ -191,12 +244,26 @@ void socket_handler::handle()
             continue;
         }
 
+        // process events
         for (int i = 0; i < num; i++) // Sockets that handle readable data
         {
             uint64_t loop_gid = lastest_tick_time + (++gid_seq);
 
+            socket *now_loop_socket = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
+
+            if (!now_loop_socket)
+            {
+                LOG_ERROR("event loop data.ptr is nullptr");
+                continue;
+            }
+
+            if (removed_socket.find(now_loop_socket) != removed_socket.end())
+            {
+                continue;
+            }
+
             // There is a new socket connection
-            if (m_server == static_cast<socket *>(m_epoll->m_events[i].data.ptr))
+            if (m_server == now_loop_socket)
             {
                 int socket_fd = m_server->accept(); // Gets the socket_fd for the new connection
                 if (socket_fd <= 0)
@@ -234,7 +301,7 @@ void socket_handler::handle()
                     if (ssl_err)
                     {
                         LOG_ERROR("SSL ERR");
-                        remove(socket_object);
+                        push_wait_remove(socket_object);
                         continue;
                     }
                 }
@@ -245,7 +312,7 @@ void socket_handler::handle()
                 if (p_connection == nullptr)
                 {
                     LOG_ERROR("p_connection == nullptr");
-                    remove(socket_object);
+                    push_wait_remove(socket_object);
                     continue;
                 }
                 else
@@ -260,7 +327,7 @@ void socket_handler::handle()
                 {
                     LOG_ERROR("singleton<connection_mgr>::instance()->add error");
                     singleton<connection_mgr>::instance()->release(p_connection);
-                    remove(socket_object);
+                    push_wait_remove(socket_object);
                     continue;
                 }
 
@@ -279,13 +346,12 @@ void socket_handler::handle()
             {
                 // already connection socket process
                 uint32_t events = m_epoll->m_events[i].events;
-                socket *socket_ptr = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
-                detach(socket_ptr);
+                detach(now_loop_socket);
 
                 if ((events & EPOLLHUP) || (events & EPOLLERR) || (events & EPOLLRDHUP))
                 {
                     // using connection_mgr mark_close,to prevent connection already free
-                    singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+                    singleton<connection_mgr>::instance()->mark_close(now_loop_socket);
                     // process using task
                 }
 
@@ -298,7 +364,7 @@ void socket_handler::handle()
                     send_event = events & EPOLLOUT;
                 }
 
-                do_task(socket_ptr, recv_event, send_event);
+                do_task(now_loop_socket, recv_event, send_event);
             }
         }
     }
@@ -345,6 +411,8 @@ void socket_handler::do_task(socket *socket_ptr, bool recv_event, bool send_even
         LOG_ERROR("new_task is nullptr");
         exit(EXIT_FAILURE);
     }
+
+    // LOG_ERROR("do_task %llu", socket_ptr->get_gid());
 
     // Submit the task to the queue of task_dispatcher
     singleton<worker_pool>::instance()->assign(new_task, socket_ptr->get_gid());

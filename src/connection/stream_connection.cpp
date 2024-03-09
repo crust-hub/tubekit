@@ -160,11 +160,12 @@ bool stream_connection::send(const char *buffer, size_t buffer_size)
         return false;
     }
 
-    uint64_t len = 0;
+    // uint64_t len = 0;
 
     try
     {
-        len = m_wating_send_pack.write(buffer, buffer_size);
+        // len =
+        m_wating_send_pack.write(buffer, buffer_size);
     }
     catch (const std::runtime_error &e)
     {

@@ -130,7 +130,7 @@ void websocket_task::run()
                 t_websocket_connection->destory_callback(*t_websocket_connection);
             }
             singleton<connection_mgr>::instance()->remove(socket_ptr);
-            singleton<socket_handler>::instance()->remove(socket_ptr);
+            singleton<socket_handler>::instance()->push_wait_remove(socket_ptr);
         }
         return;
     }

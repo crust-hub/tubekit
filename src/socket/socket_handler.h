@@ -5,6 +5,8 @@
 #include "socket/event_poller.h"
 #include "utility/object_pool.h"
 #include "thread/mutex.h"
+#include <list>
+#include <set>
 
 namespace tubekit
 {
@@ -47,6 +49,10 @@ namespace tubekit
             void do_task(socket *m_socket, bool recv_event, bool send_event);
 
         public:
+            void push_wait_remove(socket *m_socket);
+            void update_wait_remove(std::set<socket *> &removed_socket);
+
+        public:
             void on_tick();
 
         private:
@@ -56,6 +62,12 @@ namespace tubekit
             event_poller *m_epoll;
             socket *m_server;
             tubekit::thread::mutex m_mutex;
+
+            tubekit::thread::mutex m_remove_mutex;
+            std::list<socket *> m_remove_list1;
+            std::list<socket *> m_remove_list2;
+            std::list<socket *> *m_read_remove_list;
+            std::list<socket *> *m_write_remove_list;
         };
     }
 }
