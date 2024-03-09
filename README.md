@@ -52,11 +52,7 @@ $ ./kill.sh
 ## Docker
 
 ```bash
-docker run -it -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
-$ cd protocol
-$ cd ..
-$ cmake .
-$ make -j3
+$ docker run -it -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
 $ cd ./bin
 $ ./tubekit
 ```
