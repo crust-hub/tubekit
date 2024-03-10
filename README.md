@@ -57,18 +57,16 @@ $ cd ./bin
 $ ./tubekit
 ```
 
-## App
+## App Example
 
 support tcp keep-alive stream (protobuf) and http app (http-parser)、websocket
-
-## Example
 
 1. [framework config](https://github.com/crust-hub/tubekit/blob/main/bin/config/main.ini)
 2. [stream protobuf app](https://github.com/crust-hub/tubekit/blob/main/src/app/stream_app.cpp)
 3. [http app](https://github.com/crust-hub/tubekit/blob/main/src/app/http_app.cpp)
 4. [websocket app](https://github.com/crust-hub/tubekit/blob/main/src/app/websocket_app.cpp)
 
-## QPS
+## Requests Per Second
 
 CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60 GHz  
 Mem: 8GB  
@@ -76,39 +74,43 @@ OS : WSL2 Ubuntu (Windows 11)
 
 ```ini
 config/main.ini 
-    theads:6  
+    theads:8  
     max_conn:2000  
 ```
 
-testing result
+apache2-utils testing
 
 ```bash
-$ ab -c {{Concurrency}} -n {{HttpRequest}} http://IP:20023/
+# tubekit
+$ ab -c {{concurrency}} -n {{httpRequest}} http://IP:20023/
+# nodejs
+$ ab -c {{concurrency}} -n {{httpRequest}} http://IP:20025/
 ```
 
 ```bash
-Concurrency QPS             HttpRequest
+# apache2-utils ab report
+concurrency bin/tubekit          test/node_http_server.js            httpRequest     responseBodySize
 
-10          13872.80/sec    10000
-10          13147.52/sec    100000
-10          9789.71/sec     500000
+10          11959.51/sec         3636.00 /sec                        10000           890bytes
+10          7897.85 /sec         3244.76 /sec                        100000          890bytes
+10          8050.12 /sec         3047.05 /sec                        500000          890bytes
 
-50          13540.06/sec    10000
-50          11490.66/sec    100000
-50          9470.44/sec     500000
+50          9571.97 /sec         3484.50 /sec                        10000           890bytes
+50          7679.47 /sec         3453.35 /sec                        100000          890bytes
+50          7744.02 /sec         3389.12 /sec                        500000          890bytes
 
-100         14059.34/sec    10000
-100         11530.81/sec    100000
-100         9420.90/sec     500000
+100         10784.61/sec         3819.69 /sec                        10000           890bytes
+100         7715.26 /sec         3447.19 /sec                        100000          890bytes
+100         7361.67 /sec         3566.64 /sec                        500000          890bytes
 
-500         13839.18/sec    10000
-500         12407.10/sec    100000
-500         9438.90/sec     500000
+500         7744.84 /sec         4101.63 /sec                        10000           890bytes
+500         7813.42 /sec         3593.05 /sec                        100000          890bytes
+500         7663.37 /sec         3654.70 /sec                        500000          890bytes
 
-1000        13732.30/sec    10000
-1000        11226.25/sec    100000
-1000        9641.19/sec     500000
-1000        8989.65/sec     1000000
+1000        10670.04/sec         3381.92 /sec                        10000           890bytes
+1000        7682.88 /sec         3459.71 /sec                        100000          890bytes
+1000        7754.77 /sec         3667.54 /sec                        500000          890bytes
+1000        7519.90 /sec         3691.43 /sec                        1000000         890bytes
 ```
 
 ## Directory Structure
