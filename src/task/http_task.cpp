@@ -132,6 +132,7 @@ void http_task::run()
     // connection is close
     if (nullptr == t_http_connection || t_http_connection->is_close())
     {
+        // here, make sure closing connection and socket once
         if (t_http_connection)
         {
             if (t_http_connection->destory_callback)

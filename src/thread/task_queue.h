@@ -4,6 +4,7 @@
 #include "thread/auto_lock.h"
 #include "task/task_mgr.h"
 #include <tubekit-log/logger.h>
+#include <unordered_map>
 
 namespace tubekit::thread
 {
@@ -20,6 +21,7 @@ namespace tubekit::thread
         mutex m_mutex;
         condition m_condition;
         std::list<TASK *> m_task;
+        std::unordered_map<TASK *, bool> m_in_task;
     };
 
     template <typename TASK>
@@ -36,14 +38,12 @@ namespace tubekit::thread
     bool task_queue<TASK>::push(TASK *task)
     {
         auto_lock lock(m_mutex);
-        for (auto ptr : m_task)
+        if (m_in_task[task])
         {
-            if (ptr && ptr->compare(task))
-            {
-                return false;
-            }
+            return true;
         }
         m_task.push_back(task);
+        m_in_task[task] = true;
         m_condition.broadcast();
         return true;
     }
@@ -58,6 +58,7 @@ namespace tubekit::thread
         }
         TASK *task = m_task.front();
         m_task.pop_front();
+        m_in_task[task] = false;
         return task;
     }
 }

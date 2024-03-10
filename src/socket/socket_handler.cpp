@@ -352,7 +352,8 @@ void socket_handler::handle()
                 {
                     // using connection_mgr mark_close,to prevent connection already free
                     singleton<connection_mgr>::instance()->mark_close(now_loop_socket);
-                    // process using task
+                    // process using task on_mark_close
+                    continue;
                 }
 
                 // Different processing is triggered for different poll events

@@ -57,6 +57,7 @@ void stream_task::run()
     // connection is close
     if (nullptr == t_stream_connection || t_stream_connection->is_close())
     {
+        // here, make sure closing connection and socket once
         if (t_stream_connection)
         {
             singleton<connection_mgr>::instance()->remove(socket_ptr);

@@ -123,6 +123,7 @@ void websocket_task::run()
 
     if (nullptr == t_websocket_connection || t_websocket_connection->is_close())
     {
+        // here, make sure closing connection and socket once
         if (t_websocket_connection)
         {
             if (t_websocket_connection->destory_callback)
