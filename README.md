@@ -2,7 +2,7 @@
 
 The C++ TCP server framework based on the Reactor model continues to implement POSIX thread pool, Epoll, non blocking IO, object pool, log, socket network programming, support the dynamic library to implement custom protocol extensions, and use http parser to process http requests. Currently only supports Linux systems
 
-CPP: `-std=c++17`  
+CPP: `std=c++17`  
 Platform: `linux`  
 Protocol: `http` `tcp stream(protobuf)` `websocket`  
 Support TLS/SSL: `openssl`  
@@ -138,3 +138,5 @@ concurrency bin/tubekit          test/node_http_server.js            httpRequest
 
 [@http-parser](https://github.com/nodejs/http-parser)  
 [@lua](https://github.com/lua/lua)  
+[@protobuffer](https://github.com/protocolbuffers/protobuf)  
+
