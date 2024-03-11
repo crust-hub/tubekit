@@ -93,7 +93,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
         //     t_path = url;
         // }
 
-        if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::regular)
+        if (fs::exists(t_path) && fs::is_regular_file(t_path) && fs::status(t_path).type() == fs::file_type::regular)
         {
             std::string mime_type;
             try
@@ -148,7 +148,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             return;
         }
 
-        if (fs::exists(t_path) && fs::status(t_path).type() == fs::file_type::directory)
+        if (fs::exists(t_path) && fs::is_directory(t_path) && fs::status(t_path).type() == fs::file_type::directory)
         {
             connection.ptr = nullptr;
             const char *response = "HTTP/1.1 200 OK\r\nServer: tubekit\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
@@ -162,7 +162,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
             }
             //  generate dir list
             vector<string> a_tags;
-            for (const auto &dir_entry : fs::directory_iterator{t_path})
+            for (const auto &dir_entry : fs::directory_iterator(t_path))
             {
                 std::string sub_path = dir_entry.path().string().substr(prefix.size());
                 a_tags.push_back(html_loader::a_tag(utility::url::encode(sub_path), sub_path));
