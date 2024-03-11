@@ -10,40 +10,60 @@ Script: `lua`
 
 ## Get Start
 
-Prepare
+If there are already dependencies to be installed on the host, please selectively ignore them.
+
+### Ubuntu (Docker)
 
 ```bash
+$ docker run -it ubuntu
 $ sudo apt-get update
 $ sudo apt-get install apt-utils -y
 $ sudo apt-get install cmake g++ make git -y
 $ sudo apt-get install protobuf-compiler libprotobuf-dev -y
 $ sudo apt-get install libssl-dev -y
 $ git clone https://github.com/crust-hub/tubekit.git
-```
-
-Build
-
-```bash
 $ cd tubekit
 $ cd protocol
 $ make
 $ cd ..
 $ cmake .
-$ make -j3
+$ make -j4
 ```
 
-Config
+### CentOS8(Docker)
 
 ```bash
-$ vim bin/config/main.ini
+$ docker run -it centos
+$ cd /etc/yum.repos.d/
+$ sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+$ sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+$ yum install -y epel-release
+$ yum install cmake gcc gcc-c++ make git -y
+$ yum install openssl-devel -y
+$ dnf --enablerepo=powertools install protobuf -y
+$ dnf --enablerepo=powertools install protobuf-devel -y
+$ git clone https://github.com/crust-hub/tubekit.git
+$ cd tubekit
+$ cd protocol
+$ make
+$ cd ..
+$ cmake .
+$ make -j4
 ```
 
-Run
+### Http Dir
 
 ```bash
 $ sudo mkdir /tubekit_static
+$ vim bin/config/main.ini
+```
+
+### Runing Tubekit
+
+```bash
 $ cd bin
-$ ./tubekit 
+$ ./tubekit
+$ ps -ef | grep tubekit
 ```
 
 ## Docker
