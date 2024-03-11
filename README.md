@@ -134,9 +134,9 @@ concurrency bin/tubekit          test/node_http_server.js            httpRequest
 
 [Directory Structure Link](./doc/dir_detail.md)
 
-## Third Party
+## Third-Party
 
-[@http-parser](https://github.com/nodejs/http-parser)  
-[@lua](https://github.com/lua/lua)  
-[@protobuffer](https://github.com/protocolbuffers/protobuf)  
+1、[@http-parser](https://github.com/nodejs/http-parser)  2、[@lua](https://github.com/lua/lua)  
+3、[@protobuffer](https://github.com/protocolbuffers/protobuf)  4、[@openssl](https://github.com/openssl/openssl)  
+
 
