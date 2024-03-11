@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_set>
+#include <cstdlib>
 
 #include "thread/mutex.h"
 #include "thread/auto_lock.h"
@@ -24,7 +25,7 @@ namespace tubekit
              * @param max_size number of object
              */
             template <typename... ARGS>
-            void init(size_t max_size, bool block, ARGS &&...args);
+            int init(size_t max_size, bool block, ARGS &&...args);
 
             /**
              * @brief get a object from list
@@ -50,33 +51,45 @@ namespace tubekit
              */
             mutex m_mutex;
             condition m_condition;
+            T *m_objects;
             bool m_block;
+            size_t m_max_size;
         };
 
         template <typename T>
         object_pool<T>::~object_pool()
         {
             auto_lock lock(m_mutex);
-            // free space of the all objects
-            for (auto t : m_set)
+            if(m_objects)
             {
-                delete t;
+                for(size_t i = 0; i < m_max_size; i++)
+                {
+                    m_objects[i].~T();
+                }
             }
+            free(m_objects);
+            m_objects = nullptr;
             m_set.clear();
         }
 
         template <typename T>
         template <typename... ARGS>
-        void object_pool<T>::init(size_t max_size, bool block, ARGS &&...args)
+        int object_pool<T>::init(size_t max_size, bool block, ARGS &&...args)
         {
             auto_lock lock(m_mutex);
+            m_objects = (T*) ::malloc(sizeof(T) * max_size);
+            if (!m_objects)
+            {
+                return -1;
+            }
             for (size_t i = 0; i < max_size; ++i)
             {
-                T *p = new T(std::forward<ARGS>(args)...);
-                if (p)
-                    m_set.insert(p);
+                new (&m_objects[i]) T(std::forward<ARGS>(args)...);
+                m_set.insert(&m_objects[i]);
             }
+            m_max_size = max_size;
             m_block = block;
+            return 0;
         }
 
         template <typename T>
