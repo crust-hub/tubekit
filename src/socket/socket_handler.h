@@ -17,7 +17,7 @@ namespace tubekit
         public:
             socket_handler();
             ~socket_handler();
-            bool init(const std::string &ip, int port, int max_connections, int wait_time);
+            int init(const std::string &ip, int port, int max_connections, int wait_time);
 
             /**
              * @brief Register the m_socket with the epoll

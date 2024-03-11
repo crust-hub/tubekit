@@ -21,10 +21,10 @@ using namespace tubekit::connection;
 using namespace tubekit::app;
 using namespace tubekit::server;
 
-stream_task::stream_task(tubekit::socket::socket *m_socket) : task(m_socket),
-                                                              reason_send(false),
-                                                              reason_recv(false)
+stream_task::stream_task(tubekit::socket::socket *m_socket) : task(m_socket)
 {
+    reason_send = false;
+    reason_recv = false;
 }
 
 stream_task::~stream_task()

@@ -8,11 +8,11 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                        m_send_buffer(204800),
-                                                                        recv_end(false),
-                                                                        process_end(false),
+                                                                        m_send_buffer(20480),
                                                                         buffer_used_len(0),
                                                                         buffer_start_use(0),
+                                                                        recv_end(false),
+                                                                        process_end(false),
                                                                         response_end(false),
                                                                         everything_end(false)
 {

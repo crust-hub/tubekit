@@ -41,7 +41,7 @@ namespace tubekit::connection
 
         void on_new_connection(void *index_ptr);
 
-        void init(tubekit::task::task_type task_type);
+        int init(tubekit::task::task_type task_type);
 
     public:
         connection *create();

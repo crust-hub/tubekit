@@ -10,15 +10,15 @@ using namespace tubekit::utility;
 using namespace tubekit::socket;
 
 websocket_connection::websocket_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                                  connected(false),
-                                                                                  http_processed(false),
                                                                                   buffer_used_len(0),
                                                                                   buffer_start_use(0),
-                                                                                  m_recv_buffer(204800),
-                                                                                  m_send_buffer(204800),
-                                                                                  m_wating_send_pack(204700),
+                                                                                  http_processed(false),
+                                                                                  m_recv_buffer(20480),
+                                                                                  m_send_buffer(20480),
+                                                                                  m_wating_send_pack(20470),
                                                                                   should_send_idx(-1),
-                                                                                  should_send_size(0)
+                                                                                  should_send_size(0),
+                                                                                  connected(false)
 {
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
@@ -229,7 +229,7 @@ bool websocket_connection::send(const char *buffer, size_t buffer_size, bool che
     }
     catch (const std::runtime_error &e)
     {
-        // LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
+        LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
         return false;
     }
 

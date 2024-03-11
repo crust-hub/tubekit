@@ -21,8 +21,8 @@ namespace tubekit
 
         public:
             // flag:why create task
-            bool reason_recv;
-            bool reason_send;
+            bool reason_recv{false};
+            bool reason_send{false};
         };
     }
 }

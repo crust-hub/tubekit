@@ -56,7 +56,7 @@ void server::listen(const std::string &ip, int port)
 
 void server::start()
 {
-    std::cout << "server start..." << std::endl;
+    LOG_ERROR("server::start ...");
 
     if (get_use_ssl())
     {
@@ -94,7 +94,11 @@ void server::start()
 
     // socket object pool
     int iret = singleton<object_pool<socket::socket>>::instance()->init(m_connects, false);
-    if(0 != iret) return;
+    if (0 != iret)
+    {
+        LOG_ERROR("socket object_pool init return %d", iret);
+        return;
+    }
 
     // connection object pool and task object pool
     task::task_type task_type = get_task_type();
@@ -103,25 +107,49 @@ void server::start()
     case task::task_type::HTTP_TASK:
     {
         iret = singleton<object_pool<connection::http_connection>>::instance()->init(m_connects, false, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("http_connection object_pool init return %d", iret);
+            return;
+        }
         iret = singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, true, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("http_task object_pool init return %d", iret);
+            return;
+        }
         break;
     }
     case task::task_type::STREAM_TASK:
     {
         iret = singleton<object_pool<connection::stream_connection>>::instance()->init(m_connects, false, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("stream_connection object_pool init return %d", iret);
+            return;
+        }
         iret = singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, true, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("stream_task object_pool init return %d", iret);
+            return;
+        }
         break;
     }
     case task::task_type::WEBSOCKET_TASK:
     {
         iret = singleton<object_pool<connection::websocket_connection>>::instance()->init(m_connects, false, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("websocket_connection object_pool init return %d", iret);
+            return;
+        }
         iret = singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, true, nullptr);
-        if(0 != iret) return;
+        if (0 != iret)
+        {
+            LOG_ERROR("websocket_task object_pool init return %d", iret);
+            return;
+        }
         break;
     }
     default:
@@ -132,14 +160,30 @@ void server::start()
     }
 
     // connection_mgr
-    singleton<connection::connection_mgr>::instance()->init(task_type);
+    iret = singleton<connection::connection_mgr>::instance()->init(task_type);
+    if (0 != iret)
+    {
+        LOG_ERROR("connection_mgr init return %d", iret);
+        return;
+    }
 
     // task_mgr
-    singleton<task::task_mgr>::instance()->init(task_type);
+    iret = singleton<task::task_mgr>::instance()->init(task_type);
+    if (0 != iret)
+    {
+        LOG_ERROR("task_mgr init return %d", iret);
+        return;
+    }
 
     socket_handler *handler = singleton<socket_handler>::instance();
-    handler->init(m_ip, m_port, m_connects, m_wait_time);
-    handler->handle(); // main thread loop
+    iret = handler->init(m_ip, m_port, m_connects, m_wait_time);
+    if (0 != iret)
+    {
+        LOG_ERROR("socket_handler init return %d", iret);
+        return;
+    }
+
+    handler->handle(); // main thread event loop
 
     LOG_ERROR("socket_handler handle return");
 }

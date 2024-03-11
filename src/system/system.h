@@ -16,7 +16,7 @@ namespace tubekit
             static void signal_term(int sig);
 
         private:
-            void core_dump(); // core dump
+            int set_sys_limits();
             void signal_conf();
             void create_daemon();
 

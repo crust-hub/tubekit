@@ -262,9 +262,10 @@ bool connection_mgr::is_websocket(connection *conn_ptr)
     return false;
 }
 
-void connection_mgr::init(tubekit::task::task_type task_type)
+int connection_mgr::init(tubekit::task::task_type task_type)
 {
     m_task_type = task_type;
+    return 0;
 }
 
 void connection_mgr::release(connection *connection_ptr)

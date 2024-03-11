@@ -24,7 +24,7 @@ void worker_pool::create(size_t size, task_destory *destory_ptr)
     for (size_t i = 0; i < size; i++)
     {
         worker *new_worker = new worker(destory_ptr);
-        LOG_DEBUG("create worker thread %x", new_worker);
+        LOG_ERROR("create worker thread %x", new_worker);
         worker_map[i] = new_worker;
         new_worker->start();
     }

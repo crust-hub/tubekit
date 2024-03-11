@@ -28,6 +28,7 @@ void system::init()
     // load config
     inifile::inifile *ini = singleton<inifile::inifile>::instance();
     ini->load(get_root_path() + "/config/main.ini");
+
     const string &ip = (*ini)["server"]["ip"];
     const int port = (*ini)["server"]["port"];
     const int threads = (*ini)["server"]["threads"];
@@ -50,7 +51,7 @@ void system::init()
     }
 
     // coredump config
-    core_dump();
+    set_sys_limits();
 
     // signal config
     signal_conf();
@@ -59,9 +60,13 @@ void system::init()
     const string log_dir_path = get_root_path() + "/log";
     DIR *dp = opendir(log_dir_path.c_str());
     if (dp == nullptr)
+    {
         mkdir(log_dir_path.c_str(), 0755); // create dir
+    }
     else
+    {
         closedir(dp);
+    }
     logger::instance().open(m_root_path + "/log/tubekit.log");
 
     // server
@@ -88,16 +93,24 @@ void system::init()
     m_server->start(); // main thread loop
 }
 
-void system::core_dump()
+int system::set_sys_limits()
 {
     // core dump info
     struct rlimit x;
     int ret = getrlimit(RLIMIT_CORE, &x);
-    x.rlim_cur = x.rlim_max;
+    x.rlim_cur = RLIM_SAVED_MAX;
+    x.rlim_max = RLIM_SAVED_MAX;
+
     ret = setrlimit(RLIMIT_CORE, &x);
-    ret = getrlimit(RLIMIT_DATA, &x);
-    x.rlim_cur = 768000000;
+
+    ret = setrlimit(RLIMIT_AS, &x);
     ret = setrlimit(RLIMIT_DATA, &x);
+    ret = setrlimit(RLIMIT_FSIZE, &x);
+    ret = setrlimit(RLIMIT_NOFILE, &x);
+
+    // ret = getrlimit(RLIMIT_DATA, &x);
+
+    return ret;
 }
 
 string system::get_root_path()

@@ -2,7 +2,10 @@
 
 using namespace tubekit::socket;
 
-event_poller::event_poller(bool et) : m_epfd(0), m_et(et), m_max_connections(0), m_events(nullptr)
+event_poller::event_poller(bool et) : m_epfd(0),
+                                      m_max_connections(0),
+                                      m_events(nullptr),
+                                      m_et(et)
 {
 }
 

@@ -13,9 +13,10 @@ task_mgr::task_mgr()
 {
 }
 
-void task_mgr::init(tubekit::task::task_type task_type)
+int task_mgr::init(tubekit::task::task_type task_type)
 {
     m_task_type = task_type;
+    return 0;
 }
 
 tubekit::thread::task *task_mgr::create(tubekit::socket::socket *m_socket)

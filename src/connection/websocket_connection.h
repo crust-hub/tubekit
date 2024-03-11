@@ -66,8 +66,8 @@ namespace tubekit
             std::string sec_websocket_key;
             std::string sec_websocket_version;
             std::map<std::string, std::vector<std::string>> headers;
-            const size_t buffer_size{202300};
-            char buffer[202300];
+            const size_t buffer_size{20230};
+            char buffer[20230];
             int buffer_used_len;
             int buffer_start_use;
             std::string head_filed_tmp;

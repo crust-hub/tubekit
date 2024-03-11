@@ -8,9 +8,9 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                            m_send_buffer(204800),
-                                                                            m_recv_buffer(204800),
-                                                                            m_wating_send_pack(204800),
+                                                                            m_send_buffer(20480),
+                                                                            m_recv_buffer(20480),
+                                                                            m_wating_send_pack(20480),
                                                                             should_send_idx(-1),
                                                                             should_send_size(0)
 {

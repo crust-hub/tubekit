@@ -163,12 +163,12 @@ void socket_handler::on_tick()
     singleton<hooks::tick>::instance()->run();
 }
 
-bool socket_handler::init(const string &ip, int port, int max_connections, int wait_time)
+int socket_handler::init(const string &ip, int port, int max_connections, int wait_time)
 {
     if (m_init)
     {
         LOG_ERROR("socket handler already init");
-        return true;
+        return 0;
     }
     m_server = new server_socket(ip, port, max_connections);
     m_max_connections = max_connections;
@@ -181,7 +181,7 @@ bool socket_handler::init(const string &ip, int port, int max_connections, int w
     m_read_remove_list = &m_remove_list1;
     m_write_remove_list = &m_remove_list2;
 
-    return m_init;
+    return 0;
 }
 
 void socket_handler::handle()

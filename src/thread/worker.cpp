@@ -56,9 +56,10 @@ void worker::run()
         {
             break;
         }
-        int rc = 0;
+        // int rc = 0;
         int old_state = 0;
-        rc = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
+        // rc =
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
         /*
         设置本线程对Cancel信号的反应。
         state有两种值：pthread_CANCEL_ENABLE（缺省）和pthread_CANCEL_DISABLE
@@ -76,7 +77,8 @@ void worker::run()
         will_run_task = nullptr;
 
         // 允许接收cancel信号后被设置为CANCLED状态 然后运行到取消点停止
-        rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);
+        // rc =
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);
 
         pthread_testcancel(); // 设置取消点 如果线程收到了cancel则运行到取消点才可以被取消
     }

@@ -6,8 +6,10 @@ int64_t timer::s_initial_id = 0;
 std::mutex timer::s_mutex;
 
 timer::timer(int32_t repeated_times, int64_t interval, timer_callback callback)
-    : m_repeated_times(repeated_times), m_interval(interval), m_callback(callback)
 {
+    m_repeated_times = repeated_times;
+    m_interval = interval;
+    m_callback = callback;
     // 当前时间加上一个间隔时间,为下次到期时间
     m_expired_time = (int64_t)time(nullptr) + interval; // seconds
     m_id = generate_id();

@@ -1,7 +1,6 @@
 #pragma once
 #include <unordered_set>
 #include <cstdlib>
-
 #include "thread/mutex.h"
 #include "thread/auto_lock.h"
 #include "thread/condition.h"
@@ -60,9 +59,9 @@ namespace tubekit
         object_pool<T>::~object_pool()
         {
             auto_lock lock(m_mutex);
-            if(m_objects)
+            if (m_objects)
             {
-                for(size_t i = 0; i < m_max_size; i++)
+                for (size_t i = 0; i < m_max_size; i++)
                 {
                     m_objects[i].~T();
                 }
@@ -77,17 +76,25 @@ namespace tubekit
         int object_pool<T>::init(size_t max_size, bool block, ARGS &&...args)
         {
             auto_lock lock(m_mutex);
-            m_objects = (T*) ::malloc(sizeof(T) * max_size);
+            m_objects = (T *)::malloc(sizeof(T) * max_size);
             if (!m_objects)
             {
                 return -1;
             }
+            m_max_size = 0;
             for (size_t i = 0; i < max_size; ++i)
             {
-                new (&m_objects[i]) T(std::forward<ARGS>(args)...);
-                m_set.insert(&m_objects[i]);
+                auto ptr = new (&m_objects[i]) T(std::forward<ARGS>(args)...);
+                if (ptr)
+                {
+                    m_max_size++;
+                    m_set.insert(ptr);
+                }
+                else
+                {
+                    return -2;
+                }
             }
-            m_max_size = max_size;
             m_block = block;
             return 0;
         }
