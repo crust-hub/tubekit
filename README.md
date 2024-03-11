@@ -2,19 +2,22 @@
 
 The C++ TCP server framework based on the Reactor model continues to implement POSIX thread pool, Epoll, non blocking IO, object pool, log, socket network programming, support the dynamic library to implement custom protocol extensions, and use http parser to process http requests. Currently only supports Linux systems
 
-Platform: `Linux`  
-Protocol: `HTTP` `TCP Stream(Protobuf)` `WebSocket`  
-Support TLS/SSL: `OpenSSL`  
-Script: `Lua`  
+CPP: `-std=c++17`  
+Platform: `linux`  
+Protocol: `http` `tcp stream(protobuf)` `websocket`  
+Support TLS/SSL: `openssl`  
+Script: `lua`  
 
 ## Get Start
 
-prepare
+Prepare
 
 ```bash
-$ sudo apt update
-$ sudo apt install protobuf-compiler libprotobuf-dev
-$ apt install g++ cmake make
+$ sudo apt-get update
+$ sudo apt-get install apt-utils -y
+$ sudo apt-get install cmake g++ make git -y
+$ sudo apt-get install protobuf-compiler libprotobuf-dev -y
+$ sudo apt-get install libssl-dev -y
 $ git clone https://github.com/crust-hub/tubekit.git
 ```
 
@@ -38,15 +41,9 @@ $ vim bin/config/main.ini
 Run
 
 ```bash
-$ chmod +x ./run.sh
-$ ./run.sh
-```
-
-Stop
-
-```bash
-$ chmod +x ./kill.sh
-$ ./kill.sh
+$ sudo mkdir /tubekit_static
+$ cd bin
+$ ./tubekit 
 ```
 
 ## Docker
