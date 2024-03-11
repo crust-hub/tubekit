@@ -1,5 +1,5 @@
 #pragma once
-#include <set>
+#include <unordered_set>
 
 #include "thread/mutex.h"
 #include "thread/auto_lock.h"
@@ -42,7 +42,7 @@ namespace tubekit
             uint space();
 
         private:
-            std::set<T *> m_set;
+            std::unordered_set<T *> m_set;
 
             /**
              * @brief ensure thread safety for m_list operations
