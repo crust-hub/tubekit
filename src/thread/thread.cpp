@@ -2,7 +2,7 @@
 
 using namespace tubekit::thread;
 
-thread::thread() : m_tid(0)
+thread::thread() : m_tid(0), stop_flag(false)
 {
 }
 

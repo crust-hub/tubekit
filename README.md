@@ -1,8 +1,8 @@
 # Tubekit
 
-The C++ TCP server framework based on the Reactor model continues to implement POSIX thread pool, Epoll, non blocking IO, object pool, log, socket network programming, support the dynamic library to implement custom protocol extensions, and use http parser to process http requests. Currently only supports Linux systems
+Network Message Framework For Linux C++.
 
-CPP: `std=c++17`  
+CPP: `c++17`  
 Platform: `linux`  
 Protocol: `http` `tcp stream(protobuf)` `websocket`  
 Support TLS/SSL: `openssl`  
@@ -30,7 +30,7 @@ $ cmake .
 $ make -j4
 ```
 
-### CentOS8(Docker)
+### CentOS8 (Docker)
 
 ```bash
 $ docker run -it centos
@@ -51,14 +51,14 @@ $ cmake .
 $ make -j4
 ```
 
-### Http Dir
+### Config
 
 ```bash
 $ sudo mkdir /tubekit_static
 $ vim bin/config/main.ini
 ```
 
-### Runing Tubekit
+### Tubekit Start
 
 ```bash
 $ cd bin
@@ -66,7 +66,7 @@ $ ./tubekit
 $ ps -ef | grep tubekit
 ```
 
-## Docker
+## Docker Example
 
 ```bash
 $ docker run -it -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
@@ -74,7 +74,7 @@ $ cd ./bin
 $ ./tubekit
 ```
 
-## App Example
+## APP Example
 
 support tcp keep-alive stream (protobuf) and http app (http-parser)、websocket
 
@@ -130,13 +130,8 @@ concurrency bin/tubekit          test/node_http_server.js            httpRequest
 1000        7519.90 /sec         3691.43 /sec                        1000000         890bytes
 ```
 
-## Directory Structure
-
-[Directory Structure Link](./doc/dir_detail.md)
-
 ## Third-Party
 
 1、[@http-parser](https://github.com/nodejs/http-parser)  2、[@lua](https://github.com/lua/lua)  
 3、[@protobuffer](https://github.com/protocolbuffers/protobuf)  4、[@openssl](https://github.com/openssl/openssl)  
-
 

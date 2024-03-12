@@ -1,27 +1,27 @@
-#pragma once
-#include <string>
+// #pragma once
+// #include <string>
 
-#include "engine/context.h"
+// #include "engine/context.h"
 
-namespace tubekit
-{
-    namespace engine
-    {
-        class plugin
-        {
-        public:
-            plugin();
-            plugin(const std::string &name, bool flag);
-            virtual ~plugin();
-            void set_name(const std::string &name);
-            const std::string &get_name() const;
-            void set_switch(bool flag);
-            bool get_switch() const;
-            virtual bool run(context &ctx) = 0;
+// namespace tubekit
+// {
+//     namespace engine
+//     {
+//         class plugin
+//         {
+//         public:
+//             plugin();
+//             plugin(const std::string &name, bool flag);
+//             virtual ~plugin();
+//             void set_name(const std::string &name);
+//             const std::string &get_name() const;
+//             void set_switch(bool flag);
+//             bool get_switch() const;
+//             virtual bool run(context &ctx) = 0;
 
-        protected:
-            std::string m_name;
-            bool m_switch;
-        };
-    }
-}
+//         protected:
+//             std::string m_name;
+//             bool m_switch;
+//         };
+//     }
+// }

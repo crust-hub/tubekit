@@ -17,14 +17,15 @@ namespace tubekit::thread
         virtual void run();
 
     public:
-        void push(task *m_task);
+        void push(task *task_ptr);
         void stop();
 
     public:
         static void cleanup(void *ptr);
 
     private:
-        task_queue<task> m_task_queue;
+        task_queue m_task_queue;
         task_destory *m_destory_ptr;
+        bool m_stoped;
     };
 }

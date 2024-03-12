@@ -1,4 +1,6 @@
 #include <tubekit-log/logger.h>
+#include <thread>
+#include <chrono>
 
 #include "thread/worker.h"
 #include "utility/singleton.h"
@@ -9,7 +11,9 @@ using namespace tubekit::thread;
 using namespace tubekit::log;
 using namespace tubekit::utility;
 
-worker::worker(task_destory *destory_ptr) : thread(), m_destory_ptr(destory_ptr)
+worker::worker(task_destory *destory_ptr) : thread(),
+                                            m_destory_ptr(destory_ptr),
+                                            m_stoped(true)
 {
 }
 
@@ -20,21 +24,27 @@ worker::~worker()
 void worker::cleanup(void *ptr)
 {
     LOG_INFO("worker thread cleanup handler: %x", ptr);
+    worker *worker_ptr = (worker *)ptr;
+    worker_ptr->m_stoped = true;
 }
 
 void worker::run()
 {
+    LOG_ERROR("worker[%x]::run() begin", this);
+    m_stoped = false;
     sigset_t mask;
     // sigfillset(sigset_t *set)调用该函数后，set指向的信号集中将包含linux支持的64种信号
     if (0 != sigfillset(&mask))
     {
         LOG_ERROR("worker thread sigfillset failed");
+        return;
     }
     // SIG_BLOCK:结果集是当前集合参数集的并集；SIG_UNBLOCK:结果集是当前集合参数集的差集；SIG_SETMASK:结果集是由参数集指向的
     // 在多线程的程序里，希望只在主线程中处理信号，可以使用pthread_sigmask
     if (0 != pthread_sigmask(SIG_SETMASK, &mask, NULL))
     {
         LOG_ERROR("worker thread pthread_sigmask failed");
+        return;
     }
     /*
     在POSIX线程API中提供了一个pthread_cleanup_push()/pthread_cleanup_pop()函数对用于自动释放资源
@@ -54,6 +64,7 @@ void worker::run()
         task *will_run_task = m_task_queue.pop();
         if (will_run_task == nullptr || stop_flag)
         {
+            m_stoped = true;
             break;
         }
         // int rc = 0;
@@ -84,20 +95,29 @@ void worker::run()
     }
 
     pthread_cleanup_pop(1);
+    m_stoped = true;
 }
 
-void worker::push(task *m_task)
+void worker::push(task *task_ptr)
 {
     if (stop_flag)
     {
+        if (task_ptr)
+        {
+            m_destory_ptr->execute(task_ptr);
+        }
         LOG_ERROR("worker thread already stoped, cannot add task to queue");
         return;
     }
-    bool b_res = m_task_queue.push(m_task);
-    if (!b_res)
+
+    bool b_res = m_task_queue.push(task_ptr);
+    if (false == b_res)
     {
         // destory task
-        m_destory_ptr->execute(m_task);
+        if (task_ptr)
+        {
+            m_destory_ptr->execute(task_ptr);
+        }
     }
 }
 
@@ -105,4 +125,11 @@ void worker::stop()
 {
     push(nullptr);
     stop_flag = true;
+    // wait task_queue empty
+    LOG_ERROR("sleep_for worker[%x] m_stoped", this);
+    while (false == m_stoped)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    LOG_ERROR("okay sleep_for worker[%x] m_stoped", this);
 }
