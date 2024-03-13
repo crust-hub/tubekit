@@ -85,6 +85,8 @@ namespace tubekit
             int should_send_size{0};
 
         private:
+            char buf2sock_inner_buffer[1024]{0};
+            char sock2buf_inner_buffer[1024]{0};
             http_parser m_http_parser;
             bool connected{false};
         };

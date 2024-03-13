@@ -78,11 +78,10 @@ void websocket_connection::add_header(const std::string &key, const std::string 
 
 bool websocket_connection::sock2buf()
 {
-    static char inner_buffer[1024] = {0};
     while (true)
     {
         int oper_errno = 0;
-        int len = socket_ptr->recv(inner_buffer, 1024, oper_errno);
+        int len = socket_ptr->recv(sock2buf_inner_buffer, 1024, oper_errno);
         if (len == -1 && oper_errno == EAGAIN)
         {
             return true;
@@ -95,11 +94,12 @@ bool websocket_connection::sock2buf()
         {
             try
             {
-                m_recv_buffer.write(inner_buffer, len);
+                m_recv_buffer.write(sock2buf_inner_buffer, len);
             }
             catch (const std::runtime_error &e)
             {
-                LOG_ERROR(e.what());
+                LOG_ERROR("%s", e.what());
+                mark_close();
             }
         }
         else
@@ -112,8 +112,6 @@ bool websocket_connection::sock2buf()
 
 bool websocket_connection::buf2sock()
 {
-    static char inner_buffer[1024] = {0};
-
     while (true)
     {
         if (should_send_idx < 0)
@@ -121,7 +119,7 @@ bool websocket_connection::buf2sock()
             int len = -1;
             try
             {
-                len = m_send_buffer.read(inner_buffer, 1024);
+                len = m_send_buffer.read(buf2sock_inner_buffer, 1024);
             }
             catch (const std::runtime_error &e)
             {
@@ -177,7 +175,7 @@ bool websocket_connection::buf2sock()
         }
 
         int oper_errno = 0;
-        int len = socket_ptr->send(&inner_buffer[should_send_idx], should_send_size, oper_errno);
+        int len = socket_ptr->send(&buf2sock_inner_buffer[should_send_idx], should_send_size, oper_errno);
         if (0 > len)
         {
             if (oper_errno == EINTR)

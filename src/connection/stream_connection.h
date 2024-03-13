@@ -47,6 +47,8 @@ namespace tubekit
         private:
             int should_send_idx{-1};
             int should_send_size{0};
+            char buf2sock_inner_buffer[1024]{0};
+            char sock2buf_inner_buffer[1024]{0};
         };
     }
 }
