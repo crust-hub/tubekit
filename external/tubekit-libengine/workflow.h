@@ -46,7 +46,7 @@
 //             bool load_plugin(work &work, tubekit::xml::element &el);
 
 //         private:
-//             std::map<std::string, work *> m_works;
+//             std::map<std::string, work *> m_works{};
 //         };
 //     }
 // }

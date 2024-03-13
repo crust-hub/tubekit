@@ -56,8 +56,8 @@ namespace tubekit::connection
         static bool is_websocket(connection *conn_ptr);
 
     private:
-        std::unordered_map<void *, connection *> m_map;
+        std::unordered_map<void *, connection *> m_map{};
         tubekit::thread::mutex m_mutex;
-        tubekit::task::task_type m_task_type;
+        tubekit::task::task_type m_task_type{tubekit::task::task_type::NONE};
     };
 }

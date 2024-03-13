@@ -25,7 +25,7 @@ namespace tubekit::thread
         void stop();
 
     private:
-        std::unordered_map<uint32_t, worker *> worker_map;
-        task_destory *destory_ptr;
+        std::unordered_map<uint32_t, worker *> worker_map{};
+        task_destory *destory_ptr{nullptr};
     };
 }

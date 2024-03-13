@@ -25,7 +25,7 @@ namespace tubekit::thread
 
     private:
         task_queue m_task_queue;
-        task_destory *m_destory_ptr;
-        bool m_stoped;
+        task_destory *m_destory_ptr{nullptr};
+        volatile bool m_stoped{false};
     };
 }

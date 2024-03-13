@@ -101,7 +101,7 @@ namespace tubekit
             void log(flag f, const char *file, int line, const char *format, va_list arg_ptr);
 
         protected:
-            FILE *m_fp;
+            FILE *m_fp{nullptr};
             static const char *s_flag[FLAG_COUNT];
         };
     }

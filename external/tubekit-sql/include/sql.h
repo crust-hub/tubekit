@@ -219,9 +219,9 @@ namespace tubekit
             void set_bind(size_t index, void *buffer, size_t size, value_type type, bool is_null = false);
 
         private:
-            MYSQL_STMT *stmt;
+            MYSQL_STMT *stmt{nullptr};
             MYSQL_BIND bind[bind_size];
-            std::weak_ptr<connection> m_conn;
+            std::weak_ptr<connection> m_conn{nullptr};
         };
 
         template <size_t bind_size>

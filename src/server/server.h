@@ -59,19 +59,19 @@ namespace tubekit
             bool is_stop();
 
         private:
-            std::string m_ip;
-            size_t m_port;
-            size_t m_threads;
-            size_t m_connects;
-            size_t m_wait_time;
-            std::string m_http_static_dir;
-            std::string m_lua_dir;
+            std::string m_ip{};
+            size_t m_port{0};
+            size_t m_threads{0};
+            size_t m_connects{0};
+            size_t m_wait_time{0};
+            std::string m_http_static_dir{};
+            std::string m_lua_dir{};
 
-            std::string m_task_type;
+            std::string m_task_type{};
             bool m_daemon{false};
             bool m_use_ssl{false};
-            std::string m_crt_pem;
-            std::string m_key_pem;
+            std::string m_crt_pem{};
+            std::string m_key_pem{};
             volatile bool stop_flag{false};
             SSL_CTX *m_ssl_context{nullptr};
         };

@@ -22,9 +22,9 @@
 //             bool run(context &ctx);
 
 //         protected:
-//             std::string m_name;
-//             bool m_switch;
-//             std::vector<plugin *> m_plugins;
+//             std::string m_name{};
+//             bool m_switch{false};
+//             std::vector<plugin *> m_plugins{};
 //         };
 //     }
 // }

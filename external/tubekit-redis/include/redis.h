@@ -13,9 +13,9 @@ namespace tubekit
             void test();
 
         private:
-            std::string host;
-            int port;
-            std::string pwd;
+            std::string host{};
+            int port{0};
+            std::string pwd{};
         };
     }
 }

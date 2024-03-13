@@ -107,7 +107,7 @@ namespace tubekit::json
             std::list<json> *m_array;
             std::map<std::string, json> *m_object;
         };
-        Type m_type;
+        Type m_type{json_null};
         Value m_value;
     };
 }

@@ -18,7 +18,7 @@ namespace tubekit::thread
     private:
         mutex m_mutex;
         condition m_condition;
-        std::list<task *> m_task;
-        std::unordered_set<void *> m_in_task;
+        std::list<task *> m_task{};
+        std::unordered_set<void *> m_in_task{};
     };
 }

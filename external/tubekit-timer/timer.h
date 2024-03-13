@@ -25,11 +25,11 @@ namespace tubekit
             static int64_t generate_id();
 
         private:
-            int64_t m_id;              // timer id
-            time_t m_expired_time;     // 到期时间
-            int32_t m_repeated_times;  // 重复次数
-            timer_callback m_callback; // 回调函数
-            int64_t m_interval;        // 时间间隔
+            int64_t m_id{0};                    // timer id
+            time_t m_expired_time{0};           // 到期时间
+            int32_t m_repeated_times{0};        // 重复次数
+            timer_callback m_callback{nullptr}; // 回调函数
+            int64_t m_interval{0};              // 时间间隔
 
         private:
             static int64_t s_initial_id;

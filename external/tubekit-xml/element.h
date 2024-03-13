@@ -12,10 +12,10 @@ namespace tubekit
         class element
         {
         private:
-            string m_name;
-            string m_text;
-            std::vector<element> m_children; // child nodes
-            std::map<string, string> m_attrs;
+            string m_name{};
+            string m_text{};
+            std::vector<element> m_children{}; // child nodes
+            std::map<string, string> m_attrs{};
 
         public:
             element() = default;

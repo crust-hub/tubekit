@@ -24,11 +24,11 @@ namespace tubekit
             bool read_ptr_move_n(uint64_t n);
 
         private:
-            uint64_t m_limit_max;
-            uint64_t m_size;
-            char *m_read_ptr;
-            char *m_write_ptr;
-            char *m_buffer;
+            uint64_t m_limit_max{0};
+            uint64_t m_size{0};
+            char *m_read_ptr{nullptr};
+            char *m_write_ptr{nullptr};
+            char *m_buffer{nullptr};
             std::mutex m_mutex;
 
         private:

@@ -32,7 +32,7 @@ namespace tubekit
             bool operator==(const value &other) const;
 
         private:
-            string m_value;
+            string m_value{};
         };
     }
 }

@@ -21,7 +21,7 @@ namespace tubekit
             void create_daemon();
 
         private:
-            std::string m_root_path;
+            std::string m_root_path{};
         };
     }
 }

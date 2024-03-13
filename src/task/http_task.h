@@ -25,8 +25,8 @@ namespace tubekit
         public:
             static http_parser_settings *settings;
             // flag:why create task
-            bool reason_recv;
-            bool reason_send;
+            bool reason_recv{false};
+            bool reason_send{false};
         };
     }
 }

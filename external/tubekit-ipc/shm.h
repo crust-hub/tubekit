@@ -32,9 +32,9 @@ namespace tubekit
             T *get_by_index(size_t index);
 
         private:
-            size_t count;
-            size_t mem_size;
-            std::string name;
+            size_t count{0};
+            size_t mem_size{0};
+            std::string name{};
             T *list{nullptr};
             int mem_fd{-1};
             void *mem_ptr{nullptr};

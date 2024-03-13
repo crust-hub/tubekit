@@ -35,14 +35,14 @@
 //             void clear();
 
 //         private:
-//             std::map<std::string, bool> m_bool;
-//             std::map<std::string, char> m_char;
-//             std::map<std::string, short> m_short;
-//             std::map<std::string, int> m_int;
-//             std::map<std::string, long> m_long;
-//             std::map<std::string, double> m_double;
-//             std::map<std::string, std::string> m_str;
-//             std::map<std::string, object *> m_obj;
+//             std::map<std::string, bool> m_bool{};
+//             std::map<std::string, char> m_char{};
+//             std::map<std::string, short> m_short{};
+//             std::map<std::string, int> m_int{};
+//             std::map<std::string, long> m_long{};
+//             std::map<std::string, double> m_double{};
+//             std::map<std::string, std::string> m_str{};
+//             std::map<std::string, object *> m_obj{};
 //         };
 //         template <>
 //         inline void context::set<bool>(const std::string &key, bool value)

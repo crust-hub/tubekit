@@ -42,7 +42,7 @@ namespace tubekit
             uint space();
 
         private:
-            std::unordered_set<T *> m_set;
+            std::unordered_set<T *> m_set{};
 
             /**
              * @brief ensure thread safety for m_list operations
@@ -50,9 +50,9 @@ namespace tubekit
              */
             mutex m_mutex;
             condition m_condition;
-            T *m_objects;
-            bool m_block;
-            size_t m_max_size;
+            T *m_objects{nullptr};
+            bool m_block{true};
+            size_t m_max_size{0};
         };
 
         template <typename T>

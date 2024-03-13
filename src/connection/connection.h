@@ -34,11 +34,11 @@ namespace tubekit
             uint64_t get_gid();
 
         private:
-            bool close_flag;
-            uint64_t gid;
+            bool close_flag{false};
+            uint64_t gid{0};
 
         protected:
-            tubekit::socket::socket *socket_ptr;
+            tubekit::socket::socket *socket_ptr{nullptr};
         };
     }
 }

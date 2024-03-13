@@ -92,8 +92,8 @@ namespace tubekit
             string parse_element_attr_val();
 
         private:
-            string m_str; // xml context string
-            size_t m_idx; // analysis char index
+            string m_str{};  // xml context string
+            size_t m_idx{0}; // analysis char index
         };
     }
 }

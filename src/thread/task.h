@@ -20,7 +20,7 @@ namespace tubekit
             virtual bool compare(task *other);
 
         protected:
-            void *m_data;
+            void *m_data{nullptr};
         };
     }
 }

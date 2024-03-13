@@ -58,15 +58,15 @@ namespace tubekit
             uint64_t get_gid();
 
         protected:
-            string m_ip;
-            int m_port;
-            int m_sockfd;
+            string m_ip{};
+            int m_port{0};
+            int m_sockfd{0};
             SSL *m_ssl_instance{nullptr};
-            bool m_ssl_accepted;
-            uint64_t gid;
+            bool m_ssl_accepted{false};
+            uint64_t gid{0};
 
         public:
-            std::function<void()> close_callback;
+            std::function<void()> close_callback{nullptr};
 
         public:
             static int create_tcp_socket();

@@ -3,8 +3,8 @@
 #include <memory>
 #include <unistd.h>
 
-#include "timer/timer.h"
-#include "timer/timer_manager.h"
+#include "../external/tubekit-timer/timer.h"
+#include "../external/tubekit-timer/timer_manager.h"
 
 using namespace std;
 using namespace tubekit::timer;
@@ -52,4 +52,4 @@ int main(int argc, char **argv)
     return 0;
 }
 
-// g++ timer.test.cpp ../src/timer/timer.cpp ../src/timer/timer_manager.cpp -o timer.test.exe -I"../src/" -lpthread
+//  g++ timer.test.cpp ../external/tubekit-timer/timer.cpp ../external/tubekit-timer/timer_manager.cpp - o timer.test.exe - I "../src/" - lpthread

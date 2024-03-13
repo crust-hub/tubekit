@@ -20,8 +20,8 @@
 //             virtual bool run(context &ctx) = 0;
 
 //         protected:
-//             std::string m_name;
-//             bool m_switch;
+//             std::string m_name{};
+//             bool m_switch{false};
 //         };
 //     }
 // }

@@ -26,6 +26,6 @@ namespace tubekit::app
         static int Logger(lua_State *lua_state);
 
     private:
-        lua_State *lua_state;
+        lua_State *lua_state{nullptr};
     };
 }

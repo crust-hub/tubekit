@@ -56,18 +56,18 @@ namespace tubekit
             void on_tick();
 
         private:
-            bool m_init;
-            int m_max_connections;
-            int m_wait_time;
-            event_poller *m_epoll;
-            socket *m_server;
+            bool m_init{false};
+            int m_max_connections{0};
+            int m_wait_time{0};
+            event_poller *m_epoll{nullptr};
+            socket *m_server{nullptr};
             tubekit::thread::mutex m_mutex;
 
             tubekit::thread::mutex m_remove_mutex;
-            std::list<socket *> m_remove_list1;
-            std::list<socket *> m_remove_list2;
-            std::list<socket *> *m_read_remove_list;
-            std::list<socket *> *m_write_remove_list;
+            std::list<socket *> m_remove_list1{};
+            std::list<socket *> m_remove_list2{};
+            std::list<socket *> *m_read_remove_list{nullptr};
+            std::list<socket *> *m_write_remove_list{nullptr};
         };
     }
 }

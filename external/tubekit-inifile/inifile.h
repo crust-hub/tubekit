@@ -61,8 +61,8 @@ namespace tubekit
             string trim(string s);
 
         private:
-            string m_filename;
-            std::map<string, map<string, value>> m_inifile;
+            string m_filename{};
+            std::map<string, map<string, value>> m_inifile{};
         };
     }
 }

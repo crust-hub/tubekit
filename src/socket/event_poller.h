@@ -124,27 +124,27 @@ namespace tubekit
              * @brief epoll句柄
              *
              */
-            int m_epfd;
+            int m_epfd{0};
             /**
              * @brief 最大连接数，epoll_event最大数量
              *
              */
-            int m_max_connections;
+            int m_max_connections{0};
             /**
              * @brief 事件数组
              *
              */
-            struct epoll_event *m_events;
+            struct epoll_event *m_events{nullptr};
             /**
              * @brief 是否为EPOLLET模式
              *
              */
-            bool m_et;
+            bool m_et{false};
             /**
              * @brief event what store fd is listenning
              *
              */
-            std::unordered_map<int, uint32_t> m_map_fd_envets;
+            std::unordered_map<int, uint32_t> m_map_fd_envets{};
         };
     }
 };

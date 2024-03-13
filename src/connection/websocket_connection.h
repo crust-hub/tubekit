@@ -61,16 +61,16 @@ namespace tubekit
             bool send(const char *buffer, size_t buffer_size, bool check_connected = true);
 
         public:
-            std::string url;
-            std::string method;
-            std::string sec_websocket_key;
-            std::string sec_websocket_version;
-            std::map<std::string, std::vector<std::string>> headers;
+            std::string url{};
+            std::string method{};
+            std::string sec_websocket_key{};
+            std::string sec_websocket_version{};
+            std::map<std::string, std::vector<std::string>> headers{};
             const size_t buffer_size{20230};
-            char buffer[20230];
-            int buffer_used_len;
-            int buffer_start_use;
-            std::string head_filed_tmp;
+            char buffer[20230]{0};
+            int buffer_used_len{0};
+            int buffer_start_use{0};
+            std::string head_filed_tmp{};
             bool http_processed{false};
             bool everything_end{false};
             bool is_upgrade{false};

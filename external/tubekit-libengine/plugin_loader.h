@@ -34,7 +34,7 @@
 //             void *get(const std::string &plugin, const std::string &symbol);
 
 //         private:
-//             std::map<std::string, void *> m_plugins;
+//             std::map<std::string, void *> m_plugins{};
 //         };
 //     }
 // }

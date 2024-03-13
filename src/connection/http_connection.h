@@ -39,29 +39,29 @@ namespace tubekit
             virtual void reuse() override;
 
         public:
-            std::string url;
-            std::string method;
-            std::map<std::string, std::vector<std::string>> headers;
-            std::vector<char> body;
-            std::vector<std::vector<char>> chunks;
-            std::vector<char> data;
+            std::string url{};
+            std::string method{};
+            std::map<std::string, std::vector<std::string>> headers{};
+            std::vector<char> body{};
+            std::vector<std::vector<char>> chunks{};
+            std::vector<char> data{};
             buffer::buffer m_send_buffer;
             const size_t buffer_size{20230};
-            char buffer[20230];
-            int buffer_used_len; // effective content length in buffer
-            int buffer_start_use;
-            std::string head_field_tmp;
-            std::function<void(http_connection &connection)> process_callback;
-            std::function<void(http_connection &connection)> write_end_callback;
-            std::function<void(http_connection &connection)> destory_callback;
+            char buffer[20230]{0};
+            int buffer_used_len{0}; // effective content length in buffer
+            int buffer_start_use{0};
+            std::string head_field_tmp{};
+            std::function<void(http_connection &connection)> process_callback{nullptr};
+            std::function<void(http_connection &connection)> write_end_callback{nullptr};
+            std::function<void(http_connection &connection)> destory_callback{nullptr};
             void *ptr{nullptr};
 
         private:
             http_parser m_http_parser;
-            bool recv_end;
-            bool process_end;
-            bool response_end;
-            bool everything_end;
+            bool recv_end{false};
+            bool process_end{false};
+            bool response_end{false};
+            bool everything_end{false};
         };
     }
 }

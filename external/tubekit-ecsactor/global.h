@@ -64,7 +64,7 @@ namespace tubekit::ecsactor
          * @brief 上次update_time的时间戳 毫秒
          *
          */
-        timeutil::time time_tick;
+        timeutil::time time_tick{0};
 
         /**
          * @brief 停止标识
@@ -75,7 +75,7 @@ namespace tubekit::ecsactor
     private:
         std::mutex m_mutex;
         uint16_t m_sn_ticket{1};
-        uint32_t m_app_type;
-        uint32_t m_app_id;
+        uint32_t m_app_type{0};
+        uint32_t m_app_id{0};
     };
 };
