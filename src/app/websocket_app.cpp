@@ -199,7 +199,7 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         }
         if (index - 1 + frame.payload_length >= all_data_len)
         {
-            LOG_ERROR("index - 1 + frame.payload_length=[%llu] >= all_data_len[%llu]", index - 1 + frame.payload_length, all_data_len);
+            // LOG_ERROR("index - 1 + frame.payload_length=[%llu] >= all_data_len[%llu]", index - 1 + frame.payload_length, all_data_len);
             break;
         }
         std::string payload_data(data + index, frame.payload_length);

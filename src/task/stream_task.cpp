@@ -113,7 +113,8 @@ void stream_task::run()
         // read data from socket to connection layer buffer
         if (false == t_stream_connection->sock2buf())
         {
-            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+            t_stream_connection->mark_close();
+            return;
         }
     }
 

@@ -22,29 +22,45 @@ stream_connection::~stream_connection()
 
 bool stream_connection::sock2buf()
 {
+    if (sock2buf_data_len > 0)
+    {
+        try
+        {
+            m_recv_buffer.write(sock2buf_inner_buffer, sock2buf_data_len);
+        }
+        catch (const std::runtime_error &e)
+        {
+            LOG_ERROR("%s", e.what());
+            return false;
+        }
+        sock2buf_data_len = 0;
+    }
+
     while (true)
     {
         int oper_errno = 0;
-        int len = socket_ptr->recv(sock2buf_inner_buffer, 1024, oper_errno);
-        if (len == -1 && oper_errno == EAGAIN)
+        sock2buf_data_len = socket_ptr->recv(sock2buf_inner_buffer, 1024, oper_errno);
+        if (sock2buf_data_len == -1 && oper_errno == EAGAIN)
         {
             return true;
         }
-        else if (len == -1 && oper_errno == EINTR)
+        else if (sock2buf_data_len == -1 && oper_errno == EINTR)
         {
             continue;
         }
-        else if (len > 0)
+        else if (sock2buf_data_len > 0)
         {
             try
             {
-                m_recv_buffer.write(sock2buf_inner_buffer, len);
+                m_recv_buffer.write(sock2buf_inner_buffer, sock2buf_data_len);
             }
             catch (const std::runtime_error &e)
             {
                 LOG_ERROR("%s", e.what());
-                mark_close();
+                return false;
             }
+            sock2buf_data_len = 0;
+            return true;
         }
         else
         {
@@ -197,4 +213,5 @@ void stream_connection::reuse()
     m_wating_send_pack.clear();
     this->should_send_idx = -1;
     this->should_send_size = 0;
+    this->sock2buf_data_len = 0;
 }

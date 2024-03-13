@@ -287,7 +287,7 @@ void websocket_task::run()
         // read data from socket to connection layer buffer
         if (false == t_websocket_connection->sock2buf())
         {
-            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+            t_websocket_connection->mark_close();
             return;
         }
         // process data
