@@ -112,7 +112,7 @@ void server::start()
             LOG_ERROR("http_connection object_pool init return %d", iret);
             return;
         }
-        iret = singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, true, nullptr);
+        iret = singleton<object_pool<task::http_task>>::instance()->init(m_connects * 3, true, 0);
         if (0 != iret)
         {
             LOG_ERROR("http_task object_pool init return %d", iret);
@@ -128,7 +128,7 @@ void server::start()
             LOG_ERROR("stream_connection object_pool init return %d", iret);
             return;
         }
-        iret = singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, true, nullptr);
+        iret = singleton<object_pool<task::stream_task>>::instance()->init(m_connects * 3, true, 0);
         if (0 != iret)
         {
             LOG_ERROR("stream_task object_pool init return %d", iret);
@@ -144,7 +144,7 @@ void server::start()
             LOG_ERROR("websocket_connection object_pool init return %d", iret);
             return;
         }
-        iret = singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, true, nullptr);
+        iret = singleton<object_pool<task::websocket_task>>::instance()->init(m_connects * 3, true, 0);
         if (0 != iret)
         {
             LOG_ERROR("websocket_task object_pool init return %d", iret);
@@ -160,7 +160,7 @@ void server::start()
     }
 
     // connection_mgr
-    iret = singleton<connection::connection_mgr>::instance()->init(task_type);
+    iret = singleton<connection::connection_mgr>::instance()->init(task_type, m_threads);
     if (0 != iret)
     {
         LOG_ERROR("connection_mgr init return %d", iret);

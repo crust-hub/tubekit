@@ -10,7 +10,7 @@ namespace tubekit
         class stream_task : public tubekit::thread::task
         {
         public:
-            stream_task(tubekit::socket::socket *m_socket);
+            stream_task(uint64_t gid);
             ~stream_task();
             void run();
             /**

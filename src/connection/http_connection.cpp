@@ -107,7 +107,7 @@ ostream &operator<<(ostream &os, const http_connection &m_http_connection)
 
 void http_connection::on_mark_close()
 {
-    singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
+    singleton<socket_handler>::instance()->do_task(get_gid(), false, true);
 }
 
 void http_connection::reuse()

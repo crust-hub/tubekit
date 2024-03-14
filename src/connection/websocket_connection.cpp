@@ -30,7 +30,7 @@ websocket_connection::~websocket_connection()
 
 void websocket_connection::on_mark_close()
 {
-    singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
+    singleton<socket_handler>::instance()->do_task(get_gid(), false, true);
 }
 
 void websocket_connection::reuse()
@@ -248,13 +248,13 @@ bool websocket_connection::send(const char *buffer, size_t buffer_size, bool che
         return false;
     }
 
-    if (socket_ptr)
+    if (get_gid() > 0)
     {
-        singleton<socket_handler>::instance()->do_task(socket_ptr, false, true);
+        singleton<socket_handler>::instance()->do_task(get_gid(), false, true);
     }
     else
     {
-        LOG_ERROR("socket_ptr is nullptr");
+        LOG_ERROR("get_gid()<=0");
         return false;
     }
 

@@ -20,7 +20,7 @@ using namespace tubekit::server;
 
 http_parser_settings *websocket_task::settings = nullptr;
 
-websocket_task::websocket_task(tubekit::socket::socket *m_socket) : task(m_socket)
+websocket_task::websocket_task(uint64_t gid) : task(gid)
 {
     if (settings == nullptr)
     {
@@ -106,11 +106,28 @@ void websocket_task::destroy()
 
 void websocket_task::run()
 {
-    if (nullptr == m_data)
+    if (0 == get_gid())
     {
         return;
     }
-    socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
+    socket::socket *socket_ptr = nullptr;
+    connection::connection *conn_ptr = nullptr;
+    bool found = false;
+
+    singleton<connection_mgr>::instance()->if_exist(
+        get_gid(),
+        [&socket_ptr, &conn_ptr, &found](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+        {
+            socket_ptr = value.first;
+            conn_ptr = value.second;
+            found = true;
+        },
+        nullptr);
+
+    if (false == found)
+    {
+        return;
+    }
 
     if (!socket_ptr->close_callback)
     {
@@ -119,20 +136,23 @@ void websocket_task::run()
     }
 
     // get connection layer instance
-    connection::websocket_connection *t_websocket_connection = (connection::websocket_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
+    connection::websocket_connection *t_websocket_connection = (connection::websocket_connection *)conn_ptr;
 
-    if (nullptr == t_websocket_connection || t_websocket_connection->is_close())
+    if (t_websocket_connection->is_close())
     {
         // here, make sure closing connection and socket once
-        if (t_websocket_connection)
+        if (t_websocket_connection->destory_callback)
         {
-            if (t_websocket_connection->destory_callback)
-            {
-                t_websocket_connection->destory_callback(*t_websocket_connection);
-            }
-            singleton<connection_mgr>::instance()->remove(socket_ptr);
-            singleton<socket_handler>::instance()->push_wait_remove(socket_ptr);
+            t_websocket_connection->destory_callback(*t_websocket_connection);
         }
+        singleton<connection_mgr>::instance()->remove(
+            get_gid(),
+            [](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+            {
+                singleton<connection_mgr>::instance()->release(value.second);
+                singleton<socket_handler>::instance()->push_wait_remove(value.first);
+            },
+            nullptr);
         return;
     }
 
@@ -146,7 +166,7 @@ void websocket_task::run()
             // LOG_ERROR("set_ssl_accepted(true)");
             socket_ptr->set_ssl_accepted(true);
             // triger new connection hook
-            singleton<connection_mgr>::instance()->on_new_connection(socket_ptr);
+            singleton<connection_mgr>::instance()->on_new_connection(get_gid());
         }
         else if (0 == ssl_status)
         {
@@ -172,7 +192,7 @@ void websocket_task::run()
             else
             {
                 LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
+                singleton<connection_mgr>::instance()->mark_close(get_gid()); // final connection and socket
                 return;
             }
         }
@@ -182,7 +202,7 @@ void websocket_task::run()
     {
         if (t_websocket_connection->http_processed)
         {
-            singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+            singleton<connection_mgr>::instance()->mark_close(get_gid());
             return;
         }
 
@@ -238,7 +258,7 @@ void websocket_task::run()
     // is not websocket
     if (!(t_websocket_connection->http_processed && t_websocket_connection->is_upgrade))
     {
-        singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+        singleton<connection_mgr>::instance()->mark_close(get_gid());
         return;
     }
 
@@ -313,7 +333,7 @@ void websocket_task::run()
 
     if (t_websocket_connection->everything_end)
     {
-        singleton<connection_mgr>::instance()->mark_close(socket_ptr);
+        singleton<connection_mgr>::instance()->mark_close(get_gid());
         return;
     }
 

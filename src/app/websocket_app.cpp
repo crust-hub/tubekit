@@ -212,15 +212,8 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         }
         frame.payload_data = std::move(payload_data);
 
-        // broadcast
-        singleton<connection_mgr>::instance()->for_each(
-            [&frame](connection::connection &conn) -> void
-            {
-                websocket_connection *ptr_conn = static_cast<websocket_connection *>(&conn);
-                websocket_app::send_packet(*ptr_conn, frame.payload_data.c_str(), frame.payload_length, false);
-            });
-
-        // websocket_app::send_packet(m_websocket_connection, frame.payload_data.c_str(), frame.payload_length, false);
+        // pingpong
+        websocket_app::send_packet(nullptr, frame.payload_data.c_str(), frame.payload_length, m_websocket_connection.get_gid());
         // frame.payload_data.push_back(0);
         // LOG_ERROR("%s", frame.payload_data.c_str());
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);
@@ -240,7 +233,7 @@ void websocket_app::on_new_connection(tubekit::connection::websocket_connection 
     LOG_ERROR("on_new_connection");
 }
 
-bool websocket_app::send_packet(tubekit::connection::websocket_connection &m_websocket_connection, const char *data, size_t data_len, bool use_safe)
+bool websocket_app::send_packet(tubekit::connection::websocket_connection *m_websocket_connection, const char *data, size_t data_len, uint64_t gid /*= 0*/)
 {
     if (!data)
     {
@@ -272,9 +265,23 @@ bool websocket_app::send_packet(tubekit::connection::websocket_connection &m_web
 
     frame.insert(frame.end(), data, data + data_len);
 
-    if (!use_safe)
+    if (0 == gid && m_websocket_connection)
     {
-        return m_websocket_connection.send((const char *)frame.data(), frame.size());
+        return m_websocket_connection->send((const char *)frame.data(), frame.size());
     }
-    return singleton<connection_mgr>::instance()->safe_send(m_websocket_connection.get_socket_ptr(), (const char *)frame.data(), frame.size());
+    else
+    {
+        bool res = false;
+        singleton<connection_mgr>::instance()->if_exist(
+            gid,
+            [&res, &frame](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+            {
+                tubekit::connection::websocket_connection *p_wsconn = (tubekit::connection::websocket_connection *)(value.second);
+                res = p_wsconn->send((const char *)frame.data(), frame.size());
+            },
+            nullptr);
+        return res;
+    }
+
+    return false;
 }

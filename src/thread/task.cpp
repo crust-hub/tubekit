@@ -4,11 +4,7 @@
 
 using namespace tubekit::thread;
 
-task::task() : m_data(nullptr)
-{
-}
-
-task::task(void *data) : m_data(data)
+task::task(uint64_t gid) : m_gid(gid)
 {
 }
 
@@ -16,14 +12,14 @@ task::~task()
 {
 }
 
-void *task::get_data()
+uint64_t task::get_gid()
 {
-    return m_data;
+    return m_gid;
 }
 
-void task::set_data(void *data)
+void task::set_gid(uint64_t gid)
 {
-    m_data = data;
+    m_gid = gid;
 }
 
 bool task::compare(task *other)
@@ -32,7 +28,7 @@ bool task::compare(task *other)
     {
         return true;
     }
-    if (other && this->m_data == other->m_data)
+    if (other && this->m_gid == other->m_gid)
     {
         return true;
     }

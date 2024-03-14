@@ -46,7 +46,7 @@ namespace tubekit
              */
             int remove(socket *m_socket);
 
-            void do_task(socket *m_socket, bool recv_event, bool send_event);
+            void do_task(uint64_t gid, bool recv_event, bool send_event);
 
         public:
             void push_wait_remove(socket *m_socket);

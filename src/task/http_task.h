@@ -13,7 +13,7 @@ namespace tubekit
         class http_task : public tubekit::thread::task
         {
         public:
-            http_task(tubekit::socket::socket *m_socket);
+            http_task(uint64_t gid);
             ~http_task();
             void run() override;
             /**

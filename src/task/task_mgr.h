@@ -14,7 +14,7 @@ namespace tubekit
         public:
             task_mgr();
             int init(tubekit::task::task_type task_type);
-            tubekit::thread::task *create(tubekit::socket::socket *m_socket);
+            tubekit::thread::task *create(uint64_t gid);
             void release(tubekit::thread::task *task_ptr);
 
         private:

@@ -13,11 +13,133 @@ using tubekit::app::websocket_app;
 using tubekit::connection::connection;
 using tubekit::connection::connection_mgr;
 using tubekit::connection::http_connection;
+using tubekit::connection::safe_mapping;
 using tubekit::connection::stream_connection;
 using tubekit::connection::websocket_connection;
 using tubekit::task::task_type;
 using tubekit::utility::object_pool;
 using tubekit::utility::singleton;
+
+safe_mapping::safe_mapping()
+{
+}
+
+safe_mapping::~safe_mapping()
+{
+}
+
+void safe_mapping::if_exist(uint64_t gid,
+                            std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                            std::function<void(uint64_t)> failed_callback)
+{
+    lock.lock();
+    auto iter = gid2pair.find(gid);
+    if (iter != gid2pair.end())
+    {
+        if (succ_callback)
+        {
+            succ_callback(iter->first, iter->second);
+        }
+    }
+    else
+    {
+        if (failed_callback)
+        {
+            failed_callback(gid);
+        }
+    }
+    lock.unlock();
+}
+
+void safe_mapping::remove(uint64_t gid,
+                          std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                          std::function<void(uint64_t)> failed_callback)
+{
+    lock.lock();
+    auto iter = gid2pair.find(gid);
+    if (iter != gid2pair.end())
+    {
+        auto first = iter->first;
+        auto second = iter->second;
+        gid2pair.erase(iter);
+        if (succ_callback)
+        {
+            succ_callback(first, second);
+        }
+    }
+    else
+    {
+        if (failed_callback)
+        {
+            failed_callback(gid);
+        }
+    }
+    lock.unlock();
+}
+
+void safe_mapping::insert(uint64_t gid,
+                          std::pair<socket::socket *, connection *> value,
+                          std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                          std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> failed_callback)
+{
+    lock.lock();
+    auto iter = gid2pair.find(gid);
+    if (iter != gid2pair.end())
+    {
+        if (failed_callback)
+        {
+            failed_callback(gid, value);
+        }
+    }
+    else
+    {
+        gid2pair[gid] = value;
+        if (succ_callback)
+        {
+            succ_callback(gid, value);
+        }
+    }
+    lock.unlock();
+}
+
+void connection_mgr::if_exist(uint64_t gid,
+                              std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                              std::function<void(uint64_t)> failed_callback)
+{
+    uint64_t hash_idx = gid % m_thread_size;
+    m_safe_mapping[hash_idx].if_exist(gid, succ_callback, failed_callback);
+}
+
+void connection_mgr::remove(uint64_t gid,
+                            std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                            std::function<void(uint64_t)> failed_callback)
+{
+    uint64_t hash_idx = gid % m_thread_size;
+    m_safe_mapping[hash_idx].remove(
+        gid,
+        [&succ_callback](uint64_t key, std::pair<socket::socket *, connection *> value)
+        {
+            if (is_stream(value.second))
+            {
+                stream_app::on_close_connection(*convert_to_stream(value.second));
+            }
+            if (is_websocket(value.second))
+            {
+                websocket_app::on_close_connection(*convert_to_websocket(value.second));
+            }
+            succ_callback(key, value);
+        },
+        failed_callback);
+}
+
+void connection_mgr::insert(uint64_t gid,
+                            std::pair<socket::socket *, connection *> value,
+                            std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
+                            std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> failed_callback)
+{
+    uint64_t hash_idx = gid % m_thread_size;
+    m_safe_mapping[hash_idx].insert(gid, value, succ_callback, failed_callback);
+}
 
 connection_mgr::connection_mgr()
 {
@@ -25,163 +147,39 @@ connection_mgr::connection_mgr()
 
 connection_mgr::~connection_mgr()
 {
-}
-
-bool connection_mgr::add(void *index_ptr, connection *conn_ptr)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res != m_map.end() && res->second == conn_ptr)
+    if (m_safe_mapping)
     {
-        return true;
-    }
-    if (res != m_map.end())
-    {
-        return false;
-    }
-    m_map.insert({index_ptr, conn_ptr});
-    return true;
-}
-
-void connection_mgr::on_new_connection(void *index_ptr)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res == m_map.end())
-    {
-        return;
-    }
-    if (!res->second)
-    {
-        return;
-    }
-    if (is_stream(res->second))
-    {
-        stream_app::on_new_connection(*convert_to_stream(res->second));
-    }
-    if (is_websocket(res->second))
-    {
-        websocket_app::on_new_connection(*convert_to_websocket(res->second));
+        delete[] m_safe_mapping;
     }
 }
 
-bool connection_mgr::remove(void *index_ptr)
+void connection_mgr::on_new_connection(uint64_t gid)
 {
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res != m_map.end())
-    {
-        res->second->close_before();
-        if (is_stream(res->second))
+    if_exist(
+        gid,
+        [](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
         {
-            stream_app::on_close_connection(*convert_to_stream(res->second));
-        }
-        if (is_websocket(res->second))
+            if (is_stream(value.second))
+            {
+                stream_app::on_new_connection(*convert_to_stream(value.second));
+            }
+            if (is_websocket(value.second))
+            {
+                websocket_app::on_new_connection(*convert_to_websocket(value.second));
+            }
+        },
+        nullptr);
+}
+
+void connection_mgr::mark_close(uint64_t gid)
+{
+    if_exist(
+        gid,
+        [](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
         {
-            websocket_app::on_close_connection(*convert_to_websocket(res->second));
-        }
-        // connection back to pool
-        release(res->second);
-
-        m_map.erase(res);
-        return true;
-    }
-    return false;
-}
-
-bool connection_mgr::has(void *index_ptr)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res != m_map.end())
-    {
-        return true;
-    }
-    return false;
-}
-
-void connection_mgr::for_each(std::function<void(connection &conn)> callback)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    if (callback)
-    {
-        for (auto p : m_map)
-        {
-            callback(*p.second);
-        }
-    }
-}
-
-connection *connection_mgr::get(void *index_ptr)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res != m_map.end())
-    {
-        return res->second;
-    }
-    return nullptr;
-}
-
-bool connection_mgr::safe_send(void *index_ptr, const char *buffer, size_t len)
-{
-    if (!buffer || 0 == len || !index_ptr)
-    {
-        return false;
-    }
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res == m_map.end())
-    {
-        LOG_ERROR("res == m_map.end()");
-        return false;
-    }
-
-    if (res->second->get_socket_ptr() != index_ptr)
-    {
-        LOG_ERROR("res->second->get_socket_ptr() != index_ptr");
-        return false;
-    }
-
-    tubekit::socket::socket *psocket = static_cast<tubekit::socket::socket *>(index_ptr);
-    if (psocket->get_gid() != res->second->get_gid())
-    {
-        LOG_ERROR("psocket->get_gid() != res->second->get_gid()");
-        return false;
-    }
-
-    if (is_stream(res->second))
-    {
-        stream_connection *stream_conn = convert_to_stream(res->second);
-        if (!stream_conn)
-        {
-            return false;
-        }
-        return stream_conn->send(buffer, len);
-    }
-
-    if (is_websocket(res->second))
-    {
-        websocket_connection *websocket_conn = convert_to_websocket(res->second);
-        if (!websocket_conn)
-        {
-            return false;
-        }
-        return websocket_conn->send(buffer, len);
-    }
-    return false;
-}
-
-bool connection_mgr::mark_close(void *index_ptr)
-{
-    tubekit::thread::auto_lock lock(m_mutex);
-    auto res = m_map.find(index_ptr);
-    if (res != m_map.end())
-    {
-        res->second->mark_close();
-        return true;
-    }
-    return false;
+            value.second->mark_close();
+        },
+        nullptr);
 }
 
 http_connection *connection_mgr::convert_to_http(connection *conn_ptr)
@@ -262,9 +260,11 @@ bool connection_mgr::is_websocket(connection *conn_ptr)
     return false;
 }
 
-int connection_mgr::init(tubekit::task::task_type task_type)
+int connection_mgr::init(tubekit::task::task_type task_type, uint32_t thread_size)
 {
     m_task_type = task_type;
+    m_thread_size = thread_size;
+    m_safe_mapping = new safe_mapping[thread_size];
     return 0;
 }
 

@@ -194,7 +194,7 @@ void socket_handler::handle()
 
     time::time socket_handler_time;
     socket_handler_time.update();
-    uint64_t lastest_tick_time = socket_handler_time.get_milliseconds();
+    uint64_t lastest_tick_time = socket_handler_time.get_seconds();
     uint64_t gid_seq = 0;
 
     std::set<socket *> removed_socket;
@@ -209,19 +209,17 @@ void socket_handler::handle()
 
         // tick time update
         socket_handler_time.update();
-        uint64_t now_tick_time = socket_handler_time.get_milliseconds();
+        uint64_t now_tick_time = socket_handler_time.get_seconds();
         if (lastest_tick_time != now_tick_time)
         {
-            if (now_tick_time - lastest_tick_time > 2)
+            // sys stop check
+            if (singleton<tubekit::server::server>::instance()->is_stop())
             {
-                // sys stop check
-                if (singleton<tubekit::server::server>::instance()->is_stop())
-                {
-                    singleton<tubekit::server::server>::instance()->on_stop();
-                    singleton<hooks::stop>::instance()->run();
-                    break; // main process to exit
-                }
+                singleton<tubekit::server::server>::instance()->on_stop();
+                singleton<hooks::stop>::instance()->run();
+                break; // main process to exit
             }
+
             gid_seq = 0;
             lastest_tick_time = now_tick_time;
         }
@@ -247,8 +245,6 @@ void socket_handler::handle()
         // process events
         for (int i = 0; i < num; i++) // Sockets that handle readable data
         {
-            uint64_t loop_gid = lastest_tick_time + (++gid_seq);
-
             socket *now_loop_socket = static_cast<socket *>(m_epoll->m_events[i].data.ptr);
 
             if (!now_loop_socket)
@@ -276,6 +272,9 @@ void socket_handler::handle()
                     ::close(socket_fd);
                     continue;
                 }
+                ++gid_seq;
+                // Almost impossible to process 4294967295 connections in one second
+                uint64_t loop_gid = (lastest_tick_time << 32) + gid_seq;
                 socket_object->m_sockfd = socket_fd;
                 socket_object->set_gid(loop_gid);
                 socket_object->close_callback = nullptr;
@@ -322,10 +321,18 @@ void socket_handler::handle()
                     p_connection->set_gid(loop_gid);
                 }
 
-                bool bret = singleton<connection_mgr>::instance()->add(socket_object, p_connection);
-                if (!bret)
+                bool res = false;
+                singleton<connection_mgr>::instance()->insert(
+                    loop_gid, {socket_object, p_connection},
+                    [&res](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+                    {
+                        res = true;
+                    },
+                    nullptr);
+
+                if (false == res)
                 {
-                    LOG_ERROR("singleton<connection_mgr>::instance()->add error");
+                    LOG_ERROR("singleton<connection_mgr>::instance()->insert error");
                     singleton<connection_mgr>::instance()->release(p_connection);
                     push_wait_remove(socket_object);
                     continue;
@@ -336,11 +343,11 @@ void socket_handler::handle()
                 if (!singleton<server::server>::instance()->get_use_ssl())
                 {
                     // triger new connection hook
-                    singleton<connection_mgr>::instance()->on_new_connection(socket_object);
+                    singleton<connection_mgr>::instance()->on_new_connection(loop_gid);
                 }
 
                 // first connected, try listen write and process
-                do_task(socket_object, true, true);
+                do_task(loop_gid, true, true);
             }
             else // already connection socket has event happen
             {
@@ -351,7 +358,7 @@ void socket_handler::handle()
                 if ((events & EPOLLHUP) || (events & EPOLLERR) || (events & EPOLLRDHUP))
                 {
                     // using connection_mgr mark_close,to prevent connection already free
-                    singleton<connection_mgr>::instance()->mark_close(now_loop_socket);
+                    singleton<connection_mgr>::instance()->mark_close(now_loop_socket->get_gid());
                     // process using task on_mark_close
                     continue;
                 }
@@ -365,19 +372,18 @@ void socket_handler::handle()
                     send_event = events & EPOLLOUT;
                 }
 
-                do_task(now_loop_socket, recv_event, send_event);
+                do_task(now_loop_socket->get_gid(), recv_event, send_event);
             }
         }
     }
 }
 
-void socket_handler::do_task(socket *socket_ptr, bool recv_event, bool send_event)
+void socket_handler::do_task(uint64_t gid, bool recv_event, bool send_event)
 {
     // Decide which engine to use,such as WORKDLOW_TASK or HTTP_TASK
     auto task_type = singleton<server::server>::instance()->get_task_type();
-    thread::task *new_task = singleton<task_mgr>::instance()->create(socket_ptr);
-
     // create task
+    thread::task *new_task = singleton<task_mgr>::instance()->create(gid);
     switch (task_type)
     {
     case task_type::STREAM_TASK:
@@ -405,16 +411,13 @@ void socket_handler::do_task(socket *socket_ptr, bool recv_event, bool send_even
     default:
         break;
     }
-
-    // create task failed
+    // create task failedclear
     if (new_task == nullptr)
     {
         LOG_ERROR("new_task is nullptr");
         exit(EXIT_FAILURE);
     }
-
     // LOG_ERROR("do_task %llu", socket_ptr->get_gid());
-
     // Submit the task to the queue of task_dispatcher
-    singleton<worker_pool>::instance()->assign(new_task, socket_ptr->get_gid());
+    singleton<worker_pool>::instance()->assign(new_task, new_task->get_gid());
 }

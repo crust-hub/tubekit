@@ -19,7 +19,7 @@ int task_mgr::init(tubekit::task::task_type task_type)
     return 0;
 }
 
-tubekit::thread::task *task_mgr::create(tubekit::socket::socket *m_socket)
+tubekit::thread::task *task_mgr::create(uint64_t gid)
 {
     tubekit::thread::task *task_ptr = nullptr;
     switch (m_task_type)
@@ -44,7 +44,7 @@ tubekit::thread::task *task_mgr::create(tubekit::socket::socket *m_socket)
     }
     if (task_ptr)
     {
-        task_ptr->set_data(m_socket);
+        task_ptr->set_gid(gid);
     }
     return task_ptr;
 }

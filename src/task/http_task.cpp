@@ -24,9 +24,9 @@ using namespace tubekit::server;
 
 http_parser_settings *http_task::settings = nullptr;
 
-http_task::http_task(tubekit::socket::socket *m_socket) : task(m_socket),
-                                                          reason_recv(false),
-                                                          reason_send(false)
+http_task::http_task(uint64_t gid) : task(gid),
+                                     reason_recv(false),
+                                     reason_send(false)
 {
     if (settings == nullptr)
     {
@@ -113,12 +113,29 @@ void http_task::destroy()
 
 void http_task::run()
 {
-    if (nullptr == m_data)
+    if (0 == get_gid())
     {
         return;
     }
 
-    socket::socket *socket_ptr = static_cast<socket::socket *>(m_data);
+    socket::socket *socket_ptr = nullptr;
+    connection::connection *conn_ptr = nullptr;
+    bool found = false;
+
+    singleton<connection_mgr>::instance()->if_exist(
+        get_gid(),
+        [&socket_ptr, &conn_ptr, &found](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+        {
+            socket_ptr = value.first;
+            conn_ptr = value.second;
+            found = true;
+        },
+        nullptr);
+
+    if (false == found)
+    {
+        return;
+    }
 
     if (!socket_ptr->close_callback)
     {
@@ -127,21 +144,24 @@ void http_task::run()
     }
 
     // get connection layer instance
-    connection::http_connection *t_http_connection = (connection::http_connection *)singleton<connection_mgr>::instance()->get(socket_ptr);
+    connection::http_connection *t_http_connection = (connection::http_connection *)conn_ptr;
 
     // connection is close
-    if (nullptr == t_http_connection || t_http_connection->is_close())
+    if (t_http_connection->is_close())
     {
         // here, make sure closing connection and socket once
-        if (t_http_connection)
+        if (t_http_connection->destory_callback)
         {
-            if (t_http_connection->destory_callback)
-            {
-                t_http_connection->destory_callback(*t_http_connection);
-            }
-            singleton<connection_mgr>::instance()->remove(socket_ptr);
-            singleton<socket_handler>::instance()->push_wait_remove(socket_ptr);
+            t_http_connection->destory_callback(*t_http_connection);
         }
+        singleton<connection_mgr>::instance()->remove(
+            get_gid(),
+            [](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+            {
+                singleton<connection_mgr>::instance()->release(value.second);
+                singleton<socket_handler>::instance()->push_wait_remove(value.first);
+            },
+            nullptr);
         return;
     }
 
@@ -155,7 +175,7 @@ void http_task::run()
             // LOG_ERROR("set_ssl_accepted(true)");
             socket_ptr->set_ssl_accepted(true);
             // triger new connection hook
-            singleton<connection_mgr>::instance()->on_new_connection(socket_ptr);
+            singleton<connection_mgr>::instance()->on_new_connection(get_gid());
         }
         else if (0 == ssl_status)
         {
@@ -181,7 +201,7 @@ void http_task::run()
             else
             {
                 LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                singleton<connection_mgr>::instance()->mark_close(socket_ptr); // final connection and socket
+                singleton<connection_mgr>::instance()->mark_close(get_gid()); // final connection and socket
                 return;
             }
         }

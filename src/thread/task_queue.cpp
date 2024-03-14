@@ -22,14 +22,14 @@ bool task_queue::push(task *task_ptr)
         return true;
     }
 
-    auto iter = m_in_task.find(task_ptr->get_data());
+    auto iter = m_in_task.find(task_ptr->get_gid());
     if (iter != m_in_task.end())
     {
         return false;
     }
 
     m_task.push_back(task_ptr);
-    m_in_task.insert(task_ptr->get_data());
+    m_in_task.insert(task_ptr->get_gid());
     m_condition.broadcast();
 
     return true;
@@ -47,7 +47,7 @@ task *task_queue::pop()
 
     if (task_ptr)
     {
-        auto iter = m_in_task.find(task_ptr->get_data());
+        auto iter = m_in_task.find(task_ptr->get_gid());
         if (iter != m_in_task.end())
         {
             m_in_task.erase(iter);

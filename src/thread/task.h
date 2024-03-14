@@ -1,5 +1,6 @@
 #pragma once
 #include "thread/mutex.h"
+#include <cstdint>
 
 namespace tubekit
 {
@@ -8,19 +9,18 @@ namespace tubekit
         class task
         {
         public:
-            task();
-            task(void *data);
+            task(uint64_t gid);
             virtual ~task();
 
-            void *get_data();
-            void set_data(void *data);
+            uint64_t get_gid();
+            void set_gid(uint64_t gid);
 
             virtual void run() = 0;     // pure virtual function
             virtual void destroy() = 0; // interface
             virtual bool compare(task *other);
 
         protected:
-            void *m_data{nullptr};
+            uint64_t m_gid{0};
         };
     }
 }
