@@ -31,6 +31,12 @@ enum class websocket_frame_type
     ERROR = 6
 };
 
+namespace tubekit::app
+{
+    std::set<uint64_t> websocket_app::global_player{};
+    tubekit::thread::mutex websocket_app::global_player_mutex;
+};
+
 int websocket_app::on_init()
 {
     LOG_ERROR("websocket_app::on_init()");
@@ -212,8 +218,17 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         }
         frame.payload_data = std::move(payload_data);
 
-        // pingpong
-        websocket_app::send_packet(nullptr, frame.payload_data.c_str(), frame.payload_length, m_websocket_connection.get_gid());
+        // broadcast
+        std::set<uint64_t> global_player_copy;
+        global_player_mutex.lock();
+        global_player_copy = global_player;
+        global_player_mutex.unlock();
+
+        for (auto player : global_player_copy)
+        {
+            websocket_app::send_packet(nullptr, frame.payload_data.c_str(), frame.payload_length, player);
+        }
+
         // frame.payload_data.push_back(0);
         // LOG_ERROR("%s", frame.payload_data.c_str());
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);
@@ -225,12 +240,18 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
 
 void websocket_app::on_close_connection(tubekit::connection::websocket_connection &m_websocket_connection)
 {
-    LOG_ERROR("on_close_connection");
+    global_player_mutex.lock();
+    global_player.erase(m_websocket_connection.get_gid());
+    LOG_ERROR("player online %d, close_connection[%llu]", global_player.size(), m_websocket_connection.get_gid());
+    global_player_mutex.unlock();
 }
 
 void websocket_app::on_new_connection(tubekit::connection::websocket_connection &m_websocket_connection)
 {
-    LOG_ERROR("on_new_connection");
+    global_player_mutex.lock();
+    global_player.insert(m_websocket_connection.get_gid());
+    LOG_ERROR("player online %d new_connection[%llu]", global_player.size(), m_websocket_connection.get_gid());
+    global_player_mutex.unlock();
 }
 
 bool websocket_app::send_packet(tubekit::connection::websocket_connection *m_websocket_connection, const char *data, size_t data_len, uint64_t gid /*= 0*/)

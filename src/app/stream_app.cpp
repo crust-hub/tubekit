@@ -4,8 +4,6 @@
 #include "proto_res/proto_message_head.pb.h"
 #include <tubekit-log/logger.h>
 #include <string>
-#include <set>
-#include "thread/mutex.h"
 #include "utility/singleton.h"
 #include "connection/connection_mgr.h"
 #include "socket/socket.h"
@@ -21,20 +19,36 @@ using tubekit::utility::singleton;
 
 namespace tubekit::app
 {
-    std::set<void *> global_player;
-    tubekit::thread::mutex global_player_mutex;
-}
+    std::set<uint64_t> stream_app::global_player{};
+    tubekit::thread::mutex stream_app::global_player_mutex;
+};
 
 static int process_protocol(tubekit::connection::stream_connection &m_stream_connection, ProtoPackage &package)
 {
     // EXAMPLE_REQ
-    if (package.cmd() == ProtoCmd::EXAMPLE_REQ)
+    if (package.cmd() == ProtoCmd::CS_REQ_EXAMPLE)
     {
-        ProtoExampleReq exampleReq;
+        ProtoCSReqExample exampleReq;
         if (exampleReq.ParseFromString(package.body()))
         {
-            LOG_ERROR("%s", exampleReq.testcontext().c_str());
-            // std::cout << exampleReq.testcontext() << std::endl;
+            // LOG_ERROR("%s", exampleReq.testcontext().c_str());
+            ProtoPackage message;
+            ProtoCSResExample exampleRes;
+            exampleRes.set_testcontext(exampleReq.testcontext());
+            message.set_cmd(ProtoCmd::CS_RES_EXAMPLE);
+            // pong package
+            std::string body_str;
+            body_str.resize(exampleReq.ByteSizeLong());
+            google::protobuf::io::ArrayOutputStream output_stream_1(&body_str[0], body_str.size());
+            google::protobuf::io::CodedOutputStream coded_output_1(&output_stream_1);
+            exampleReq.SerializeToCodedStream(&coded_output_1);
+            message.set_body(body_str);
+            std::string data = message.SerializePartialAsString();
+            bool send_res = m_stream_connection.send(data.c_str(), data.size());
+            if (!send_res)
+            {
+                LOG_ERROR("send example res failed");
+            }
         }
         else
         {
@@ -66,8 +80,6 @@ void stream_app::on_tick()
 
 void stream_app::process_connection(tubekit::connection::stream_connection &m_stream_connection)
 {
-    using tubekit::app::global_player;
-    using tubekit::app::global_player_mutex;
     uint64_t all_data_len = m_stream_connection.m_recv_buffer.can_readable_size();
     char *all_data_buffer = new char[all_data_len];
     m_stream_connection.m_recv_buffer.copy_all(all_data_buffer, all_data_len);
@@ -111,20 +123,16 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
 
 void stream_app::on_close_connection(tubekit::connection::stream_connection &m_stream_connection)
 {
-    using tubekit::app::global_player;
-    using tubekit::app::global_player_mutex;
     global_player_mutex.lock();
-    global_player.erase(m_stream_connection.get_socket_ptr());
-    LOG_ERROR("player online %d", global_player.size());
+    global_player.erase(m_stream_connection.get_gid());
+    LOG_ERROR("player online %d, close_connection[%llu]", global_player.size(), m_stream_connection.get_gid());
     global_player_mutex.unlock();
 }
 
 void stream_app::on_new_connection(tubekit::connection::stream_connection &m_stream_connection)
 {
-    using tubekit::app::global_player;
-    using tubekit::app::global_player_mutex;
     global_player_mutex.lock();
-    global_player.insert(m_stream_connection.get_socket_ptr());
-    LOG_ERROR("player online %d", global_player.size());
+    global_player.insert(m_stream_connection.get_gid());
+    LOG_ERROR("player online %d new_connection[%llu]", global_player.size(), m_stream_connection.get_gid());
     global_player_mutex.unlock();
 }

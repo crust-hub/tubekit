@@ -2,6 +2,8 @@
 #include <string>
 #include <cstdint>
 #include "connection/websocket_connection.h"
+#include <set>
+#include "thread/mutex.h"
 
 // thread not safe : The function will be called by multiple threads simultaneously.
 // thread safe : The function can only be called by the main thread or can be used in any thread.
@@ -64,6 +66,9 @@ namespace tubekit
              *
              */
             static void on_tick();
+
+            static std::set<uint64_t> global_player;
+            static tubekit::thread::mutex global_player_mutex;
         };
     }
 }
