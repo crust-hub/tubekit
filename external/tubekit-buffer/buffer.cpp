@@ -189,3 +189,8 @@ bool buffer::read_ptr_move_n(uint64_t n)
     m_read_ptr = m_read_ptr + n;
     return true;
 }
+
+char *buffer::force_get_read_ptr()
+{
+    return get_read_ptr();
+}

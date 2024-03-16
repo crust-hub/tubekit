@@ -60,17 +60,13 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
 {
     // LOG_ERROR("process_connection");
     uint64_t all_data_len = m_websocket_connection.m_recv_buffer.can_readable_size();
-    if (all_data_len <= 0)
+    if (all_data_len == 0)
     {
         // LOG_ERROR("all_data_len <= 0");
         return;
     }
-    char *data = new (std::nothrow) char[all_data_len];
-    if (!data)
-    {
-        return;
-    }
-    all_data_len = m_websocket_connection.m_recv_buffer.copy_all(data, all_data_len);
+    const char *data = m_websocket_connection.m_recv_buffer.force_get_read_ptr();
+
     size_t index = 0;
 
     while (true)
@@ -234,8 +230,6 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);
         index += frame.payload_length;
     }
-
-    delete[] data;
 }
 
 void websocket_app::on_close_connection(tubekit::connection::websocket_connection &m_websocket_connection)

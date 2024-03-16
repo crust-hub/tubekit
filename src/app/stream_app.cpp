@@ -81,13 +81,17 @@ void stream_app::on_tick()
 void stream_app::process_connection(tubekit::connection::stream_connection &m_stream_connection)
 {
     uint64_t all_data_len = m_stream_connection.m_recv_buffer.can_readable_size();
-    char *all_data_buffer = new char[all_data_len];
-    m_stream_connection.m_recv_buffer.copy_all(all_data_buffer, all_data_len);
+    if(0 == all_data_len)
+    {
+        return;
+    }
+
+    const char *all_data_buffer = m_stream_connection.m_recv_buffer.force_get_read_ptr();
     uint64_t offset = 0;
 
     do
     {
-        char *tmp_buffer = all_data_buffer + offset;
+        const char *tmp_buffer = all_data_buffer + offset;
         uint64_t data_len = all_data_len - offset;
         if (data_len == 0)
         {
@@ -117,8 +121,6 @@ void stream_app::process_connection(tubekit::connection::stream_connection &m_st
     {
         m_stream_connection.mark_close();
     }
-
-    delete[] all_data_buffer;
 }
 
 void stream_app::on_close_connection(tubekit::connection::stream_connection &m_stream_connection)

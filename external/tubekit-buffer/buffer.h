@@ -22,6 +22,7 @@ namespace tubekit
             void clear();
             uint64_t copy_all(char *out, uint64_t out_len);
             bool read_ptr_move_n(uint64_t n);
+            char *force_get_read_ptr();
 
         private:
             uint64_t m_limit_max{0};
