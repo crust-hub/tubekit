@@ -166,7 +166,7 @@ void http_task::run()
     }
 
     // ssl
-    if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted() && !t_http_connection->is_close())
+    if (singleton<server::server>::instance()->get_use_ssl() && !socket_ptr->get_ssl_accepted())
     {
         int ssl_status = SSL_accept(socket_ptr->get_ssl_instance());
 
@@ -201,14 +201,14 @@ void http_task::run()
             else
             {
                 LOG_ERROR("SSL_accept ssl_status[%d] error: %s", ssl_status, ERR_error_string(ERR_get_error(), nullptr));
-                singleton<connection_mgr>::instance()->mark_close(get_gid()); // final connection and socket
+                t_http_connection->mark_close();
                 return;
             }
         }
     }
 
     // read from socket
-    if (!t_http_connection->get_recv_end())
+    if (!t_http_connection->get_recv_end() && !t_http_connection->get_everything_end())
     {
         t_http_connection->buffer_used_len = 0;
 
@@ -234,6 +234,7 @@ void http_task::run()
                 }
                 else if (nparsed != t_http_connection->buffer_used_len) // error
                 {
+                    LOG_ERROR("nparsed != t_http_connection->buffer_used_len");
                     t_http_connection->buffer_used_len = 0;
                     t_http_connection->set_everything_end(true);
                     break;
