@@ -1,4 +1,4 @@
-// g++ -o client.exe client.cpp ../protocol/proto_res/*.pb.cc-- std = c++ 17 - lprotobuf - lpthre ad
+// g++ -o client.exe client.cpp ../protocol/proto_res/*.pb.cc --std=c++17 -lprotobuf -lpthread
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -25,7 +25,7 @@ int main(int argc, const char **argv)
     }
 
     // const char *server_ip = "61.171.51.135";
-    const char *server_ip = "172.29.94.203";
+    const char *server_ip = "127.0.0.1";
     int server_port = 20023;
 
     int n;

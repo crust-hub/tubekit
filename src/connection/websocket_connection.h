@@ -34,7 +34,7 @@ namespace tubekit
             virtual void reuse() override;
 
         private:
-            bool sock2buf();
+            bool sock2buf(bool &need_task);
             bool buf2sock();
 
         public:

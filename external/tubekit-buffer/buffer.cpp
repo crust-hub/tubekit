@@ -9,6 +9,10 @@ buffer::buffer(uint64_t limit_max)
     m_limit_max = limit_max;
     m_buffer = nullptr;
     m_buffer = (char *)malloc(m_size);
+    if(nullptr == m_buffer)
+    {
+        throw std::runtime_error("buffer::buffer malloc failed");
+    }
     m_read_ptr = m_buffer;
     m_write_ptr = m_buffer;
 }
@@ -193,4 +197,12 @@ bool buffer::read_ptr_move_n(uint64_t n)
 char *buffer::force_get_read_ptr()
 {
     return get_read_ptr();
+}
+
+uint64_t buffer::blank_space()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    uint64_t u_after_size = after_size();
+    uint64_t can_promote_bytes = m_limit_max - m_size;
+    return u_after_size + can_promote_bytes;
 }

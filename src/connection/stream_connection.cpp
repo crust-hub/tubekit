@@ -20,8 +20,9 @@ stream_connection::~stream_connection()
 {
 }
 
-bool stream_connection::sock2buf()
+bool stream_connection::sock2buf(bool &need_task)
 {
+    need_task = false;
     if (sock2buf_data_len > 0)
     {
         try
@@ -30,7 +31,7 @@ bool stream_connection::sock2buf()
         }
         catch (const std::runtime_error &e)
         {
-            LOG_ERROR("%s", e.what());
+            LOG_ERROR("recv_buffer overflow %s", e.what());
             return false;
         }
         sock2buf_data_len = 0;
@@ -57,9 +58,9 @@ bool stream_connection::sock2buf()
             catch (const std::runtime_error &e)
             {
                 LOG_ERROR("%s", e.what());
+                need_task = true;
                 return false;
             }
-            sock2buf_data_len = 0;
             return true;
         }
         else
@@ -99,34 +100,46 @@ bool stream_connection::buf2sock()
                 bool have_data = false;
                 while (true)
                 {
-                    char temp_buffer[1024];
-                    int temp_buffer_len = 0;
-                    try
+                    uint64_t send_buffer_blank_space = m_send_buffer.blank_space();
+                    if (send_buffer_blank_space > 0)
                     {
-                        temp_buffer_len = m_wating_send_pack.read(temp_buffer, 1024);
-                    }
-                    catch (const std::runtime_error &e)
-                    {
-                        LOG_ERROR(e.what());
-                    }
-                    if (temp_buffer_len > 0)
-                    {
-                        have_data = true;
+                        char temp_buffer[1024];
+                        uint64_t reserve_size = send_buffer_blank_space >= 1024 ? 1024 : send_buffer_blank_space;
+
+                        int temp_buffer_len = 0;
                         try
                         {
-                            int writed_len = m_send_buffer.write(temp_buffer, temp_buffer_len);
-                            if (writed_len != temp_buffer_len)
-                            {
-                                LOG_ERROR("write_len[%d] != temp_buffer_len[%d]", writed_len, temp_buffer_len);
-                            }
+                            temp_buffer_len = m_wating_send_pack.read(temp_buffer, reserve_size);
                         }
                         catch (const std::runtime_error &e)
                         {
                             LOG_ERROR(e.what());
                         }
+                        if (temp_buffer_len > 0)
+                        {
+                            have_data = true;
+                            try
+                            {
+                                int writed_len = m_send_buffer.write(temp_buffer, temp_buffer_len);
+                                if (writed_len != temp_buffer_len)
+                                {
+                                    LOG_ERROR("write_len[%d] != temp_buffer_len[%d]", writed_len, temp_buffer_len);
+                                    return false;
+                                }
+                            }
+                            catch (const std::runtime_error &e)
+                            {
+                                LOG_ERROR(e.what());
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                     else
                     {
+                        have_data = true;
                         break;
                     }
                 }
@@ -174,16 +187,15 @@ bool stream_connection::send(const char *buffer, size_t buffer_size)
         return false;
     }
 
-    // uint64_t len = 0;
+    uint64_t len = 0;
 
     try
     {
-        // len =
-        m_wating_send_pack.write(buffer, buffer_size);
+        len = m_wating_send_pack.write(buffer, buffer_size);
     }
     catch (const std::runtime_error &e)
     {
-        // LOG_ERROR("m_wating_send_pack.write(buffer, %d) return %d %s", buffer_size, len, e.what());
+        LOG_ERROR("m_wating_send_pack.write return %lu %lu %s", buffer_size, len, e.what());
         return false;
     }
 

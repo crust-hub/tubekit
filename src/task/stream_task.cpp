@@ -131,10 +131,19 @@ void stream_task::run()
     // recv data
     {
         // read data from socket to connection layer buffer
-        if (false == t_stream_connection->sock2buf())
+        bool need_task = false;
+        bool sock2buf_res = t_stream_connection->sock2buf(need_task);
+        if (false == sock2buf_res)
         {
-            t_stream_connection->mark_close();
-            return;
+            if(false == need_task)
+            {
+                t_stream_connection->mark_close();
+                return;
+            }
+            else
+            {
+                singleton<socket_handler>::instance()->do_task(get_gid(), true, true);
+            }
         }
     }
 
