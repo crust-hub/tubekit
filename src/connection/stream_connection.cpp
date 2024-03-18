@@ -8,9 +8,6 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 stream_connection::stream_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                            m_send_buffer(20480),
-                                                                            m_recv_buffer(20480),
-                                                                            m_wating_send_pack(20480),
                                                                             should_send_idx(-1),
                                                                             should_send_size(0)
 {
@@ -37,10 +34,11 @@ bool stream_connection::sock2buf(bool &need_task)
         sock2buf_data_len = 0;
     }
 
+    // tag1
     while (true)
     {
         int oper_errno = 0;
-        sock2buf_data_len = socket_ptr->recv(sock2buf_inner_buffer, 1024, oper_errno);
+        sock2buf_data_len = socket_ptr->recv(sock2buf_inner_buffer, inner_buffer_size, oper_errno);
         if (sock2buf_data_len == -1 && oper_errno == EAGAIN)
         {
             return true;
@@ -61,7 +59,8 @@ bool stream_connection::sock2buf(bool &need_task)
                 need_task = true;
                 return false;
             }
-            return true;
+            sock2buf_data_len = 0;
+            continue; // to tag1
         }
         else
         {
@@ -71,88 +70,100 @@ bool stream_connection::sock2buf(bool &need_task)
     return false;
 }
 
-bool stream_connection::buf2sock()
+bool stream_connection::buf2sock(bool &closed)
 {
+    closed = false;
+    // tag1
     while (true)
     {
-        if (should_send_idx < 0)
+        // tag2 insure buf2sock_inner_buffer exist data
+        while (should_send_idx < 0)
         {
             int len = -1;
             try
             {
-                len = m_send_buffer.read(buf2sock_inner_buffer, 1024);
+                len = m_send_buffer.read(buf2sock_inner_buffer, inner_buffer_size);
             }
             catch (const std::runtime_error &e)
             {
                 LOG_ERROR(e.what());
+                closed = true;
+                return false;
             }
 
             if (len > 0)
             {
                 should_send_idx = 0;
                 should_send_size = len;
-                continue;
+                break; // to tag4
             }
 
+            // tag3
             // no data send in m_send_buffer
             // read package from m_wating_send_pack to m_send_buffer，if data exsit,return true
+            while (true)
             {
-                bool have_data = false;
-                while (true)
+                uint64_t send_buffer_blank_space = m_send_buffer.blank_space();
+                if (send_buffer_blank_space > 0)
                 {
-                    uint64_t send_buffer_blank_space = m_send_buffer.blank_space();
-                    if (send_buffer_blank_space > 0)
-                    {
-                        char temp_buffer[1024];
-                        uint64_t reserve_size = send_buffer_blank_space >= 1024 ? 1024 : send_buffer_blank_space;
+                    char temp_buffer[1024];
+                    uint64_t reserve_size = send_buffer_blank_space >= 1024 ? 1024 : send_buffer_blank_space;
 
-                        int temp_buffer_len = 0;
+                    int temp_buffer_len = 0;
+                    try
+                    {
+                        temp_buffer_len = m_wating_send_pack.read(temp_buffer, reserve_size);
+                    }
+                    catch (const std::runtime_error &e)
+                    {
+                        LOG_ERROR(e.what());
+                        closed = true;
+                        return false;
+                    }
+
+                    if (temp_buffer_len > 0)
+                    {
                         try
                         {
-                            temp_buffer_len = m_wating_send_pack.read(temp_buffer, reserve_size);
+                            int writed_len = m_send_buffer.write(temp_buffer, temp_buffer_len);
+                            if (writed_len != temp_buffer_len)
+                            {
+                                LOG_ERROR("write_len[%d] != temp_buffer_len[%d]", writed_len, temp_buffer_len);
+                                closed = true;
+                                return false;
+                            }
+                            break; // to tag2
                         }
                         catch (const std::runtime_error &e)
                         {
                             LOG_ERROR(e.what());
-                        }
-                        if (temp_buffer_len > 0)
-                        {
-                            have_data = true;
-                            try
-                            {
-                                int writed_len = m_send_buffer.write(temp_buffer, temp_buffer_len);
-                                if (writed_len != temp_buffer_len)
-                                {
-                                    LOG_ERROR("write_len[%d] != temp_buffer_len[%d]", writed_len, temp_buffer_len);
-                                    return false;
-                                }
-                            }
-                            catch (const std::runtime_error &e)
-                            {
-                                LOG_ERROR(e.what());
-                            }
-                        }
-                        else
-                        {
-                            break;
+                            closed = true;
+                            return false;
                         }
                     }
                     else
                     {
-                        have_data = true;
-                        break;
+                        return false; // nothing m_waiting_send_pack to m_send_buffer
                     }
                 }
-                return have_data;
+                else
+                {
+                    LOG_ERROR("send_buffer_blank_space <= 0");
+                    closed = true;
+                    return false;
+                }
             }
         }
+
+        // tag4
+        // here buf2sock_inner_buffer exist data
         int oper_errno = 0;
         int len = socket_ptr->send(&buf2sock_inner_buffer[should_send_idx], should_send_size, oper_errno);
         if (0 > len)
         {
             if (oper_errno == EINTR)
             {
-                continue;
+                continue; // to tag1
             }
             else if (oper_errno == EAGAIN)
             {
@@ -160,12 +171,14 @@ bool stream_connection::buf2sock()
             }
             else
             {
+                closed = true;
                 return false;
             }
         }
         else if (0 == len)
         {
-            return false;
+            closed = true;
+            return true;
         }
         else
         {
@@ -175,8 +188,10 @@ bool stream_connection::buf2sock()
                 should_send_size = 0;
                 should_send_idx = -1;
             }
+            // to tag1
         }
     }
+    closed = true;
     return false;
 }
 
@@ -214,15 +229,24 @@ bool stream_connection::send(const char *buffer, size_t buffer_size)
 
 void stream_connection::on_mark_close()
 {
+    m_send_buffer.clear();      // GC
+    m_recv_buffer.clear();      // GC
+    m_wating_send_pack.clear(); // GC
     singleton<socket_handler>::instance()->do_task(get_gid(), false, true);
 }
 
 void stream_connection::reuse()
 {
     connection::reuse();
-    m_send_buffer.clear();
-    m_recv_buffer.clear();
-    m_wating_send_pack.clear();
+
+    constexpr uint64_t mem_buffer_size_max = 1048576; // 1MB
+    m_send_buffer.clear();                            // GC
+    m_send_buffer.set_limit_max(mem_buffer_size_max);
+    m_recv_buffer.clear(); // GC
+    m_recv_buffer.set_limit_max(mem_buffer_size_max);
+    m_wating_send_pack.clear(); // GC
+    m_wating_send_pack.set_limit_max(mem_buffer_size_max);
+
     this->should_send_idx = -1;
     this->should_send_size = 0;
     this->sock2buf_data_len = 0;

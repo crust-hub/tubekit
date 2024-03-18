@@ -3,16 +3,11 @@
 
 using tubekit::buffer::buffer;
 
-buffer::buffer(uint64_t limit_max)
+buffer::buffer()
 {
-    m_size = limit_max < 1024 ? limit_max : 1024;
-    m_limit_max = limit_max;
+    m_size = 0;
+    m_limit_max = 1024;
     m_buffer = nullptr;
-    m_buffer = (char *)malloc(m_size);
-    if(nullptr == m_buffer)
-    {
-        throw std::runtime_error("buffer::buffer malloc failed");
-    }
     m_read_ptr = m_buffer;
     m_write_ptr = m_buffer;
 }
@@ -28,6 +23,7 @@ buffer::~buffer()
 uint64_t buffer::read(char *dest, uint64_t size)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     if (dest == nullptr || size == 0)
     {
         throw std::runtime_error("dest == nullptr || size == 0");
@@ -52,6 +48,7 @@ uint64_t buffer::read(char *dest, uint64_t size)
 uint64_t buffer::write(const char *source, uint64_t size)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     if (source == nullptr || size == 0)
     {
         throw std::runtime_error("dest == nullptr || size == 0");
@@ -97,6 +94,7 @@ uint64_t buffer::write(const char *source, uint64_t size)
 
 bool buffer::check_and_write(const char *source, uint64_t size)
 {
+    check_init();
     uint64_t m_after_size = after_size();
     if (size <= m_after_size)
     {
@@ -109,6 +107,7 @@ bool buffer::check_and_write(const char *source, uint64_t size)
 
 void buffer::move_to_before()
 {
+    check_init();
     uint64_t readable = 0;
     get_readable_size(readable);
     memmove(m_buffer, m_read_ptr, readable);
@@ -118,6 +117,7 @@ void buffer::move_to_before()
 
 uint64_t buffer::after_size()
 {
+    check_init();
     char *last_buffer_ptr = m_buffer + m_size;
     uint64_t after_size = last_buffer_ptr - m_write_ptr;
     return after_size;
@@ -126,6 +126,7 @@ uint64_t buffer::after_size()
 uint64_t buffer::can_readable_size()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     uint64_t size;
     get_readable_size(size);
     return size;
@@ -133,13 +134,18 @@ uint64_t buffer::can_readable_size()
 
 void buffer::get_readable_size(uint64_t &out)
 {
+    check_init();
     out = m_write_ptr - m_read_ptr;
 }
 
 void buffer::set_limit_max(uint64_t limit_max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-    m_limit_max = limit_max;
+    if (limit_max < m_limit_max)
+    {
+        return;
+    }
+    m_limit_max = limit_max < 1024 ? 1024 : limit_max;
 }
 
 uint64_t buffer::get_limit_max()
@@ -151,12 +157,20 @@ uint64_t buffer::get_limit_max()
 void buffer::clear()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
+    if (m_buffer)
+    {
+        free(m_buffer);
+        m_buffer = nullptr;
+    }
     m_read_ptr = m_buffer;
     m_write_ptr = m_buffer;
+    m_size = 0;
+    m_limit_max = 1024;
 }
 
 char *buffer::get_read_ptr()
 {
+    check_init();
     return m_read_ptr;
 }
 
@@ -167,6 +181,7 @@ uint64_t buffer::copy_all(char *out, uint64_t out_len)
         return 0;
     }
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     uint64_t all_bytes = 0;
     get_readable_size(all_bytes);
     if (out_len < all_bytes)
@@ -184,6 +199,7 @@ bool buffer::read_ptr_move_n(uint64_t n)
         return true;
     }
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     uint64_t all_bytes = 0;
     get_readable_size(all_bytes);
     if (n > all_bytes)
@@ -202,7 +218,23 @@ char *buffer::force_get_read_ptr()
 uint64_t buffer::blank_space()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
+    check_init();
     uint64_t u_after_size = after_size();
     uint64_t can_promote_bytes = m_limit_max - m_size;
     return u_after_size + can_promote_bytes;
+}
+
+void buffer::check_init()
+{
+    if (m_buffer == nullptr && m_write_ptr == nullptr && m_read_ptr == nullptr)
+    {
+        m_buffer = (char *)malloc(1024);
+        if (nullptr == m_buffer)
+        {
+            throw std::runtime_error("buffer::buffer malloc failed");
+        }
+        m_size = 1024;
+        m_read_ptr = m_buffer;
+        m_write_ptr = m_buffer;
+    }
 }

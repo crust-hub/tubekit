@@ -309,7 +309,7 @@ void websocket_task::run()
         bool sock2buf_res = t_websocket_connection->sock2buf(need_task);
         if (false == sock2buf_res)
         {
-            if(false == need_task)
+            if (false == need_task)
             {
                 t_websocket_connection->mark_close();
                 return;
@@ -324,19 +324,25 @@ void websocket_task::run()
             websocket_app::process_connection(*t_websocket_connection);
         }
         // send data
-        bool b_send = false;
         {
-            // send data to socket from connection layer
-            b_send = t_websocket_connection->buf2sock();
-        }
-        if (b_send)
-        {
-            int i_ret = singleton<socket_handler>::instance()->attach(socket_ptr, b_send);
-            if (i_ret != 0)
+            bool b_send = false, b_closed = false;
             {
-                LOG_ERROR("socket handler attach error %d", i_ret);
+                // send data to socket from connection layer
+                b_send = t_websocket_connection->buf2sock(b_closed);
             }
-            return;
+            if (b_closed)
+            {
+                t_websocket_connection->mark_close();
+            }
+            else if (b_send)
+            {
+                int i_ret = singleton<socket_handler>::instance()->attach(socket_ptr, b_send);
+                if (i_ret != 0)
+                {
+                    LOG_ERROR("socket handler attach error %d", i_ret);
+                }
+                return;
+            }
         }
     }
 

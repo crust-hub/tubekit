@@ -48,7 +48,7 @@ int main(int argc, const char **argv)
                 uint64_t recv_size = 0;
                 uint64_t last_print_size = 0;
 
-                constexpr int client_cnt = 500;
+                constexpr int client_cnt = 300;
                 int client_socket_arr[client_cnt]{0};
                 for (int client_idx = 0; client_idx < client_cnt; client_idx++)
                 {

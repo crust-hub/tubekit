@@ -8,7 +8,6 @@ using tubekit::socket::socket_handler;
 using tubekit::utility::singleton;
 
 http_connection::http_connection(tubekit::socket::socket *socket_ptr) : connection(socket_ptr),
-                                                                        m_send_buffer(20480),
                                                                         buffer_used_len(0),
                                                                         buffer_start_use(0),
                                                                         recv_end(false),
@@ -107,6 +106,7 @@ ostream &operator<<(ostream &os, const http_connection &m_http_connection)
 
 void http_connection::on_mark_close()
 {
+    m_send_buffer.clear(); // GC
     singleton<socket_handler>::instance()->do_task(get_gid(), false, true);
 }
 
@@ -119,7 +119,10 @@ void http_connection::reuse()
     this->body.clear();
     this->chunks.clear();
     this->data.clear();
-    this->m_send_buffer.clear();
+
+    constexpr uint64_t mem_buffer_size_max = 1048576; // 1MB
+    this->m_send_buffer.clear();                      // GC
+    this->m_send_buffer.set_limit_max(mem_buffer_size_max);
     this->buffer_used_len = 0;
     this->buffer_start_use = 0;
     this->head_field_tmp.clear();

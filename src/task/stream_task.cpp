@@ -135,7 +135,7 @@ void stream_task::run()
         bool sock2buf_res = t_stream_connection->sock2buf(need_task);
         if (false == sock2buf_res)
         {
-            if(false == need_task)
+            if (false == need_task)
             {
                 t_stream_connection->mark_close();
                 return;
@@ -152,12 +152,16 @@ void stream_task::run()
         stream_app::process_connection(*t_stream_connection);
     }
 
-    bool b_send = false;
+    bool b_send = false, b_closed = false;
 
     // send data
     {
         // send data to socket from connection layer
-        b_send = t_stream_connection->buf2sock();
+        b_send = t_stream_connection->buf2sock(b_closed);
+        if (b_closed)
+        {
+            t_stream_connection->mark_close();
+        }
     }
 
     int i_ret = singleton<socket_handler>::instance()->attach(socket_ptr, b_send);

@@ -21,7 +21,7 @@ namespace tubekit
 
         private:
             bool sock2buf(bool &need_task);
-            bool buf2sock();
+            bool buf2sock(bool &closed);
 
         public:
             /**
@@ -49,6 +49,7 @@ namespace tubekit
             int should_send_size{0};
             char buf2sock_inner_buffer[1024]{0};
             char sock2buf_inner_buffer[1024]{0};
+            const size_t inner_buffer_size{1024};
             int sock2buf_data_len{0};
         };
     }
