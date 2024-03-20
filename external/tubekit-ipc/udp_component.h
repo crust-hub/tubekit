@@ -14,24 +14,36 @@ namespace tubekit
 {
     namespace ipc
     {
-        int udp_component_server(const std::string &IP,
-                                 const std::string &PORT,
-                                 const int event_loop_ms,
-                                 bool &stop_flag,
-                                 std::function<void()> tick_callback,
-                                 std::function<void(const char *buffer, ssize_t len, struct sockaddr_in &)> message_callback,
-                                 std::function<void()> close_callback);
+        class udp_component
+        {
+        public:
+            ~udp_component();
+            std::string udp_component_get_ip(struct sockaddr_in &addr);
+            int udp_component_get_port(struct sockaddr_in &addr);
 
-        int udp_component_client(const std::string &IP,
-                                 const int PORT,
-                                 const char *buffer,
-                                 ssize_t len,
-                                 const std::string &CLIENT_IP = "",
-                                 const int CLIENT_PORT = 0);
+            int udp_component_server(const std::string &IP,
+                                     const int PORT);
 
-        std::string udp_component_get_ip(struct sockaddr_in &addr);
+            int udp_component_client(const std::string &IP,
+                                     const int PORT,
+                                     const char *buffer,
+                                     ssize_t len,
+                                     struct sockaddr *addr = nullptr,
+                                     socklen_t addr_len = 0);
 
-        int udp_component_get_port(struct sockaddr_in &addr);
+        private:
+            int event_loop();
+            int init_sock();
+            void to_close();
+
+        private:
+            int m_socket_fd{0};
+            int m_epoll_fd{0};
+
+        public:
+            std::function<void(bool &to_stop)> tick_callback{nullptr};
+            std::function<void(const char *buffer, ssize_t len, struct sockaddr_in &)> message_callback{nullptr};
+            std::function<void()> close_callback{nullptr};
+        };
     }
 }
-
