@@ -39,11 +39,10 @@ static int process_protocol(tubekit::connection::stream_connection &m_stream_con
             // pong package
             std::string body_str;
             body_str.resize(exampleReq.ByteSizeLong());
-            google::protobuf::io::ArrayOutputStream output_stream_1(&body_str[0], body_str.size());
-            google::protobuf::io::CodedOutputStream coded_output_1(&output_stream_1);
-            exampleReq.SerializeToCodedStream(&coded_output_1);
+            exampleReq.SerializeToString(&body_str);
             message.set_body(body_str);
-            std::string data = message.SerializePartialAsString();
+            std::string data;
+            message.SerializeToString(&data);
             bool send_res = m_stream_connection.send(data.c_str(), data.size());
             if (!send_res)
             {
@@ -81,7 +80,7 @@ void stream_app::on_tick()
 void stream_app::process_connection(tubekit::connection::stream_connection &m_stream_connection)
 {
     uint64_t all_data_len = m_stream_connection.m_recv_buffer.can_readable_size();
-    if(0 == all_data_len)
+    if (0 == all_data_len)
     {
         return;
     }

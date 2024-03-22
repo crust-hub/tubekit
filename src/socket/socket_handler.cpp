@@ -118,7 +118,7 @@ int socket_handler::remove(socket *m_socket)
     return iret;
 }
 
-socket *socket_handler::alloc_socket()
+tubekit::socket::socket *socket_handler::alloc_socket()
 {
     if (!m_init)
     {
@@ -280,6 +280,8 @@ void socket_handler::handle()
                 socket_object->close_callback = nullptr;
                 socket_object->set_non_blocking();
                 socket_object->set_linger(false, 0);
+                socket_object->set_send_buffer(65536);
+                socket_object->set_recv_buffer(65536);
 
                 if (singleton<server::server>::instance()->get_use_ssl())
                 {

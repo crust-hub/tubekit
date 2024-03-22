@@ -47,8 +47,8 @@ void websocket_connection::reuse()
     this->everything_end = false;
     this->is_upgrade = false;
 
-    constexpr uint64_t mem_buffer_size_max = 1048576; // 1MB
-    this->m_recv_buffer.clear();                      // GC
+    constexpr uint64_t mem_buffer_size_max = inner_buffer_size + 2; // 2MB
+    this->m_recv_buffer.clear();                                    // GC
     this->m_recv_buffer.set_limit_max(mem_buffer_size_max);
 
     this->m_send_buffer.clear(); // GC
@@ -172,8 +172,8 @@ bool websocket_connection::buf2sock(bool &closed)
                 uint64_t send_buffer_blank_space = m_send_buffer.blank_space();
                 if (send_buffer_blank_space > 0)
                 {
-                    char temp_buffer[1024];
-                    uint64_t reserve_size = send_buffer_blank_space >= 1024 ? 1024 : send_buffer_blank_space;
+                    char temp_buffer[inner_buffer_size];
+                    uint64_t reserve_size = send_buffer_blank_space >= inner_buffer_size ? inner_buffer_size : send_buffer_blank_space;
 
                     int temp_buffer_len = 0;
                     try

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 message ProtoCSReqExample{
-    string testContext = 1;
+    bytes testContext = 1;
 }
 
 message ProtoCSResExample{
-    string testContext = 1;
+    bytes testContext = 1;
 }

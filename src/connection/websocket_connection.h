@@ -85,9 +85,10 @@ namespace tubekit
             int should_send_size{0};
 
         private:
-            char buf2sock_inner_buffer[1024]{0};
-            char sock2buf_inner_buffer[1024]{0};
-            const size_t inner_buffer_size{1024};
+            static constexpr size_t inner_buffer_size{1024000};
+            char buf2sock_inner_buffer[1024000]{0};
+            char sock2buf_inner_buffer[1024000]{0};
+
             int sock2buf_data_len{0};
 
             http_parser m_http_parser;

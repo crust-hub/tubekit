@@ -25,6 +25,7 @@ bool task_queue::push(task *task_ptr)
     auto iter = m_in_task.find(task_ptr->get_gid());
     if (iter != m_in_task.end())
     {
+        m_condition.broadcast();
         return false;
     }
 

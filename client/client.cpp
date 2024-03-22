@@ -33,22 +33,28 @@ int main(int argc, const char **argv)
 
     constexpr int thread_count = 20;
 
+    constexpr int client_cnt = 100;
+    // 350KB/s
+
+    // 1024KB
     for (int loop = 0; loop < thread_count; loop++)
     {
         std::thread m_thread(
-            [server_port, server_ip, argv, loop, &stop_flag]()
+            [server_port, server_ip, argv, loop, &stop_flag, &client_cnt]()
             {
                 ProtoPackage message;
                 ProtoCSReqExample exampleReq;
-                std::string send_str(argv[1]);
+                constexpr uint send_all_string_bytes = 200000;
+                std::string send_str(send_all_string_bytes, 'a');
+                // send_str = argv[1];
                 exampleReq.set_testcontext(send_str);
                 message.set_cmd(ProtoCmd::CS_REQ_EXAMPLE);
-
+                // 30MB * 2000 = 60 000MB = 60GB
                 uint64_t send_size = 0;
                 uint64_t recv_size = 0;
                 uint64_t last_print_size = 0;
+                uint64_t last_time = std::time(nullptr);
 
-                constexpr int client_cnt = 300;
                 int client_socket_arr[client_cnt]{0};
                 for (int client_idx = 0; client_idx < client_cnt; client_idx++)
                 {
@@ -93,39 +99,51 @@ int main(int argc, const char **argv)
                         {
                             continue;
                         }
-                        std::string body_str;
-                        body_str.resize(exampleReq.ByteSizeLong());
-                        google::protobuf::io::ArrayOutputStream output_stream_1(&body_str[0], body_str.size());
-                        google::protobuf::io::CodedOutputStream coded_output_1(&output_stream_1);
-                        exampleReq.SerializeToCodedStream(&coded_output_1);
-                        message.set_body(body_str);
-                        std::string data = message.SerializePartialAsString();
+                        std::string str;
+                        exampleReq.SerializeToString(&str);
+                        message.set_body(str);
+                        std::string data;
+                        message.SerializeToString(&data);
 
                         uint64_t packageLen = data.size();
 
-                        for (int i = 0; i < 5; i++)
+                        // every client pingpong 1
+                        for (int i = 0; i < 1; i++)
                         {
-                            if (send(client_socket, data.c_str(), data.size(), 0) != data.size())
+                            std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+                            std::chrono::milliseconds send_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+                            // std::cout << "ping" << std::endl;
+                            uint64_t sended = 0;
+                            while (data.size() != sended)
                             {
-                                // perror("Send Head failed");
-                                close(client_socket);
-                                client_socket = 0;
-                                return;
+                                // std::cout<<"send.. data.size() - sended = "<< ( data.size() - sended) <<std::endl;
+                                int len = send(client_socket, data.c_str() + sended, data.size() - sended, 0);
+                                if (len <= 0)
+                                {
+                                    perror("Send Head failed");
+                                    close(client_socket);
+                                    client_socket = 0;
+                                    return;
+                                }
+                                else
+                                {
+                                    sended += len;
+                                }
                             }
-                            else
-                            {
-                                send_size++;
-                                // printf("Send Head succ\n");
-                            }
+                            send_size++;
                             // printf("Send all bytes package %ld body %ld all %ld\n", data.size(), body_str.size(), data.size() + body_str.size());
+                            // std::cout << "ping OK" << std::endl;
 
                             // block read res package
-                            char buffer[1024000]{0};
+                            char buffer[5024000]{0};
                             uint32_t data_len = 0;
 
+                            // std::cout << "pong" << std::endl;
+                            // std::cout <<"recv.."<<std::endl;
+                            // std::cout << "reading=======================================================================>" << std::endl;
                             while (true)
                             {
-                                int recv_len = read(client_socket, buffer + data_len, 1024000 - data_len);
+                                int recv_len = read(client_socket, buffer + data_len, 5024000);
                                 if (recv_len == 0)
                                 {
                                     close(client_socket);
@@ -134,16 +152,23 @@ int main(int argc, const char **argv)
                                 }
                                 if (recv_len == -1)
                                 {
+                                    std::cout << "recv err" << std::endl;
                                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                                     continue;
                                 }
-
+                                // 6000 * 20 * 2MB = 6 000 * 2 0 * 2=240 000MB = 240GB
+                                // printf("data_len[%u] += recv_len[%d]\n", data_len, recv_len);
                                 data_len += recv_len;
 
                                 ProtoPackage protoPackage;
+                                // std::cout << "ParseFromArray recv_len[" << recv_len << "]"
+                                //           << "data_len=" << data_len << std::endl;
                                 if (!protoPackage.ParseFromArray(buffer, data_len))
                                 {
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                                    // std::cout << "Failed" << std::endl;
+                                    // std::cout << "ParseFromArray recv_len[" << recv_len << "]"
+                                    //           << "data_len=" << data_len << std::endl;
+                                    // std::this_thread::sleep_for(std::chrono::milliseconds(1));
                                     continue;
                                 }
                                 else
@@ -154,11 +179,17 @@ int main(int argc, const char **argv)
                                         if (exampleRes.ParseFromString(protoPackage.body()))
                                         {
                                             recv_size++;
-                                            if ((recv_size - last_print_size) > 1000)
+
+                                            uint64_t now_time = std::time(nullptr);
+                                            if ((recv_size - last_print_size) >= 0)
                                             {
-                                                printf("RES(thread[%d] send_size[%lu],recv_size[%lu])=>%s\n", loop, send_size, recv_size, exampleRes.testcontext().c_str());
+                                                // printf("RES(thread[%d] seconds[%lu] send_size[%lu],recv_size[%lu])\n", loop, now_time - last_time, send_size, recv_size);
+                                                std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+                                                std::chrono::milliseconds recv_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+                                                std::cout << "pingpong " << recv_ms.count() - send_ms.count() << " ms cnt " << recv_size << "  " << send_all_string_bytes << " bytes " << std::endl;
                                                 last_print_size = recv_size;
                                             }
+                                            last_time = now_time;
                                             break;
                                         }
                                         else
@@ -177,9 +208,12 @@ int main(int argc, const char **argv)
                                     }
                                 }
                             }
+
+                            // std::cout << "pong OK" << std::endl;
+                            // std::cout << "pingpong OK" << std::endl;
                         }
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    // std::this_thread::sleep_for(std::chrono::microseconds(200));
                 }
             });
         m_thread.detach();
