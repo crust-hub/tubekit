@@ -33,18 +33,20 @@ int main(int argc, const char **argv)
 
     constexpr int thread_count = 20;
 
-    constexpr int client_cnt = 100;
+    constexpr int client_cnt = 50;
+
+    constexpr int pingpong_cnt = 1;
     // 350KB/s
 
     // 1024KB
     for (int loop = 0; loop < thread_count; loop++)
     {
         std::thread m_thread(
-            [server_port, server_ip, argv, loop, &stop_flag, &client_cnt]()
+            [server_port, server_ip, argv, loop, &stop_flag, &client_cnt, &pingpong_cnt]()
             {
                 ProtoPackage message;
                 ProtoCSReqExample exampleReq;
-                constexpr uint send_all_string_bytes = 200000;
+                constexpr uint send_all_string_bytes = 800000;
                 std::string send_str(send_all_string_bytes, 'a');
                 // send_str = argv[1];
                 exampleReq.set_testcontext(send_str);
@@ -108,7 +110,7 @@ int main(int argc, const char **argv)
                         uint64_t packageLen = data.size();
 
                         // every client pingpong 1
-                        for (int i = 0; i < 1; i++)
+                        for (int i = 0; i < pingpong_cnt; i++)
                         {
                             std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
                             std::chrono::milliseconds send_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
@@ -213,7 +215,7 @@ int main(int argc, const char **argv)
                             // std::cout << "pingpong OK" << std::endl;
                         }
                     }
-                    // std::this_thread::sleep_for(std::chrono::microseconds(200));
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
                 }
             });
         m_thread.detach();

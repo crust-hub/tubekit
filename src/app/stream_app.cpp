@@ -23,6 +23,20 @@ namespace tubekit::app
     tubekit::thread::mutex stream_app::global_player_mutex;
 };
 
+template <typename T>
+static inline bool send_protocol(tubekit::connection::stream_connection *p_conn, ProtoCmd cmd, const T &pack, uint64_t gid = 0)
+{
+    ProtoPackage message;
+    message.set_cmd(cmd);
+    std::string body_str;
+    body_str.resize(pack.ByteSizeLong());
+    pack.SerializeToString(&body_str);
+    message.set_body(body_str);
+    std::string data;
+    message.SerializeToString(&data);
+    return tubekit::app::stream_app::send_packet(p_conn, data.c_str(), data.size(), gid);
+}
+
 static int process_protocol(tubekit::connection::stream_connection &m_stream_connection, ProtoPackage &package)
 {
     // EXAMPLE_REQ
@@ -31,19 +45,9 @@ static int process_protocol(tubekit::connection::stream_connection &m_stream_con
         ProtoCSReqExample exampleReq;
         if (exampleReq.ParseFromString(package.body()))
         {
-            // LOG_ERROR("%s", exampleReq.testcontext().c_str());
-            ProtoPackage message;
             ProtoCSResExample exampleRes;
             exampleRes.set_testcontext(exampleReq.testcontext());
-            message.set_cmd(ProtoCmd::CS_RES_EXAMPLE);
-            // pong package
-            std::string body_str;
-            body_str.resize(exampleReq.ByteSizeLong());
-            exampleReq.SerializeToString(&body_str);
-            message.set_body(body_str);
-            std::string data;
-            message.SerializeToString(&data);
-            bool send_res = m_stream_connection.send(data.c_str(), data.size());
+            bool send_res = send_protocol(&m_stream_connection, ProtoCmd::CS_RES_EXAMPLE, exampleRes);
             if (!send_res)
             {
                 LOG_ERROR("send example res failed");
@@ -136,4 +140,31 @@ void stream_app::on_new_connection(tubekit::connection::stream_connection &m_str
     global_player.insert(m_stream_connection.get_gid());
     LOG_ERROR("player online %d new_connection[%llu]", global_player.size(), m_stream_connection.get_gid());
     global_player_mutex.unlock();
+}
+
+bool stream_app::send_packet(tubekit::connection::stream_connection *m_stream_connection, const char *data, size_t data_len, uint64_t gid /*= 0*/)
+{
+    if (!data || data_len == 0)
+    {
+        return false;
+    }
+    if (0 == gid && m_stream_connection)
+    {
+        return m_stream_connection->send(data, data_len);
+    }
+    else
+    {
+        bool res = false;
+        singleton<connection_mgr>::instance()->if_exist(
+            gid,
+            [&res, &data, &data_len](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+            {
+                tubekit::connection::stream_connection *p_streamconn = (tubekit::connection::stream_connection *)(value.second);
+                res = p_streamconn->send(data, data_len);
+            },
+            nullptr);
+        return res;
+    }
+
+    return false;
 }

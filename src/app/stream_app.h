@@ -54,6 +54,8 @@ namespace tubekit
              */
             static void on_tick();
 
+            static bool send_packet(tubekit::connection::stream_connection *m_stream_connection, const char *data, size_t data_len, uint64_t gid = 0);
+
             static std::set<uint64_t> global_player;
             static tubekit::thread::mutex global_player_mutex;
         };

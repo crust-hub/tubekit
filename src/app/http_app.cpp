@@ -170,7 +170,7 @@ void http_app::process_connection(tubekit::connection::http_connection &m_http_c
                     std::string sub_path = dir_entry.path().string().substr(prefix.size());
                     a_tags.push_back(html_loader::a_tag(utility::url::encode(sub_path), sub_path));
                 }
-            } 
+            }
             catch (const std::filesystem::filesystem_error &ex)
             {
                 LOG_ERROR("%s", ex.what());
