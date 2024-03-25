@@ -52,7 +52,7 @@ $ ps -ef | grep tubekit
 ## Docker Example
 
 ```bash
-$ docker run -it -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
+$ docker run -it --privileged -p 20023:20023 -v ${LOCAL_HTTP_DIR_PATH}:/tubekit_static gaowanlu/tubekit:latest bash
 $ cd ./bin
 $ ./tubekit
 ```
