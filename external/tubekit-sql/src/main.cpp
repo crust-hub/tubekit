@@ -20,8 +20,13 @@ int main(int argc, char **argv)
         {
             query m_query(conn);
             m_query.select("SELECT * FROM user");
-            std::cout << m_query.update("UPDATE user SET user_age = 66 WHERE user_id = 1 ") << std::endl;
+            std::cout << m_query.update("UPDATE user SET user_age = 999 WHERE user_id = 1 ") << std::endl;
             m_query.select("SELECT * FROM user");
+            uint64_t rows = m_query.insert("INSERT INTO user(user_age,user_email,user_password) VALUES(1,'34d@qq.com','hello halo')");
+            if (rows == 1)
+            {
+                m_query.select("SELECT LAST_INSERT_ID()");
+            }
         }
         {
             sql<1> m_sql(conn, "SELECT * FROM user WHERE user_id = ?");

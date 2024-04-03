@@ -9,41 +9,42 @@ namespace tubekit
 {
     namespace sql
     {
-        enum value_type
+        enum class value_type
         {
-            BIT = 0,
-            BLOB,
-            DATE,
-            DATETIME2,
-            DATETIME,
-            DECIMAL,
-            DOUBLE,
-            ENUM,
-            FLOAT,
-            GEOMETRY,
-            INT24,
-            INVALID,
-            JSON,
-            LONG,
-            LONG_BLOB,
-            LONGLONG,
-            MEDIUM_BLOB,
-            NEWDATE,
-            NEWDECIMAL,
-            NULL_TYPE,
-            SET,
-            SHORT,
-            STRING,
-            TIME2,
-            TIME,
-            TIMESTAMP2,
-            TIMESTAMP,
+            DECIMAL = 0,
             TINY,
-            TINY_BLOB,
-            TYPED_ARRAY,
-            VAR_STRING,
+            SHORT,
+            LONG,
+            FLOAT,
+            DOUBLE,
+            NULL_TYPE,
+            TIMESTAMP,
+            LONGLONG,
+            INT24,
+            DATE,
+            TIME,
+            DATETIME,
+            YEAR,
+            NEWDATE,
             VARCHAR,
-            YEAR
+            BIT,
+            TIMESTAMP2,
+            DATETIME2,
+            TIME2,
+            TYPED_ARRAY,
+            INVALID,
+            BOOL,
+            JSON,
+            NEWDECIMAL,
+            ENUM,
+            SET,
+            TINY_BLOB,
+            MEDIUM_BLOB,
+            LONG_BLOB,
+            BLOB,
+            VAR_STRING,
+            STRING,
+            GEOMETRY,
         };
 
         /**
@@ -94,104 +95,107 @@ namespace tubekit
         {
             switch (type)
             {
-            case BIT:
-                bind[index].buffer_type = MYSQL_TYPE_BIT;
-                break;
-            case BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_BLOB;
-                break;
-            case DATE:
-                bind[index].buffer_type = MYSQL_TYPE_DATE;
-                break;
-            case DATETIME2:
-                bind[index].buffer_type = MYSQL_TYPE_DATETIME2;
-                break;
-            case DATETIME:
-                bind[index].buffer_type = MYSQL_TYPE_DATETIME;
-                break;
-            case DECIMAL:
+            case value_type::DECIMAL:
                 bind[index].buffer_type = MYSQL_TYPE_DECIMAL;
                 break;
-            case DOUBLE:
-                bind[index].buffer_type = MYSQL_TYPE_DOUBLE;
-                break;
-            case ENUM:
-                bind[index].buffer_type = MYSQL_TYPE_ENUM;
-                break;
-            case FLOAT:
-                bind[index].buffer_type = MYSQL_TYPE_FLOAT;
-                break;
-            case GEOMETRY:
-                bind[index].buffer_type = MYSQL_TYPE_GEOMETRY;
-                break;
-            case INT24:
-                bind[index].buffer_type = MYSQL_TYPE_INT24;
-                break;
-            case INVALID:
-                bind[index].buffer_type = MYSQL_TYPE_INVALID;
-                break;
-            case JSON:
-                bind[index].buffer_type = MYSQL_TYPE_JSON;
-                break;
-            case LONG:
-                bind[index].buffer_type = MYSQL_TYPE_LONG;
-                break;
-            case LONG_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_LONG_BLOB;
-                break;
-            case LONGLONG:
-                bind[index].buffer_type = MYSQL_TYPE_LONGLONG;
-                break;
-            case MEDIUM_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_MEDIUM_BLOB;
-                break;
-            case NEWDATE:
-                bind[index].buffer_type = MYSQL_TYPE_NEWDATE;
-                break;
-            case NEWDECIMAL:
-                bind[index].buffer_type = MYSQL_TYPE_NEWDECIMAL;
-                break;
-            case NULL_TYPE:
-                bind[index].buffer_type = MYSQL_TYPE_NULL;
-                break;
-            case SET:
-                bind[index].buffer_type = MYSQL_TYPE_SET;
-                break;
-            case SHORT:
-                bind[index].buffer_type = MYSQL_TYPE_SHORT;
-                break;
-            case STRING:
-                bind[index].buffer_type = MYSQL_TYPE_STRING;
-                break;
-            case TIME2:
-                bind[index].buffer_type = MYSQL_TYPE_TIME2;
-                break;
-            case TIME:
-                bind[index].buffer_type = MYSQL_TYPE_TIME;
-                break;
-            case TIMESTAMP2:
-                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP2;
-                break;
-            case TIMESTAMP:
-                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP;
-                break;
-            case TINY:
+            case value_type::TINY:
                 bind[index].buffer_type = MYSQL_TYPE_TINY;
                 break;
-            case TINY_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_TINY_BLOB;
+            case value_type::SHORT:
+                bind[index].buffer_type = MYSQL_TYPE_SHORT;
                 break;
-            case TYPED_ARRAY:
-                bind[index].buffer_type = MYSQL_TYPE_TYPED_ARRAY;
+            case value_type::LONG:
+                bind[index].buffer_type = MYSQL_TYPE_LONG;
                 break;
-            case VAR_STRING:
-                bind[index].buffer_type = MYSQL_TYPE_VAR_STRING;
+            case value_type::FLOAT:
+                bind[index].buffer_type = MYSQL_TYPE_FLOAT;
                 break;
-            case VARCHAR:
+            case value_type::DOUBLE:
+                bind[index].buffer_type = MYSQL_TYPE_DOUBLE;
+                break;
+            case value_type::NULL_TYPE:
+                bind[index].buffer_type = MYSQL_TYPE_NULL;
+                break;
+            case value_type::TIMESTAMP:
+                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP;
+                break;
+            case value_type::LONGLONG:
+                bind[index].buffer_type = MYSQL_TYPE_LONGLONG;
+                break;
+            case value_type::INT24:
+                bind[index].buffer_type = MYSQL_TYPE_INT24;
+                break;
+            case value_type::DATE:
+                bind[index].buffer_type = MYSQL_TYPE_DATE;
+                break;
+            case value_type::TIME:
+                bind[index].buffer_type = MYSQL_TYPE_TIME;
+                break;
+            case value_type::DATETIME:
+                bind[index].buffer_type = MYSQL_TYPE_DATETIME;
+                break;
+            case value_type::YEAR:
+                bind[index].buffer_type = MYSQL_TYPE_YEAR;
+                break;
+            case value_type::NEWDATE:
+                bind[index].buffer_type = MYSQL_TYPE_NEWDATE;
+                break;
+            case value_type::VARCHAR:
                 bind[index].buffer_type = MYSQL_TYPE_VARCHAR;
                 break;
-            case YEAR:
-                bind[index].buffer_type = MYSQL_TYPE_YEAR;
+            case value_type::BIT:
+                bind[index].buffer_type = MYSQL_TYPE_BIT;
+                break;
+            case value_type::TIMESTAMP2:
+                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP2;
+                break;
+            case value_type::DATETIME2:
+                bind[index].buffer_type = MYSQL_TYPE_DATETIME2;
+                break;
+            case value_type::TIME2:
+                bind[index].buffer_type = MYSQL_TYPE_TIME2;
+                break;
+            case value_type::TYPED_ARRAY:
+                bind[index].buffer_type = MYSQL_TYPE_TYPED_ARRAY;
+                break;
+            case value_type::INVALID:
+                bind[index].buffer_type = MYSQL_TYPE_INVALID;
+                break;
+            case value_type::BOOL:
+                bind[index].buffer_type = MYSQL_TYPE_BOOL;
+                break;
+            case value_type::JSON:
+                bind[index].buffer_type = MYSQL_TYPE_JSON;
+                break;
+            case value_type::NEWDECIMAL:
+                bind[index].buffer_type = MYSQL_TYPE_NEWDECIMAL;
+                break;
+            case value_type::ENUM:
+                bind[index].buffer_type = MYSQL_TYPE_ENUM;
+                break;
+            case value_type::SET:
+                bind[index].buffer_type = MYSQL_TYPE_SET;
+                break;
+            case value_type::TINY_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_TINY_BLOB;
+                break;
+            case value_type::MEDIUM_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_MEDIUM_BLOB;
+                break;
+            case value_type::LONG_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_LONG_BLOB;
+                break;
+            case value_type::BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_BLOB;
+                break;
+            case value_type::VAR_STRING:
+                bind[index].buffer_type = MYSQL_TYPE_VAR_STRING;
+                break;
+            case value_type::STRING:
+                bind[index].buffer_type = MYSQL_TYPE_STRING;
+                break;
+            case value_type::GEOMETRY:
+                bind[index].buffer_type = MYSQL_TYPE_GEOMETRY;
                 break;
             default:
                 bind[index].buffer_type = MYSQL_TYPE_BLOB;
@@ -310,104 +314,107 @@ namespace tubekit
         {
             switch (type)
             {
-            case BIT:
-                bind[index].buffer_type = MYSQL_TYPE_BIT;
-                break;
-            case BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_BLOB;
-                break;
-            case DATE:
-                bind[index].buffer_type = MYSQL_TYPE_DATE;
-                break;
-            case DATETIME2:
-                bind[index].buffer_type = MYSQL_TYPE_DATETIME2;
-                break;
-            case DATETIME:
-                bind[index].buffer_type = MYSQL_TYPE_DATETIME;
-                break;
-            case DECIMAL:
+            case value_type::DECIMAL:
                 bind[index].buffer_type = MYSQL_TYPE_DECIMAL;
                 break;
-            case DOUBLE:
-                bind[index].buffer_type = MYSQL_TYPE_DOUBLE;
-                break;
-            case ENUM:
-                bind[index].buffer_type = MYSQL_TYPE_ENUM;
-                break;
-            case FLOAT:
-                bind[index].buffer_type = MYSQL_TYPE_FLOAT;
-                break;
-            case GEOMETRY:
-                bind[index].buffer_type = MYSQL_TYPE_GEOMETRY;
-                break;
-            case INT24:
-                bind[index].buffer_type = MYSQL_TYPE_INT24;
-                break;
-            case INVALID:
-                bind[index].buffer_type = MYSQL_TYPE_INVALID;
-                break;
-            case JSON:
-                bind[index].buffer_type = MYSQL_TYPE_JSON;
-                break;
-            case LONG:
-                bind[index].buffer_type = MYSQL_TYPE_LONG;
-                break;
-            case LONG_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_LONG_BLOB;
-                break;
-            case LONGLONG:
-                bind[index].buffer_type = MYSQL_TYPE_LONGLONG;
-                break;
-            case MEDIUM_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_MEDIUM_BLOB;
-                break;
-            case NEWDATE:
-                bind[index].buffer_type = MYSQL_TYPE_NEWDATE;
-                break;
-            case NEWDECIMAL:
-                bind[index].buffer_type = MYSQL_TYPE_NEWDECIMAL;
-                break;
-            case NULL_TYPE:
-                bind[index].buffer_type = MYSQL_TYPE_NULL;
-                break;
-            case SET:
-                bind[index].buffer_type = MYSQL_TYPE_SET;
-                break;
-            case SHORT:
-                bind[index].buffer_type = MYSQL_TYPE_SHORT;
-                break;
-            case STRING:
-                bind[index].buffer_type = MYSQL_TYPE_STRING;
-                break;
-            case TIME2:
-                bind[index].buffer_type = MYSQL_TYPE_TIME2;
-                break;
-            case TIME:
-                bind[index].buffer_type = MYSQL_TYPE_TIME;
-                break;
-            case TIMESTAMP2:
-                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP2;
-                break;
-            case TIMESTAMP:
-                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP;
-                break;
-            case TINY:
+            case value_type::TINY:
                 bind[index].buffer_type = MYSQL_TYPE_TINY;
                 break;
-            case TINY_BLOB:
-                bind[index].buffer_type = MYSQL_TYPE_TINY_BLOB;
+            case value_type::SHORT:
+                bind[index].buffer_type = MYSQL_TYPE_SHORT;
                 break;
-            case TYPED_ARRAY:
-                bind[index].buffer_type = MYSQL_TYPE_TYPED_ARRAY;
+            case value_type::LONG:
+                bind[index].buffer_type = MYSQL_TYPE_LONG;
                 break;
-            case VAR_STRING:
-                bind[index].buffer_type = MYSQL_TYPE_VAR_STRING;
+            case value_type::FLOAT:
+                bind[index].buffer_type = MYSQL_TYPE_FLOAT;
                 break;
-            case VARCHAR:
+            case value_type::DOUBLE:
+                bind[index].buffer_type = MYSQL_TYPE_DOUBLE;
+                break;
+            case value_type::NULL_TYPE:
+                bind[index].buffer_type = MYSQL_TYPE_NULL;
+                break;
+            case value_type::TIMESTAMP:
+                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP;
+                break;
+            case value_type::LONGLONG:
+                bind[index].buffer_type = MYSQL_TYPE_LONGLONG;
+                break;
+            case value_type::INT24:
+                bind[index].buffer_type = MYSQL_TYPE_INT24;
+                break;
+            case value_type::DATE:
+                bind[index].buffer_type = MYSQL_TYPE_DATE;
+                break;
+            case value_type::TIME:
+                bind[index].buffer_type = MYSQL_TYPE_TIME;
+                break;
+            case value_type::DATETIME:
+                bind[index].buffer_type = MYSQL_TYPE_DATETIME;
+                break;
+            case value_type::YEAR:
+                bind[index].buffer_type = MYSQL_TYPE_YEAR;
+                break;
+            case value_type::NEWDATE:
+                bind[index].buffer_type = MYSQL_TYPE_NEWDATE;
+                break;
+            case value_type::VARCHAR:
                 bind[index].buffer_type = MYSQL_TYPE_VARCHAR;
                 break;
-            case YEAR:
-                bind[index].buffer_type = MYSQL_TYPE_YEAR;
+            case value_type::BIT:
+                bind[index].buffer_type = MYSQL_TYPE_BIT;
+                break;
+            case value_type::TIMESTAMP2:
+                bind[index].buffer_type = MYSQL_TYPE_TIMESTAMP2;
+                break;
+            case value_type::DATETIME2:
+                bind[index].buffer_type = MYSQL_TYPE_DATETIME2;
+                break;
+            case value_type::TIME2:
+                bind[index].buffer_type = MYSQL_TYPE_TIME2;
+                break;
+            case value_type::TYPED_ARRAY:
+                bind[index].buffer_type = MYSQL_TYPE_TYPED_ARRAY;
+                break;
+            case value_type::INVALID:
+                bind[index].buffer_type = MYSQL_TYPE_INVALID;
+                break;
+            case value_type::BOOL:
+                bind[index].buffer_type = MYSQL_TYPE_BOOL;
+                break;
+            case value_type::JSON:
+                bind[index].buffer_type = MYSQL_TYPE_JSON;
+                break;
+            case value_type::NEWDECIMAL:
+                bind[index].buffer_type = MYSQL_TYPE_NEWDECIMAL;
+                break;
+            case value_type::ENUM:
+                bind[index].buffer_type = MYSQL_TYPE_ENUM;
+                break;
+            case value_type::SET:
+                bind[index].buffer_type = MYSQL_TYPE_SET;
+                break;
+            case value_type::TINY_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_TINY_BLOB;
+                break;
+            case value_type::MEDIUM_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_MEDIUM_BLOB;
+                break;
+            case value_type::LONG_BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_LONG_BLOB;
+                break;
+            case value_type::BLOB:
+                bind[index].buffer_type = MYSQL_TYPE_BLOB;
+                break;
+            case value_type::VAR_STRING:
+                bind[index].buffer_type = MYSQL_TYPE_VAR_STRING;
+                break;
+            case value_type::STRING:
+                bind[index].buffer_type = MYSQL_TYPE_STRING;
+                break;
+            case value_type::GEOMETRY:
+                bind[index].buffer_type = MYSQL_TYPE_GEOMETRY;
                 break;
             default:
                 bind[index].buffer_type = MYSQL_TYPE_BLOB;
