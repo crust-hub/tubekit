@@ -10,32 +10,92 @@ using namespace tubekit::app;
 using namespace tubekit::utility;
 using namespace tubekit::connection;
 
-struct websocket_frame
-{
-    uint8_t fin;
-    uint8_t opcode;
-    uint8_t mask;
-    uint64_t payload_length;
-    std::vector<uint8_t> masking_key;
-    std::string payload_data;
-};
-
-enum class websocket_frame_type
-{
-    CONNECTION_CLOSE_FRAME = 0,
-    TEXT_FRAME = 1,
-    BINARY_FRAME = 2,
-    PONG = 3,
-    PING = 4,
-    CONTINUATION_FRAME = 5,
-    ERROR = 6
-};
-
 namespace tubekit::app
 {
     std::set<uint64_t> websocket_app::global_player{};
     tubekit::thread::mutex websocket_app::global_player_mutex;
 };
+
+websocket_app::websocket_frame_type websocket_app::n_2_websocket_frame_type(uint8_t n)
+{
+    n = n & 0x0f;
+    if (n == 0x1)
+    {
+        return websocket_frame_type::TEXT_FRAME;
+    }
+    else if (n == 0x2)
+    {
+        return websocket_frame_type::BINARY_FRAME;
+    }
+    else
+    {
+        if (n == 0x0)
+        {
+            return websocket_frame_type::CONTINUATION_FRAME;
+        }
+        else if (n >= 0x3 && n <= 0x7)
+        {
+            return websocket_frame_type::FURTHER_NON_CONTROL;
+        }
+        else if (n >= 0xb && n <= 0xf)
+        {
+            return websocket_frame_type::FURTHER_CONTROL;
+        }
+        else if (n == 0x8)
+        {
+            return websocket_frame_type::CONNECTION_CLOSE_FRAME;
+        }
+        else if (n == 0x9)
+        {
+            return websocket_frame_type::PING;
+        }
+        else if (n == 0xa)
+        {
+            return websocket_frame_type::PONG;
+        }
+    }
+    return websocket_frame_type::ERROR;
+}
+
+uint8_t websocket_app::websocket_frame_type_2_n(websocket_frame_type type, uint8_t idx /*= 0x0*/)
+{
+    if (type == websocket_frame_type::TEXT_FRAME)
+    {
+        return 0x1;
+    }
+    else if (type == websocket_frame_type::BINARY_FRAME)
+    {
+        return 0x2;
+    }
+    else
+    {
+        if (type == websocket_frame_type::CONTINUATION_FRAME)
+        {
+            return 0x0;
+        }
+        else if (type == websocket_frame_type::FURTHER_NON_CONTROL && idx >= 0x0 && idx <= 0x4)
+        {
+            return 0x3 + idx;
+        }
+        else if (type == websocket_frame_type::FURTHER_CONTROL && idx >= 0x0 && idx <= 0x5)
+        {
+            return 0xb + idx;
+        }
+        else if (type == websocket_frame_type::CONNECTION_CLOSE_FRAME)
+        {
+            return 0x8;
+        }
+        else if (type == websocket_frame_type::PING)
+        {
+            return 0x9;
+        }
+        else if (type == websocket_frame_type::PONG)
+        {
+            return 0xa;
+        }
+    }
+    return 0x8;
+}
 
 int websocket_app::on_init()
 {
@@ -79,38 +139,8 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         size_t start_index = index;
 
         websocket_frame frame;
-        websocket_frame_type type = websocket_frame_type::ERROR;
-        switch ((uint8_t)data[index])
-        {
-        case 0x81:
-        {
-            type = websocket_frame_type::TEXT_FRAME;
-            break;
-        }
-        case 0x82:
-        {
-            type = websocket_frame_type::BINARY_FRAME;
-            break;
-        }
-        case 0x88:
-        {
-            type = websocket_frame_type::CONNECTION_CLOSE_FRAME;
-            break;
-        }
-        case 0x89:
-        {
-            type = websocket_frame_type::PING;
-            break;
-        }
-        default:
-        {
-            if (data[index] >= 0x00 && data[index] <= 0x7F)
-            {
-                type = websocket_frame_type::CONTINUATION_FRAME;
-            }
-            break;
-        }
-        }
+        uint8_t opcode = (uint8_t)data[index] & 0x0f;
+        websocket_frame_type type = n_2_websocket_frame_type(opcode);
 
         if (type != websocket_frame_type::TEXT_FRAME && type != websocket_frame_type::BINARY_FRAME)
         {
@@ -214,21 +244,27 @@ void websocket_app::process_connection(tubekit::connection::websocket_connection
         }
         frame.payload_data = std::move(payload_data);
 
-        // broadcast
-        std::set<uint64_t> global_player_copy;
-        global_player_mutex.lock();
-        global_player_copy = global_player;
-        global_player_mutex.unlock();
+        process_frame(m_websocket_connection, frame);
 
-        for (auto player : global_player_copy)
-        {
-            websocket_app::send_packet(nullptr, frame.payload_data.c_str(), frame.payload_length, player);
-        }
-
-        // frame.payload_data.push_back(0);
-        // LOG_ERROR("%s", frame.payload_data.c_str());
         m_websocket_connection.m_recv_buffer.read_ptr_move_n(index - start_index + frame.payload_length);
         index += frame.payload_length;
+    }
+}
+
+void websocket_app::process_frame(tubekit::connection::websocket_connection &m_websocket_connection,
+                                  websocket_frame &frame)
+{
+    // broadcast
+    std::set<uint64_t> global_player_copy;
+    global_player_mutex.lock();
+    global_player_copy = global_player;
+    global_player_mutex.unlock();
+
+    uint8_t first_byte = 0x80 | websocket_frame_type_2_n(websocket_frame_type::TEXT_FRAME);
+
+    for (auto player : global_player_copy)
+    {
+        websocket_app::send_packet(nullptr, first_byte, frame.payload_data.c_str(), frame.payload_length, player);
     }
 }
 
@@ -248,16 +284,19 @@ void websocket_app::on_new_connection(tubekit::connection::websocket_connection 
     global_player_mutex.unlock();
 }
 
-bool websocket_app::send_packet(tubekit::connection::websocket_connection *m_websocket_connection, const char *data, size_t data_len, uint64_t gid /*= 0*/)
+bool websocket_app::send_packet(tubekit::connection::websocket_connection *m_websocket_connection,
+                                uint8_t first_byte,
+                                const char *data,
+                                size_t data_len,
+                                uint64_t gid /*= 0*/)
 {
     if (!data)
     {
         return false;
     }
-    uint8_t opcode = 0x81;
     size_t message_length = data_len;
     std::vector<uint8_t> frame;
-    frame.push_back(opcode);
+    frame.push_back(first_byte);
 
     if (message_length <= 125)
     {
