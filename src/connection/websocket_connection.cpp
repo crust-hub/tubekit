@@ -58,6 +58,7 @@ void websocket_connection::reuse()
     this->m_wating_send_pack.set_limit_max(mem_buffer_size_max);
 
     this->destory_callback = nullptr;
+    this->write_end_callback = nullptr;
 
     http_parser_init(&m_http_parser, HTTP_REQUEST);
     m_http_parser.data = this;
@@ -209,6 +210,10 @@ bool websocket_connection::buf2sock(bool &closed)
                     }
                     else
                     {
+                        if (this->write_end_callback)
+                        {
+                            return this->write_end_callback(*this);
+                        }
                         return false; // noting m_waiting_send_pack to m_send_buffer
                     }
                 }

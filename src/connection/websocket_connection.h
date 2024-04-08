@@ -78,7 +78,8 @@ namespace tubekit
             buffer::buffer m_send_buffer;
             buffer::buffer m_wating_send_pack;
 
-            std::function<void(websocket_connection &connection)> destory_callback;
+            std::function<void(websocket_connection &connection)> destory_callback{nullptr};
+            std::function<bool(websocket_connection &connection)> write_end_callback{nullptr};
 
         private:
             int should_send_idx{-1};
