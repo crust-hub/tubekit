@@ -143,6 +143,10 @@ bool stream_connection::buf2sock(bool &closed)
                     }
                     else
                     {
+                        if (this->write_end_callback)
+                        {
+                            return this->write_end_callback(*this);
+                        }
                         return false; // nothing m_waiting_send_pack to m_send_buffer
                     }
                 }
@@ -250,4 +254,6 @@ void stream_connection::reuse()
     this->should_send_idx = -1;
     this->should_send_size = 0;
     this->sock2buf_data_len = 0;
+
+    write_end_callback = nullptr;
 }

@@ -43,6 +43,7 @@ namespace tubekit
             buffer::buffer m_send_buffer;
             buffer::buffer m_recv_buffer;
             buffer::buffer m_wating_send_pack;
+            std::function<bool(stream_connection &connection)> write_end_callback{nullptr};
 
         private:
             int should_send_idx{-1};
