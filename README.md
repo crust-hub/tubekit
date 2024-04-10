@@ -116,3 +116,5 @@ concurrency bin/tubekit          test/node_http_server.js            httpRequest
 
 1、[@http-parser](https://github.com/nodejs/http-parser)  2、[@lua](https://github.com/lua/lua)  
 3、[@protobuffer](https://github.com/protocolbuffers/protobuf)  4、[@openssl](https://github.com/openssl/openssl)  
+5、[@zlib](https://github.com/madler/zlib)  
+
