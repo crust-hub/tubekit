@@ -1,5 +1,5 @@
 message("external start")
-add_library(http-parser SHARED "./http-parser/http_parser.c")
+add_library(tubekit-http-parser SHARED "./http-parser/http_parser.c")
 
 file(GLOB_RECURSE SOURCE_INIFILE "./tubekit-inifile/*.cpp")
 add_library(tubekit-inifile SHARED ${SOURCE_INIFILE})
@@ -18,6 +18,9 @@ file(GLOB_RECURSE SOURCE_BUFFER "./tubekit-buffer/*.cpp")
 add_library(tubekit-buffer SHARED ${SOURCE_BUFFER})
 
 file(GLOB_RECURSE SOURCE_LUA "./lua/*.c")
-add_library(lua SHARED ${SOURCE_LUA})
+add_library(tubekit-lua SHARED ${SOURCE_LUA})
+
+file(GLOB_RECURSE SOURCE_ZLIB "./zlib/*.c")
+add_library(tubekit-zlib SHARED ${SOURCE_ZLIB})
 
 message("external end")
