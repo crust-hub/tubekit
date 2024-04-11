@@ -19,6 +19,14 @@ namespace tubekit
             static void process_connection(tubekit::connection::http_connection &m_http_connection);
 
             /**
+             * @brief thread not safe
+             *
+             * @param m_http_connection
+             * @return int
+             */
+            static int on_body(tubekit::connection::http_connection &m_http_connection);
+
+            /**
              * @brief thread safe
              *
              * @return int

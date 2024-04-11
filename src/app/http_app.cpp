@@ -58,6 +58,16 @@ void http_app::on_tick()
     // LOG_ERROR("http_app::on_tick()");
 }
 
+int http_app::on_body(tubekit::connection::http_connection &m_http_connection)
+{
+    if (m_http_connection.body.size() > 1024)
+    {
+        LOG_ERROR("http request body oversize 1024 bytes");
+        return -1;
+    }
+    return 0;
+}
+
 void http_app::process_connection(tubekit::connection::http_connection &m_http_connection)
 {
     m_http_connection.m_send_buffer.set_limit_max(20230);

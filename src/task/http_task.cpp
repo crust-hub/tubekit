@@ -77,7 +77,7 @@ http_task::http_task(uint64_t gid) : task(gid),
         {
             connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
             t_http_connection->add_to_body(at, length);
-            return 0;
+            return http_app::on_body(*t_http_connection);
         };
 
         settings->on_message_complete = [](http_parser *parser) -> auto
