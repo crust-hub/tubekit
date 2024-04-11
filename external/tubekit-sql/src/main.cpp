@@ -12,115 +12,60 @@ using std::shared_ptr;
 int main(int argc, char **argv)
 {
     pool m_pool;
-    m_pool.init(10, "", "root", "", "cloudalbum");
-    for (int i = 0; i < 10; i++)
+    m_pool.init(10, "127.0.0.1", "root", "", "");
     {
         shared_ptr<connection> conn = m_pool.get();
-        std::cout << "<==>m_list size = " << m_pool.get_size() << std::endl;
+        query m_query(conn);
+        m_query.select("SELECT * FROM DbMailData");
+        m_pool.back(conn);
+    }
+    {
+        shared_ptr<connection> conn = m_pool.get();
+        sql<1> m_sql(conn, "SELECT ID1,ID2,ID3,BlobData FROM DbRowData WHERE ID1 > ?");
+
+        class DbRowData
         {
-            query m_query(conn);
-            m_query.select("SELECT * FROM user");
-            std::cout << m_query.update("UPDATE user SET user_age = 999 WHERE user_id = 1 ") << std::endl;
-            m_query.select("SELECT * FROM user");
-            uint64_t rows = m_query.insert("INSERT INTO user(user_age,user_email,user_password) VALUES(1,'34d@qq.com','hello halo')");
-            if (rows == 1)
+        public:
+            DbRowData() : BlobDataSize(16777215), BlobData(new char[BlobDataSize])
             {
-                m_query.select("SELECT LAST_INSERT_ID()");
             }
-        }
-        {
-            sql<1> m_sql(conn, "SELECT * FROM user WHERE user_id = ?");
-            int64_t param_id = 1;
-            m_sql.set_bind(0, &param_id, sizeof(param_id), value_type::LONGLONG);
-
-            tubekit::sql::result<8> m_result;
-            bool is_null[8];
-            int64_t id;
-            m_result.set_bind(0, &id, sizeof(id), value_type::LONGLONG, is_null + 0);
-            int32_t age;
-            m_result.set_bind(1, &age, sizeof(age), value_type::LONG, is_null + 1);
-            int64_t avatar;
-            m_result.set_bind(2, &avatar, sizeof(avatar), value_type::LONGLONG, is_null + 2);
-            char email[300];
-            m_result.set_bind(3, email, 300, value_type::VAR_STRING, is_null + 3);
-            char name[300];
-            m_result.set_bind(4, name, 300, value_type::VAR_STRING, is_null + 4);
-            char password[300];
-            m_result.set_bind(5, password, 300, value_type::VAR_STRING, is_null + 5);
-            char profile[300];
-            m_result.set_bind(6, profile, 300, value_type::VAR_STRING, is_null + 6);
-            int32_t space;
-            m_result.set_bind(7, &space, sizeof(space), value_type::LONG, is_null + 7);
-
-            if (m_sql.execute(m_result))
+            ~DbRowData()
             {
-                while (m_sql.fetch())
+                if (BlobData)
                 {
-                    if (is_null[0])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << id << " ";
-                    }
-                    if (is_null[1])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << age << " ";
-                    }
-                    if (is_null[2])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << avatar << " ";
-                    }
-                    if (is_null[3])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << email << " ";
-                    }
-                    if (is_null[4])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << name << " ";
-                    }
-                    if (is_null[5])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << password << " ";
-                    }
-                    if (is_null[6])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << profile << " ";
-                    }
-                    if (is_null[7])
-                    {
-                        std::cout << "null ";
-                    }
-                    else
-                    {
-                        std::cout << space << " ";
-                    }
-                    std::cout << std::endl;
+                    delete[] BlobData;
+                }
+            }
+            int64_t ID1;
+            int32_t ID2;
+            int64_t ID3;
+            const unsigned int BlobDataSize;
+            char *BlobData{nullptr};
+        };
+
+        DbRowData Row;
+
+        int64_t MinID1 = 0;
+        m_sql.set_bind(0, &MinID1, sizeof(MinID1), value_type::LONGLONG);
+
+        tubekit::sql::result<4> m_result;
+        m_result.set_bind(0, &Row.ID1, sizeof(Row.ID1), value_type::LONGLONG);
+        m_result.set_bind(1, &Row.ID2, sizeof(Row.ID2), value_type::LONG);
+        m_result.set_bind(2, &Row.ID3, sizeof(Row.ID3), value_type::LONGLONG);
+        m_result.set_bind(3, Row.BlobData, Row.BlobDataSize, value_type::MEDIUM_BLOB);
+
+        if (m_sql.execute(m_result))
+        {
+            while (m_sql.fetch())
+            {
+                if (!m_result.is_null[0] && !m_result.is_null[1] && !m_result.is_null[2] && !m_result.is_null[3])
+                {
+                    std::cout << "filed len " << m_result.out_length[0] << "," << m_result.out_length[1] << "," << m_result.out_length[2] << "," << m_result.out_length[3] << std::endl;
+                    std::cout << "ID1 " << Row.ID1 << " ID2 " << Row.ID2 << " ID3 " << Row.ID3 << " BlobData " << std::string(Row.BlobData) << std::endl;
+                }
+                else
+                {
+                    std::cout << "have null" << std::endl;
                 }
             }
         }
