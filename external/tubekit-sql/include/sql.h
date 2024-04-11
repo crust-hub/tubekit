@@ -63,12 +63,12 @@ namespace tubekit
             size_t get_size();
 
         public:
-            bool is_null[bind_size]{0};
-            unsigned long out_length[bind_size]{0};
+            bool is_null[bind_size + 1]{0};
+            unsigned long out_length[bind_size + 1]{0};
 
         private:
-            MYSQL_BIND bind[bind_size];
-            size_t size{bind_size};
+            MYSQL_BIND bind[bind_size + 1];
+            size_t size{bind_size + 1};
         };
 
         template <size_t bind_size>
@@ -227,10 +227,14 @@ namespace tubekit
             bool fetch();
             void set_bind(size_t index, void *buffer, size_t size, value_type type, bool is_null = false);
 
+        public:
+            unsigned long get_affected_rows();
+
         private:
             MYSQL_STMT *stmt{nullptr};
-            MYSQL_BIND bind[bind_size];
+            MYSQL_BIND bind[bind_size + 1]{0};
             std::weak_ptr<connection> m_conn{nullptr};
+            unsigned long affected_rows{0};
         };
 
         template <size_t bind_size>
@@ -267,10 +271,13 @@ namespace tubekit
                 std::cout << " m_conn.lock()" << std::endl;
                 auto m_conn_ptr = m_conn.lock();
                 std::cout << "mysql_stmt_bind_param(stmt, bind)" << std::endl;
-                if (0 != mysql_stmt_bind_param(stmt, bind))
+                if (bind_size >= 1)
                 {
-                    std::cout << mysql_stmt_error(stmt) << std::endl;
-                    return false;
+                    if (0 != mysql_stmt_bind_param(stmt, bind))
+                    {
+                        std::cout << mysql_stmt_error(stmt) << std::endl;
+                        return false;
+                    }
                 }
                 std::cout << "mysql_stmt_execute(stmt)" << std::endl;
                 if (0 != mysql_stmt_execute(stmt))
@@ -279,11 +286,15 @@ namespace tubekit
                     return false;
                 }
                 std::cout << "mysql_stmt_bind_result" << std::endl;
-                if (0 != mysql_stmt_bind_result(stmt, m_result.get_bind()))
+                if (result_size >= 1)
                 {
-                    std::cout << mysql_stmt_error(stmt) << std::endl;
-                    return false;
+                    if (0 != mysql_stmt_bind_result(stmt, m_result.get_bind()))
+                    {
+                        std::cout << mysql_stmt_error(stmt) << std::endl;
+                        return false;
+                    }
                 }
+                affected_rows = mysql_affected_rows(m_conn_ptr->get());
             }
             return true;
         }
@@ -432,6 +443,12 @@ namespace tubekit
             else
                 bind[index].is_null = nullptr;
             bind[index].buffer_length = size;
+        }
+
+        template <size_t bind_size>
+        unsigned long sql<bind_size>::get_affected_rows()
+        {
+            return affected_rows;
         }
     }
 }
