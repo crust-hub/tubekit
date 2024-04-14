@@ -1,4 +1,4 @@
-# timer
+# tubekit-timer
 
 ## example
 

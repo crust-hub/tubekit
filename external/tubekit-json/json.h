@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <list>
+#include <vector>
 #include <map>
 
 namespace tubekit::json
@@ -8,106 +8,142 @@ namespace tubekit::json
     class json
     {
     public:
-        enum Type
+        enum class json_type
         {
             json_null = 0,
             json_bool,
-            json_int,
+            json_integer,
             json_double,
             json_string,
             json_array,
             json_object
         };
+
         json();
-        json(Type type);
+        json(json_type json_type);
         json(bool value);
-        json(int value);
+        json(long long value);
         json(double value);
         json(const char *value);
         json(const std::string &value);
         json(const json &other);
         ~json();
 
-        Type type() const;
-        bool isNull() const;
-        bool isBool() const;
-        bool isInt() const;
-        bool isDouble() const;
-        bool isString() const;
-        bool isArray() const;
-        bool isObject() const;
+        json_type type() const;
+        bool is_null() const;
+        bool is_bool() const;
+        bool is_integer() const;
+        bool is_double() const;
+        bool is_string() const;
+        bool is_array() const;
+        bool is_object() const;
 
-        bool asBool() const;
-        int asInt() const;
-        double asDouble() const;
-        std::string asString() const;
+        bool as_bool() const;
+        long long as_integer() const;
+        double as_double() const;
+        std::string as_string() const;
+
+        void copy(const json &other);
 
         // array size
-        int size() const;
-        bool empty() const;
-        void clear() const;
-        void append(const json &value);
+        size_t size() const;
 
-        bool has(int index) const;
+        bool empty() const;
+
+        void clear();
+
+        bool remove(size_t index);
+        bool remove(const char *key);
+        bool remove(const std::string &key);
+
+        bool has(size_t index) const;
         bool has(const char *key) const;
         bool has(const std::string &key) const;
 
-        json get(int index) const;
-        json get(const char *key) const;
-        json get(const std::string &key) const;
+        const json &get(size_t index) const;
+        const json &get(const char *key) const;
+        const json &get(const std::string &key) const;
 
-        void remove(int index);
-        void remove(const char *key);
-        void remove(const std::string &key);
+        void set(const json &other);
+        void set(bool value);
+        void set(long long value);
+        void set(double value);
+        void set(const std::string &value);
+
+        json &append(const json &value);
 
         json &operator=(const json &other);
+        json &operator=(bool value);
+        json &operator=(long long value);
+        json &operator=(double value);
+        json &operator=(const std::string &value);
+        json &operator=(const char *value);
+
         bool operator==(const json &other);
+        bool operator==(bool value);
+        bool operator==(long long value);
+        bool operator==(double value);
+        bool operator==(const std::string &value);
+        bool operator==(const char *value);
+
         bool operator!=(const json &other);
+        bool operator!=(bool value);
+        bool operator!=(long long value);
+        bool operator!=(double value);
+        bool operator!=(const std::string &value);
+        bool operator!=(const char *value);
 
-        json &operator[](int index);
+        json &operator[](size_t index);
+        const json &operator[](size_t index) const;
+
         json &operator[](const char *key);
-        json &operator[](const std::string &key);
+        const json &operator[](const char *key) const;
 
-        friend std::ostream &operator<<(std::ostream &os, const json &json_obj)
-        {
-            os << json_obj.str();
-            return os;
-        }
+        json &operator[](const std::string &key);
+        const json &operator[](const std::string &key) const;
 
         operator bool();
-        operator int();
+        operator long long();
         operator double();
         operator std::string();
+        operator std::string() const;
+
+        static json const &null();
 
         void parse(const std::string &str);
-        std::string str() const;
+        std::string to_string() const;
 
-        typedef std::list<json>::iterator iterator;
+        typedef std::vector<json>::iterator iterator;
+        typedef std::vector<json>::const_iterator const_iterator;
 
         iterator begin()
         {
-            return (m_value.m_array)->begin();
+            return m_array_value.begin();
         }
 
         iterator end()
         {
-            return (m_value.m_array)->end();
+            return m_array_value.end();
+        }
+
+        const_iterator begin() const
+        {
+            return m_array_value.begin();
+        }
+
+        const_iterator end() const
+        {
+            return m_array_value.end();
         }
 
     private:
-        void copy(const json &other);
+        json_type m_json_type{json_type::json_null};
+        long long m_integer_value{0};
+        double m_double_value{0.};
+        bool m_bool_value{false};
+        std::string m_string_value{};
 
-    private:
-        union Value
-        {
-            bool m_bool;
-            int m_int;
-            double m_double;
-            std::string *m_string;
-            std::list<json> *m_array;
-            std::map<std::string, json> *m_object;
-        };
-        Type m_type{json_null};
-        Value m_value;
+        std::vector<json> m_array_value{};
+        std::map<std::string, json> m_object_value{};
     };
 }

@@ -40,7 +40,7 @@ add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES})
 add_subdirectory(${PROJECT_SOURCE_DIR}/external)
 
 # for link external gen .so lib
-set(EXTERNAL_LIB tubekit-http-parser tubekit-inifile tubekit-log tubekit-timer tubekit-xml tubekit-buffer tubekit-lua tubekit-zlib)
+set(EXTERNAL_LIB tubekit-http-parser tubekit-inifile tubekit-log tubekit-timer tubekit-xml tubekit-buffer tubekit-lua tubekit-zlib tubekit-json)
 
 target_link_libraries(${PROJECT_NAME} pthread dl stdc++fs protobuf ssl crypto ${EXTERNAL_LIB})
 

@@ -23,4 +23,7 @@ add_library(tubekit-lua SHARED ${SOURCE_LUA})
 file(GLOB_RECURSE SOURCE_ZLIB "./zlib/*.c")
 add_library(tubekit-zlib SHARED ${SOURCE_ZLIB})
 
+file(GLOB_RECURSE SOURCE_JSON "./tubekit-json/*.cpp")
+add_library(tubekit-json SHARED ${SOURCE_JSON})
+
 message("external end")
