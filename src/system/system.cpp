@@ -34,6 +34,8 @@ void system::init()
     const int threads = (*ini)["server"]["threads"];
     const int max_conn = (*ini)["server"]["max_conn"];
     const int wait_time = (*ini)["server"]["wait_time"];
+    const int accept_per_tick = (*ini)["server"]["accept_per_tick"];
+
     const string task_type = (*ini)["server"]["task_type"];
 
     const string http_static_dir = (*ini)["server"]["http_static_dir"];
@@ -76,6 +78,7 @@ void system::init()
                      port,
                      threads,
                      max_conn,
+                     accept_per_tick,
                      wait_time,
                      task_type,
                      http_static_dir,

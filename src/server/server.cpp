@@ -285,6 +285,7 @@ void server::config(const std::string &ip,
                     size_t threads,
                     size_t connects,
                     size_t wait_time,
+                    size_t accept_per_tick,
                     std::string task_type,
                     std::string http_static_dir,
                     std::string lua_dir,
@@ -297,6 +298,8 @@ void server::config(const std::string &ip,
     set_threads(threads);
     set_connects(connects);
     set_wait_time(wait_time);
+    set_accept_per_tick(accept_per_tick);
+
     set_task_type(task_type);
     set_http_static_dir(http_static_dir);
     set_lua_dir(lua_dir);

@@ -22,6 +22,14 @@ namespace tubekit
             void set_threads(size_t threads);
             void set_connects(size_t connects);
             void set_wait_time(size_t wait_time);
+            inline void set_accept_per_tick(size_t accept_per_tick)
+            {
+                m_accept_per_tick = accept_per_tick;
+            }
+            inline size_t get_accept_per_tick() const
+            {
+                return m_accept_per_tick;
+            }
             void set_task_type(std::string task_type);
 
             void set_http_static_dir(std::string http_static_dir);
@@ -46,6 +54,7 @@ namespace tubekit
                         size_t threads,
                         size_t connects,
                         size_t wait_time,
+                        size_t accept_per_tick,
                         std::string task_type,
                         std::string http_static_dir,
                         std::string lua_dir,
@@ -64,6 +73,8 @@ namespace tubekit
             size_t m_threads{0};
             size_t m_connects{0};
             size_t m_wait_time{0};
+            size_t m_accept_per_tick{0};
+
             std::string m_http_static_dir{};
             std::string m_lua_dir{};
 

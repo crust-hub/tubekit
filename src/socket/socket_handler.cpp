@@ -192,6 +192,8 @@ void socket_handler::handle()
         return;
     }
 
+    const size_t accept_per_tick = singleton<tubekit::server::server>::instance()->get_accept_per_tick();
+
     time::time socket_handler_time;
     socket_handler_time.update();
     uint64_t lastest_tick_time = socket_handler_time.get_seconds();
@@ -261,95 +263,98 @@ void socket_handler::handle()
             // There is a new socket connection
             if (m_server == now_loop_socket)
             {
-                int socket_fd = m_server->accept(); // Gets the socket_fd for the new connection
-                if (socket_fd <= 0)
+                for (size_t accept_loop_idx = 0; accept_loop_idx < accept_per_tick; accept_loop_idx++)
                 {
-                    continue;
-                }
-                socket *socket_object = alloc_socket();
-                if (socket_object == nullptr)
-                {
-                    ::close(socket_fd);
-                    continue;
-                }
-                ++gid_seq;
-                // Almost impossible to process 4294967295 connections in one second
-                uint64_t loop_gid = (lastest_tick_time << 32) + gid_seq;
-                socket_object->m_sockfd = socket_fd;
-                socket_object->set_gid(loop_gid);
-                socket_object->close_callback = nullptr;
-                socket_object->set_non_blocking();
-                socket_object->set_linger(false, 0);
-                socket_object->set_send_buffer(65536);
-                socket_object->set_recv_buffer(65536);
+                    int socket_fd = m_server->accept(); // Gets the socket_fd for the new connection
+                    if (socket_fd <= 0)
+                    {
+                        break; // stop accept
+                    }
+                    socket *socket_object = alloc_socket();
+                    if (socket_object == nullptr)
+                    {
+                        ::close(socket_fd);
+                        break; // stop accept
+                    }
+                    ++gid_seq;
+                    // Almost impossible to process 4294967295 connections in one second
+                    uint64_t loop_gid = (lastest_tick_time << 32) + gid_seq;
+                    socket_object->m_sockfd = socket_fd;
+                    socket_object->set_gid(loop_gid);
+                    socket_object->close_callback = nullptr;
+                    socket_object->set_non_blocking();
+                    socket_object->set_linger(false, 0);
+                    socket_object->set_send_buffer(65536);
+                    socket_object->set_recv_buffer(65536);
 
-                if (singleton<server::server>::instance()->get_use_ssl())
-                {
-                    bool ssl_err = false;
-                    SSL *ssl_instance = SSL_new(singleton<server::server>::instance()->get_ssl_ctx());
-                    if (!ssl_instance)
+                    if (singleton<server::server>::instance()->get_use_ssl())
                     {
-                        ssl_err = true;
-                        LOG_ERROR("SSL_new return NULL");
+                        bool ssl_err = false;
+                        SSL *ssl_instance = SSL_new(singleton<server::server>::instance()->get_ssl_ctx());
+                        if (!ssl_instance)
+                        {
+                            ssl_err = true;
+                            LOG_ERROR("SSL_new return NULL");
+                        }
+                        if (!ssl_err && 1 != SSL_set_fd(ssl_instance, socket_object->m_sockfd))
+                        {
+                            ssl_err = true;
+                            LOG_ERROR("SSL_set_fd error: %s", ERR_error_string(ERR_get_error(), nullptr));
+                        }
+                        // ssl_instance bind to socket_object
+                        socket_object->set_ssl_instance(ssl_instance);
+                        if (ssl_err)
+                        {
+                            LOG_ERROR("SSL ERR");
+                            push_wait_remove(socket_object);
+                            continue;
+                        }
                     }
-                    if (!ssl_err && 1 != SSL_set_fd(ssl_instance, socket_object->m_sockfd))
+
+                    // create connection layer instance
+                    connection::connection *p_connection = singleton<connection_mgr>::instance()->create();
+
+                    if (p_connection == nullptr)
                     {
-                        ssl_err = true;
-                        LOG_ERROR("SSL_set_fd error: %s", ERR_error_string(ERR_get_error(), nullptr));
+                        LOG_ERROR("p_connection == nullptr");
+                        push_wait_remove(socket_object);
+                        break; // stop accept
                     }
-                    // ssl_instance bind to socket_object
-                    socket_object->set_ssl_instance(ssl_instance);
-                    if (ssl_err)
+                    else
                     {
-                        LOG_ERROR("SSL ERR");
+                        p_connection->reuse();
+                        p_connection->set_socket_ptr(socket_object);
+                        p_connection->set_gid(loop_gid);
+                    }
+
+                    bool res = false;
+                    singleton<connection_mgr>::instance()->insert(
+                        loop_gid, {socket_object, p_connection},
+                        [&res](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+                        {
+                            res = true;
+                        },
+                        nullptr);
+
+                    if (false == res)
+                    {
+                        LOG_ERROR("singleton<connection_mgr>::instance()->insert error");
+                        singleton<connection_mgr>::instance()->release(p_connection);
                         push_wait_remove(socket_object);
                         continue;
                     }
-                }
 
-                // create connection layer instance
-                connection::connection *p_connection = singleton<connection_mgr>::instance()->create();
-
-                if (p_connection == nullptr)
-                {
-                    LOG_ERROR("p_connection == nullptr");
-                    push_wait_remove(socket_object);
-                    continue;
-                }
-                else
-                {
-                    p_connection->reuse();
-                    p_connection->set_socket_ptr(socket_object);
-                    p_connection->set_gid(loop_gid);
-                }
-
-                bool res = false;
-                singleton<connection_mgr>::instance()->insert(
-                    loop_gid, {socket_object, p_connection},
-                    [&res](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
+                    // on_new_connection hook will be executed when it's get_ssl_accepted status first
+                    // if not using openssl
+                    if (!singleton<server::server>::instance()->get_use_ssl())
                     {
-                        res = true;
-                    },
-                    nullptr);
+                        // triger new connection hook
+                        singleton<connection_mgr>::instance()->on_new_connection(loop_gid);
+                    }
 
-                if (false == res)
-                {
-                    LOG_ERROR("singleton<connection_mgr>::instance()->insert error");
-                    singleton<connection_mgr>::instance()->release(p_connection);
-                    push_wait_remove(socket_object);
-                    continue;
-                }
-
-                // on_new_connection hook will be executed when it's get_ssl_accepted status first
-                // if not using openssl
-                if (!singleton<server::server>::instance()->get_use_ssl())
-                {
-                    // triger new connection hook
-                    singleton<connection_mgr>::instance()->on_new_connection(loop_gid);
-                }
-
-                // first connected, try listen write and process
-                do_task(loop_gid, true, true);
+                    // first connected, try listen write and process
+                    do_task(loop_gid, true, true);
+                } // for (size_t accept_loop_idx; accept_loop_idx < accept_per_tick; accept_loop_idx++)
             }
             else // already connection socket has event happen
             {
