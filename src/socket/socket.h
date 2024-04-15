@@ -69,7 +69,8 @@ namespace tubekit
             std::function<void()> close_callback{nullptr};
 
         public:
-            static int create_tcp_socket();
+            static int create_tcp_socket(std::string ip);
+            static bool is_ipv6(std::string ip);
         };
     }
 }

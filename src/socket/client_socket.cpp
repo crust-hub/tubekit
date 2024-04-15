@@ -16,7 +16,7 @@ client_socket::client_socket() : socket()
 
 client_socket::client_socket(const string &ip, int port) : socket(ip, port)
 {
-    m_sockfd = socket::create_tcp_socket();
+    m_sockfd = socket::create_tcp_socket(ip);
     if (m_sockfd < 0)
     {
         LOG_ERROR("create client socket error: errno=%d errstr=%s", errno, strerror(errno));

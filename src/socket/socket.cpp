@@ -29,24 +29,47 @@ socket::~socket()
 
 bool socket::bind(const string &ip, int port)
 {
-    struct sockaddr_in sockaddr;
-    memset(&sockaddr, 0, sizeof(sockaddr)); // init 0
-    sockaddr.sin_family = AF_INET;          // IPV4
-    if (ip != "")
+    bool isIPV6 = is_ipv6(ip);
+
+    struct sockaddr_in sockaddr; // IPV4
+    memset(&sockaddr, 0, sizeof(sockaddr));
+    struct sockaddr_in6 sockaddr6; // IPV6
+    memset(&sockaddr6, 0, sizeof(sockaddr6));
+
+    if (isIPV6)
     {
-        sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+        // family
+        sockaddr6.sin6_family = AF_INET6;
+        // addr
+        if (inet_pton(AF_INET6, ip.c_str(), &sockaddr6.sin6_addr) <= 0)
+        {
+            LOG_ERROR("Invalid IPV6 address");
+            return false;
+        }
+        // port
+        sockaddr6.sin6_port = htons(port);
+        if (::bind(m_sockfd, (struct sockaddr *)&sockaddr6, sizeof(sockaddr6)) < 0)
+        {
+            LOG_ERROR("ipv6 socket bind error: errno=%d errstr=%s", errno, strerror(errno));
+            return false;
+        }
     }
     else
     {
-        sockaddr.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0
+        // family
+        sockaddr.sin_family = AF_INET;
+        // addr
+        sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+        // port
+        sockaddr.sin_port = htons(port);
+        // bind
+        if (::bind(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
+        {
+            LOG_ERROR("ipv4 socket bind error: errno=%d errstr=%s", errno, strerror(errno));
+            return false;
+        }
     }
-    // htonl htons : change to net byte sequeue from host byte
-    sockaddr.sin_port = htons(port);
-    if (::bind(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
-    {
-        LOG_ERROR("socket bind error: errno=%d errstr=%s", errno, strerror(errno));
-        return false;
-    }
+
     return true;
 }
 
@@ -63,16 +86,47 @@ bool socket::listen(int backlog)
 
 bool socket::connect(const string &ip, int port)
 {
-    struct sockaddr_in sockaddr;
+    bool isIPV6 = is_ipv6(ip);
+    int int_isIPV6 = isIPV6 ? 1 : 0;
+
+    struct sockaddr_in sockaddr; // IPV4
     memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
-    sockaddr.sin_port = htons(port);
-    if (::connect(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
+    struct sockaddr_in6 sockaddr6; // IPV6
+    memset(&sockaddr6, 0, sizeof(sockaddr6));
+
+    if (isIPV6)
     {
-        LOG_ERROR("socket connect error: errno=%d errstr=%s", errno, strerror(errno));
-        return false;
+        // family
+        sockaddr6.sin6_family = AF_INET6;
+        // addr
+        if (inet_pton(AF_INET6, ip.c_str(), &sockaddr6.sin6_addr) <= 0)
+        {
+            LOG_ERROR("Invalid IPV6 address");
+            return false;
+        }
+        // port
+        sockaddr6.sin6_port = htons(port);
+        if (::connect(m_sockfd, (struct sockaddr *)&sockaddr6, sizeof(sockaddr6)) < 0)
+        {
+            LOG_ERROR("isIPV6 %d socket connect error: errno=%d errstr=%s", int_isIPV6, errno, strerror(errno));
+            return false;
+        }
     }
+    else
+    {
+        // family
+        sockaddr.sin_family = AF_INET;
+        // addr
+        sockaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+        // port
+        sockaddr.sin_port = htons(port);
+        if (::connect(m_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
+        {
+            LOG_ERROR("isIPV6 %d socket connect error: errno=%d errstr=%s", int_isIPV6, errno, strerror(errno));
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -330,15 +384,34 @@ bool socket::set_reuse_port()
     return true;
 }
 
-int socket::create_tcp_socket()
+int socket::create_tcp_socket(std::string ip)
 {
-    int fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (fd < 0)
+    bool isIPV6 = is_ipv6(ip);
+    int fd = -1;
+    if (isIPV6)
+    {
+        fd = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    }
+    else
+    {
+        fd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    }
+
+    if (fd <= 0)
     {
         LOG_ERROR("create tcp socket error: errno=%d errstr=%s", errno, strerror(errno));
         return fd;
     }
     return fd;
+}
+
+bool socket::is_ipv6(std::string ip)
+{
+    if (std::string::npos != ip.find_first_of('.'))
+    {
+        return false;
+    }
+    return true;
 }
 
 int socket::get_fd()

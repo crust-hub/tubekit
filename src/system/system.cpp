@@ -70,6 +70,7 @@ void system::init()
     logger::instance().open(m_root_path + "/log/tubekit.log");
 
     // server
+    LOG_ERROR("Listen IP: %s", ip.c_str());
     auto m_server = singleton<server::server>::instance();
     m_server->config(ip,
                      port,
