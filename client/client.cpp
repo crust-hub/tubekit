@@ -16,6 +16,15 @@
 #include "../protocol/proto_res/proto_example.pb.h"
 #include "../protocol/proto_res/proto_message_head.pb.h"
 
+static bool is_ipv6(std::string ip)
+{
+    if (std::string::npos != ip.find_first_of('.'))
+    {
+        return false;
+    }
+    return true;
+}
+
 int main(int argc, const char **argv)
 {
     if (argc < 2)
@@ -61,23 +70,52 @@ int main(int argc, const char **argv)
                 for (int client_idx = 0; client_idx < client_cnt; client_idx++)
                 {
                     int &client_socket = client_socket_arr[client_idx];
-                    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+                    int INET = AF_INET;
+                    if (is_ipv6(server_ip))
+                    {
+                        INET = AF_INET6;
+                    }
+
+                    client_socket = socket(INET, SOCK_STREAM, 0);
                     if (client_socket == -1)
                     {
                         perror("Socket creation failed");
                         return;
                     }
 
-                    sockaddr_in server_address;
-                    server_address.sin_family = AF_INET;
-                    server_address.sin_port = htons(server_port);
-                    server_address.sin_addr.s_addr = inet_addr(server_ip);
-
-                    if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1)
+                    if (INET == AF_INET)
                     {
-                        perror("Connection failed");
-                        close(client_socket);
-                        return;
+                        sockaddr_in server_address;
+                        server_address.sin_family = AF_INET;
+                        server_address.sin_port = htons(server_port);
+                        server_address.sin_addr.s_addr = inet_addr(server_ip);
+
+                        if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1)
+                        {
+                            perror("Connection failed");
+                            close(client_socket);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        sockaddr_in6 server_address;
+                        server_address.sin6_family = AF_INET6;
+                        server_address.sin6_port = htons(server_port);
+                        if (inet_pton(AF_INET6, server_ip, &server_address.sin6_addr) <= 0)
+                        {
+                            perror("Invalid IPV6 address");
+                            close(client_socket);
+                            return;
+                        }
+
+                        if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1)
+                        {
+                            perror("Connection failed");
+                            close(client_socket);
+                            return;
+                        }
                     }
                 }
 

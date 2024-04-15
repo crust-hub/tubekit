@@ -14,16 +14,16 @@ int main(int argc, char **argv)
         // std::cout<<"on_tick"<<std::endl;
     };
 
-    udp.message_callback = [&udp, &recv_count](const char *buffer, ssize_t len, sockaddr_in &addr)
+    udp.message_callback = [&udp, &recv_count](const char *buffer, ssize_t len, sockaddr &addr, size_t addr_len)
     {
         ++recv_count;
-        std::cout << std::string(buffer, len) << " recv_count " << recv_count << std::endl;
+        std::cout << std::string(buffer, len) << " recv_count " << recv_count << " family " << addr.sa_family << std::endl;
         // pingpong
         udp.udp_component_client("", 0,
                                  buffer,
                                  len,
-                                 (sockaddr *)&addr,
-                                 sizeof(addr));
+                                 &addr,
+                                 addr_len);
     };
 
     udp.close_callback = [&udp]()
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         // close callback
     };
 
-    udp.udp_component_server("0.0.0.0", 20025);
+    udp.udp_component_server("::", 20025);
 
     return 0;
 }

@@ -41,12 +41,13 @@ namespace tubekit
             }
         }
 
-        int udp_component::init_sock()
+        int udp_component::init_sock(std::string ip)
         {
             int &server_socket_fd = m_socket_fd;
             if (server_socket_fd <= 0)
             {
-                server_socket_fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+                int INET = is_ipv6(ip) ? AF_INET6 : AF_INET;
+                server_socket_fd = ::socket(INET, SOCK_DGRAM, 0);
                 if (server_socket_fd == -1)
                 {
                     perror("error creating socket");
@@ -56,17 +57,38 @@ namespace tubekit
             return 0;
         }
 
-        std::string udp_component::udp_component_get_ip(struct sockaddr_in &addr)
+        std::string udp_component::udp_component_get_ip(struct sockaddr &addr)
         {
-            char ip[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
-            return std::string(ip, INET_ADDRSTRLEN);
+            if (addr.sa_family == AF_INET)
+            {
+                char ip[INET_ADDRSTRLEN + 1]{0};
+                struct sockaddr_in *addr_ptr = (struct sockaddr_in *)&addr;
+                inet_ntop(AF_INET, &(addr_ptr->sin_addr), ip, INET_ADDRSTRLEN);
+                return std::string(ip, INET_ADDRSTRLEN);
+            }
+            else
+            {
+                char ip[INET6_ADDRSTRLEN + 1]{0};
+                struct sockaddr_in6 *addr_ptr = (struct sockaddr_in6 *)&addr;
+                inet_ntop(AF_INET6, &(addr_ptr->sin6_addr), ip, INET6_ADDRSTRLEN);
+                return std::string(ip, INET6_ADDRSTRLEN);
+            }
         }
 
-        int udp_component::udp_component_get_port(struct sockaddr_in &addr)
+        int udp_component::udp_component_get_port(struct sockaddr &addr)
         {
-            unsigned short port = ntohs(addr.sin_port);
-            return port;
+            if (addr.sa_family == AF_INET)
+            {
+                struct sockaddr_in *addr_ptr = (struct sockaddr_in *)&addr;
+                unsigned short port = ntohs(addr_ptr->sin_port);
+                return port;
+            }
+            else
+            {
+                struct sockaddr_in6 *addr_ptr = (struct sockaddr_in6 *)&addr;
+                unsigned short port = ntohs(addr_ptr->sin6_port);
+                return port;
+            }
         }
 
         int udp_component::udp_component_server(const std::string &IP,
@@ -78,7 +100,7 @@ namespace tubekit
             int &server_socket_fd = m_socket_fd;
             if (server_socket_fd <= 0)
             {
-                if (0 != init_sock())
+                if (0 != init_sock(IP))
                 {
                     perror("Error creating socket");
                     return -1;
@@ -89,16 +111,39 @@ namespace tubekit
             struct sockaddr_in server_addr;
             bzero(&server_addr, sizeof(server_addr));
 
-            server_addr.sin_family = AF_INET;
-            server_addr.sin_addr.s_addr = inet_addr(IP.c_str());
-            server_addr.sin_port = htons(int_port);
+            struct sockaddr_in6 server_addr6;
+            bzero(&server_addr6, sizeof(server_addr6));
 
-            // server bind addr
-            if (-1 == bind(server_socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
+            if (is_ipv6(IP))
             {
-                perror("error binding socket");
-                to_close();
-                return -1;
+                server_addr6.sin6_family = AF_INET6;
+                if (inet_pton(AF_INET6, IP.c_str(), &server_addr6.sin6_addr) <= 0)
+                {
+                    perror("Invalid IPV6 address");
+                    to_close();
+                    return -1;
+                }
+                server_addr6.sin6_port = htons(int_port);
+                // server bind addr
+                if (-1 == bind(server_socket_fd, (struct sockaddr *)&server_addr6, sizeof(server_addr6)))
+                {
+                    perror("error binding socket");
+                    to_close();
+                    return -1;
+                }
+            }
+            else
+            {
+                server_addr.sin_family = AF_INET;
+                server_addr.sin_addr.s_addr = inet_addr(IP.c_str());
+                server_addr.sin_port = htons(int_port);
+                // server bind addr
+                if (-1 == bind(server_socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)))
+                {
+                    perror("error binding socket");
+                    to_close();
+                    return -1;
+                }
             }
 
             // port reuse
@@ -122,7 +167,7 @@ namespace tubekit
             int &client_socket = m_socket_fd;
             if (client_socket <= 0)
             {
-                if (0 != init_sock())
+                if (0 != init_sock(IP))
                 {
                     perror("Error creating socket");
                     return -1;
@@ -131,13 +176,29 @@ namespace tubekit
 
             sockaddr_in server_addr;
             std::memset(&server_addr, 0, sizeof(server_addr));
+            sockaddr_in6 server_addr6;
+            std::memset(&server_addr6, 0, sizeof(server_addr6));
 
             // server addr
             if (IP != "" && PORT != 0)
             {
-                server_addr.sin_family = AF_INET;
-                server_addr.sin_addr.s_addr = inet_addr(IP.c_str());
-                server_addr.sin_port = htons(PORT);
+                if (is_ipv6(IP))
+                {
+                    server_addr6.sin6_family = AF_INET6;
+                    if (inet_pton(AF_INET6, IP.c_str(), &server_addr6.sin6_addr) <= 0)
+                    {
+                        perror("Invalid IPV6 address");
+                        to_close();
+                        return -1;
+                    }
+                    server_addr6.sin6_port = htons(PORT);
+                }
+                else
+                {
+                    server_addr.sin_family = AF_INET;
+                    server_addr.sin_addr.s_addr = inet_addr(IP.c_str());
+                    server_addr.sin_port = htons(PORT);
+                }
             }
             else if (addr && addr_len > 0)
             {
@@ -157,8 +218,15 @@ namespace tubekit
             }
             else
             {
+                sockaddr *target_addr = (sockaddr *)&server_addr;
+                size_t target_len = sizeof(sockaddr_in);
+                if (is_ipv6(IP))
+                {
+                    target_addr = (sockaddr *)&server_addr6;
+                    target_len = sizeof(sockaddr_in6);
+                }
                 bytesSent = sendto(client_socket, buffer, len, 0,
-                                   (sockaddr *)&server_addr, sizeof(server_addr));
+                                   target_addr, target_len);
             }
 
             if (bytesSent != len)
@@ -217,13 +285,15 @@ namespace tubekit
 
             // event loop
             constexpr int MAX_EVENTS_NUM = 1;
-            sockaddr_in client_addr;
+
+            sockaddr client_addr;
             socklen_t addr_len = sizeof(client_addr);
+            bzero(&client_addr, sizeof(client_addr));
+
             epoll_event events[MAX_EVENTS_NUM];
             bzero(&events[0], sizeof(events));
             int events_num = 0;
 
-            bzero(&client_addr, sizeof(client_addr));
             constexpr int buffer_size = 65507;
             char buffer[buffer_size];
             bzero(buffer, sizeof(buffer));
@@ -262,14 +332,14 @@ namespace tubekit
                     if (events[i].data.fd == server_socket_fd)
                     {
                         // have new message
-                        ssize_t bytes = recvfrom(server_socket_fd, buffer, buffer_size, 0, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len);
+                        ssize_t bytes = recvfrom(server_socket_fd, buffer, buffer_size, 0, &client_addr, (socklen_t *)&addr_len);
 
                         // process recved data
                         if (bytes > 0)
                         {
                             if (message_callback)
                             {
-                                message_callback(buffer, bytes, client_addr);
+                                message_callback(buffer, bytes, client_addr, addr_len);
                             }
                         }
                     }
@@ -277,5 +347,15 @@ namespace tubekit
             } while (true);
             return 0;
         }
+
+        bool udp_component::is_ipv6(std::string ip)
+        {
+            if (std::string::npos != ip.find_first_of('.'))
+            {
+                return false;
+            }
+            return true;
+        }
+
     }
 }

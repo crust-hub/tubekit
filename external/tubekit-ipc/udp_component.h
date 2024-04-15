@@ -18,8 +18,8 @@ namespace tubekit
         {
         public:
             ~udp_component();
-            std::string udp_component_get_ip(struct sockaddr_in &addr);
-            int udp_component_get_port(struct sockaddr_in &addr);
+            std::string udp_component_get_ip(struct sockaddr &addr);
+            int udp_component_get_port(struct sockaddr &addr);
 
             int udp_component_server(const std::string &IP,
                                      const int PORT);
@@ -30,10 +30,11 @@ namespace tubekit
                                      ssize_t len,
                                      struct sockaddr *addr = nullptr,
                                      socklen_t addr_len = 0);
+            static bool is_ipv6(std::string ip);
 
         private:
             int event_loop();
-            int init_sock();
+            int init_sock(std::string ip);
             void to_close();
 
         private:
@@ -42,7 +43,7 @@ namespace tubekit
 
         public:
             std::function<void(bool &to_stop)> tick_callback{nullptr};
-            std::function<void(const char *buffer, ssize_t len, struct sockaddr_in &)> message_callback{nullptr};
+            std::function<void(const char *buffer, ssize_t len, struct sockaddr &, size_t addr_len)> message_callback{nullptr};
             std::function<void()> close_callback{nullptr};
         };
     }
