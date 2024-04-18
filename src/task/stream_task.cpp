@@ -154,7 +154,7 @@ void stream_task::run()
         {
             stream_app::process_connection(*t_stream_connection);
         }
-        catch (std::exception &e)
+        catch (const std::exception &e)
         {
             LOG_ERROR(e.what());
             t_stream_connection->mark_close();

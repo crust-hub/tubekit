@@ -42,7 +42,7 @@ void tick::run()
             break;
         }
     }
-    catch (std::exception &e)
+    catch (const std::exception &e)
     {
         LOG_ERROR(e.what());
     }
