@@ -7,6 +7,7 @@
 #include "utility/singleton.h"
 
 #include <tubekit-log/logger.h>
+#include <stdexcept>
 
 using tubekit::app::stream_app;
 using tubekit::app::websocket_app;
@@ -19,6 +20,7 @@ using tubekit::connection::websocket_connection;
 using tubekit::task::task_type;
 using tubekit::utility::object_pool;
 using tubekit::utility::singleton;
+using tubekit::thread::auto_lock;
 
 safe_mapping::safe_mapping()
 {
@@ -32,7 +34,7 @@ void safe_mapping::if_exist(uint64_t gid,
                             std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                             std::function<void(uint64_t)> failed_callback)
 {
-    lock.lock();
+    auto autolock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
@@ -48,14 +50,13 @@ void safe_mapping::if_exist(uint64_t gid,
             failed_callback(gid);
         }
     }
-    lock.unlock();
 }
 
 void safe_mapping::remove(uint64_t gid,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                           std::function<void(uint64_t)> failed_callback)
 {
-    lock.lock();
+    auto autolock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
@@ -74,7 +75,6 @@ void safe_mapping::remove(uint64_t gid,
             failed_callback(gid);
         }
     }
-    lock.unlock();
 }
 
 void safe_mapping::insert(uint64_t gid,
@@ -82,7 +82,7 @@ void safe_mapping::insert(uint64_t gid,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> failed_callback)
 {
-    lock.lock();
+    auto autolock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
@@ -99,7 +99,6 @@ void safe_mapping::insert(uint64_t gid,
             succ_callback(gid, value);
         }
     }
-    lock.unlock();
 }
 
 void connection_mgr::if_exist(uint64_t gid,
@@ -119,15 +118,22 @@ void connection_mgr::remove(uint64_t gid,
         gid,
         [&succ_callback](uint64_t key, std::pair<socket::socket *, connection *> value)
         {
-            if (is_stream(value.second))
+            try
             {
-                stream_app::on_close_connection(*convert_to_stream(value.second));
+                if (is_stream(value.second))
+                {
+                    stream_app::on_close_connection(*convert_to_stream(value.second));
+                }
+                if (is_websocket(value.second))
+                {
+                    websocket_app::on_close_connection(*convert_to_websocket(value.second));
+                }
+                succ_callback(key, value);
             }
-            if (is_websocket(value.second))
+            catch (const std::exception &e)
             {
-                websocket_app::on_close_connection(*convert_to_websocket(value.second));
+                LOG_ERROR(e.what());
             }
-            succ_callback(key, value);
         },
         failed_callback);
 }
@@ -159,13 +165,20 @@ void connection_mgr::on_new_connection(uint64_t gid)
         gid,
         [](uint64_t key, std::pair<tubekit::socket::socket *, tubekit::connection::connection *> value)
         {
-            if (is_stream(value.second))
+            try
             {
-                stream_app::on_new_connection(*convert_to_stream(value.second));
+                if (is_stream(value.second))
+                {
+                    stream_app::on_new_connection(*convert_to_stream(value.second));
+                }
+                if (is_websocket(value.second))
+                {
+                    websocket_app::on_new_connection(*convert_to_websocket(value.second));
+                }
             }
-            if (is_websocket(value.second))
+            catch (const std::exception &e)
             {
-                websocket_app::on_new_connection(*convert_to_websocket(value.second));
+                LOG_ERROR(e.what());
             }
         },
         nullptr);

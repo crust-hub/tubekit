@@ -2,6 +2,7 @@
 #include "connection/stream_connection.h"
 #include "utility/singleton.h"
 #include "socket/socket_handler.h"
+#include <stdexcept>
 
 using tubekit::connection::stream_connection;
 using tubekit::socket::socket_handler;
@@ -145,7 +146,16 @@ bool stream_connection::buf2sock(bool &closed)
                     {
                         if (this->write_end_callback)
                         {
-                            return this->write_end_callback(*this);
+                            bool bret = false;
+                            try
+                            {
+                                bret = this->write_end_callback(*this);
+                            }
+                            catch (const std::exception &e)
+                            {
+                                LOG_ERROR(e.what());
+                            }
+                            return bret;
                         }
                         return false; // nothing m_waiting_send_pack to m_send_buffer
                     }

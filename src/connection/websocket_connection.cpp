@@ -2,6 +2,7 @@
 #include "utility/singleton.h"
 #include "socket/socket_handler.h"
 #include <tubekit-log/logger.h>
+#include <stdexcept>
 
 using namespace std;
 using namespace tubekit::connection;
@@ -212,7 +213,16 @@ bool websocket_connection::buf2sock(bool &closed)
                     {
                         if (this->write_end_callback)
                         {
-                            return this->write_end_callback(*this);
+                            bool bret = false;
+                            try
+                            {
+                                bret = this->write_end_callback(*this);
+                            }
+                            catch (const std::exception &e)
+                            {
+                                LOG_ERROR(e.what());
+                            }
+                            return bret;
                         }
                         return false; // noting m_waiting_send_pack to m_send_buffer
                     }

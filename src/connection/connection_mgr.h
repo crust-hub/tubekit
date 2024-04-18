@@ -34,7 +34,7 @@ namespace tubekit::connection
                     std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> failed_callback);
 
         std::unordered_map<uint64_t, std::pair<socket::socket *, connection *>> gid2pair{};
-        std::mutex lock;
+        tubekit::thread::mutex lock;
     };
 
     class connection_mgr

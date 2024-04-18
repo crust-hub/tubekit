@@ -7,6 +7,8 @@
 #include "task/task_type.h"
 
 #include <iostream>
+#include <stdexcept>
+#include <tubekit-log/logger.h>
 
 using namespace tubekit::app;
 using namespace tubekit::hooks;
@@ -16,24 +18,33 @@ using namespace tubekit::utility;
 int init::run()
 {
     task::task_type task_type = singleton<server::server>::instance()->get_task_type();
-    switch (task_type)
+
+    try
     {
-    case task::task_type::HTTP_TASK:
-    {
-        return http_app::on_init();
+        switch (task_type)
+        {
+        case task::task_type::HTTP_TASK:
+        {
+            return http_app::on_init();
+        }
+        case task::task_type::STREAM_TASK:
+        {
+            return stream_app::on_init();
+        }
+        case task::task_type::WEBSOCKET_TASK:
+        {
+            return websocket_app::on_init();
+        }
+        default:
+        {
+            return -1;
+        }
+        }
     }
-    case task::task_type::STREAM_TASK:
+    catch (std::exception &e)
     {
-        return stream_app::on_init();
-    }
-    case task::task_type::WEBSOCKET_TASK:
-    {
-        return websocket_app::on_init();
-    }
-    default:
-    {
+        LOG_ERROR(e.what());
         return -1;
-    }
     }
     return -1;
 }

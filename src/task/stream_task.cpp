@@ -5,6 +5,7 @@
 #include <memory.h>
 #include <vector>
 #include <tubekit-log/logger.h>
+#include <stdexcept>
 
 #include "socket/socket_handler.h"
 #include "utility/singleton.h"
@@ -149,7 +150,16 @@ void stream_task::run()
 
     // process data
     {
-        stream_app::process_connection(*t_stream_connection);
+        try
+        {
+            stream_app::process_connection(*t_stream_connection);
+        }
+        catch (std::exception &e)
+        {
+            LOG_ERROR(e.what());
+            t_stream_connection->mark_close();
+            return;
+        }
     }
 
     bool b_send = false, b_closed = false;

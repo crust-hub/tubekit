@@ -6,6 +6,7 @@
 #include <iostream>
 #include <algorithm>
 #include <tubekit-log/logger.h>
+#include <stdexcept>
 
 #include "task/http_task.h"
 #include "socket/socket_handler.h"
@@ -77,7 +78,18 @@ http_task::http_task(uint64_t gid) : task(gid),
         {
             connection::http_connection *t_http_connection = static_cast<connection::http_connection *>(parser->data);
             t_http_connection->add_to_body(at, length);
-            return http_app::on_body(*t_http_connection);
+            int iret = 0;
+            try
+            {
+                iret = http_app::on_body(*t_http_connection);
+            }
+            catch (const std::exception &e)
+            {
+                iret = -1;
+                LOG_ERROR(e.what());
+            }
+
+            return iret;
         };
 
         settings->on_message_complete = [](http_parser *parser) -> auto
@@ -152,7 +164,14 @@ void http_task::run()
         // here, make sure closing connection and socket once
         if (t_http_connection->destory_callback)
         {
-            t_http_connection->destory_callback(*t_http_connection);
+            try
+            {
+                t_http_connection->destory_callback(*t_http_connection);
+            }
+            catch (const std::exception &e)
+            {
+                LOG_ERROR(e.what());
+            }
         }
         singleton<connection_mgr>::instance()->remove(
             get_gid(),
@@ -254,13 +273,21 @@ void http_task::run()
     {
         t_http_connection->set_process_end(true);
         // app loader,loading process_callback for t_http_connection
-        app::http_app::process_connection(*t_http_connection);
-        if (t_http_connection->process_callback)
+        try
         {
-            t_http_connection->process_callback(*t_http_connection);
+            app::http_app::process_connection(*t_http_connection);
+            if (t_http_connection->process_callback)
+            {
+                t_http_connection->process_callback(*t_http_connection);
+            }
+            else
+            {
+                t_http_connection->set_everything_end(true);
+            }
         }
-        else
+        catch (const std::exception &e)
         {
+            LOG_ERROR(e.what());
             t_http_connection->set_everything_end(true);
         }
     }
@@ -303,12 +330,21 @@ void http_task::run()
         //  Notify the user that the content sent last time has been sent to the client
         if (t_http_connection->buffer_start_use == t_http_connection->buffer_used_len && 0 == t_http_connection->m_send_buffer.can_readable_size() && !t_http_connection->get_response_end())
         {
-            if (t_http_connection->write_end_callback)
+            try
             {
-                t_http_connection->write_end_callback(*t_http_connection);
+                if (t_http_connection->write_end_callback)
+                {
+
+                    t_http_connection->write_end_callback(*t_http_connection);
+                }
+                else
+                {
+                    t_http_connection->set_everything_end(true);
+                }
             }
-            else
+            catch (const std::exception &e)
             {
+                LOG_ERROR(e.what());
                 t_http_connection->set_everything_end(true);
             }
         }

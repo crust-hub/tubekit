@@ -10,6 +10,7 @@
 #include "utility/sha1.h"
 #include "utility/base64.h"
 #include "server/server.h"
+#include <stdexcept>
 
 using namespace tubekit::task;
 using namespace tubekit::socket;
@@ -321,7 +322,16 @@ void websocket_task::run()
         }
         // process data
         {
-            websocket_app::process_connection(*t_websocket_connection);
+            try
+            {
+                websocket_app::process_connection(*t_websocket_connection);
+            }
+            catch (const std::exception &e)
+            {
+                LOG_ERROR(e.what());
+                t_websocket_connection->mark_close();
+                return;
+            }
         }
         // send data
         {
