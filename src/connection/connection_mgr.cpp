@@ -34,7 +34,7 @@ void safe_mapping::if_exist(uint64_t gid,
                             std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                             std::function<void(uint64_t)> failed_callback)
 {
-    auto autolock(lock);
+    auto_lock raiilock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
@@ -56,7 +56,7 @@ void safe_mapping::remove(uint64_t gid,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                           std::function<void(uint64_t)> failed_callback)
 {
-    auto autolock(lock);
+    auto_lock raiilock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
@@ -82,7 +82,7 @@ void safe_mapping::insert(uint64_t gid,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> succ_callback,
                           std::function<void(uint64_t, std::pair<socket::socket *, connection *>)> failed_callback)
 {
-    auto autolock(lock);
+    auto_lock raiilock(lock);
     auto iter = gid2pair.find(gid);
     if (iter != gid2pair.end())
     {
